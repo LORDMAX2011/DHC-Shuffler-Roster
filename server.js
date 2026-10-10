@@ -148,7 +148,7 @@ function validateState(state) {
   if (state.apartRules !== undefined && (typeof state.apartRules !== 'string' || state.apartRules.length > 10000)) return 'Keep-apart rules are invalid.';
   if (state.balanceByAttribute !== undefined && typeof state.balanceByAttribute !== 'boolean') return 'Balance setting is invalid.';
   if (state.studentAttributes !== undefined && (!state.studentAttributes || typeof state.studentAttributes !== 'object' || Array.isArray(state.studentAttributes) || Object.entries(state.studentAttributes).some(([key, value]) => key.length > 120 || typeof value !== 'string' || value.length > 80))) return 'Student group attributes are invalid.';
-  if (state.appearance !== undefined && (!state.appearance || typeof state.appearance !== 'object' || !/^#[0-9a-f]{6}$/i.test(state.appearance.accent || '') || !/^#[0-9a-f]{6}$/i.test(state.appearance.background || '') || !['light', 'dark'].includes(state.appearance.mode))) return 'Appearance settings are invalid.';
+  if (state.appearance !== undefined && (!state.appearance || typeof state.appearance !== 'object' || !/^#[0-9a-f]{6}$/i.test(state.appearance.accent || '') || !/^#[0-9a-f]{6}$/i.test(state.appearance.background || '') || !['light', 'dark'].includes(state.appearance.mode) || (state.appearance.textSize !== undefined && !['standard', 'large', 'extra'].includes(state.appearance.textSize)) || (state.appearance.highContrast !== undefined && typeof state.appearance.highContrast !== 'boolean'))) return 'Appearance settings are invalid.';
   if (!Array.isArray(state.groups) || state.groups.length > 100) return 'Class results are invalid.';
   let studentCount = 0;
   for (const group of state.groups) {

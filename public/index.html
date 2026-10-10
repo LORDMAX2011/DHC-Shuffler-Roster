@@ -35,6 +35,8 @@
     :root[data-mode="dark"] .empty-icon, :root[data-mode="dark"] .student-name-input:focus { background:#26332c; }
     :root[data-mode="dark"] .student-list li { border-color:#303b35; }
     :root[data-mode="dark"] .student-name-input:focus { color:var(--ink); }
+    :root[data-contrast="high"] { --ink:#111; --muted:#26332c; --line:#3f4a43; --paper:#fff; --wash:#fff; --mint:#e2f1e6; --green:#004b35; --green-dark:#003b2a; }
+    :root[data-mode="dark"][data-contrast="high"] { --ink:#fff; --muted:#f0f4f1; --line:#fff; --paper:#000; --wash:#000; --mint:#161b18; --green:#005239; --green-dark:#b8ffda; }
     * { box-sizing: border-box; }
     body {
       margin: 0;
@@ -256,6 +258,18 @@
     .contrast-status { margin:12px 0 0; border-radius:10px; padding:9px 11px; color:var(--green-dark); background:var(--mint); font-size:11px; line-height:1.45; }
     .contrast-status.low { color:#8a371f; background:#fff0e9; }
     :root[data-mode="dark"] .contrast-status.low { color:#ffd4c2; background:#4a3028; }
+    .accessibility-controls { display:flex; align-items:center; flex-wrap:wrap; gap:12px; margin:14px 0; padding:14px; border:2px solid var(--line); border-radius:12px; background:var(--paper); }
+    .accessibility-controls label { display:flex; align-items:center; gap:8px; margin:0; }
+    .accessibility-controls select { min-width:160px; padding:9px 11px; border:2px solid var(--line); border-radius:9px; background:var(--paper); color:var(--ink); font:inherit; }
+    .accessibility-controls p { flex-basis:100%; margin:0; color:var(--muted); font-size:14px; line-height:1.5; }
+    :focus-visible { outline:3px solid #075fc5 !important; outline-offset:3px; }
+    :root[data-mode="dark"] :focus-visible { outline-color:#8dc5ff !important; }
+    :root[data-text-size="large"] body { font-size:18px; }
+    :root[data-text-size="large"] label, :root[data-text-size="large"] input, :root[data-text-size="large"] select, :root[data-text-size="large"] textarea, :root[data-text-size="large"] .button, :root[data-text-size="large"] .student-list li { font-size:16px !important; }
+    :root[data-text-size="large"] .profile-hint, :root[data-text-size="large"] .school-banner-copy span, :root[data-text-size="large"] .card-head p, :root[data-text-size="large"] .format-note, :root[data-text-size="large"] .class-help, :root[data-text-size="large"] .idea-description, :root[data-text-size="large"] .saved-hint, :root[data-text-size="large"] .file-drop p, :root[data-text-size="large"] .tab-copy small, :root[data-text-size="large"] .panel-heading p, :root[data-text-size="large"] .appearance-card > p, :root[data-text-size="large"] .balance-controls p, :root[data-text-size="large"] .contrast-status { font-size:14px !important; }
+    :root[data-text-size="extra"] body { font-size:20px; }
+    :root[data-text-size="extra"] label, :root[data-text-size="extra"] input, :root[data-text-size="extra"] select, :root[data-text-size="extra"] textarea, :root[data-text-size="extra"] .button, :root[data-text-size="extra"] .student-list li { font-size:18px !important; }
+    :root[data-text-size="extra"] .profile-hint, :root[data-text-size="extra"] .school-banner-copy span, :root[data-text-size="extra"] .card-head p, :root[data-text-size="extra"] .format-note, :root[data-text-size="extra"] .class-help, :root[data-text-size="extra"] .idea-description, :root[data-text-size="extra"] .saved-hint, :root[data-text-size="extra"] .file-drop p, :root[data-text-size="extra"] .tab-copy small, :root[data-text-size="extra"] .panel-heading p, :root[data-text-size="extra"] .appearance-card > p, :root[data-text-size="extra"] .balance-controls p, :root[data-text-size="extra"] .contrast-status { font-size:16px !important; }
     .toast { position:fixed; z-index:80; right:20px; bottom:20px; max-width:min(420px,calc(100% - 40px)); padding:12px 16px; border:1px solid var(--line); border-radius:13px; background:var(--paper); color:var(--ink); box-shadow:var(--shadow); font-size:13px; opacity:0; transform:translateY(12px); pointer-events:none; transition:opacity .2s,transform .2s; }
     .toast.visible { opacity:1; transform:translateY(0); }
     .toast.error { border-color:#d99883; }
@@ -439,7 +453,13 @@
 
     <section class="appearance-card" id="appearanceCard" aria-labelledby="appearanceTitle">
       <h3 id="appearanceTitle">Make it yours</h3>
-      <p>Pick a ready-made palette, then adjust the main accent and page background. Your choice is saved for this school.</p>
+      <p>Choose larger text and high-contrast colors for easier reading, then adjust the page style. Your choices are saved for this school.</p>
+      <div class="accessibility-controls" aria-label="Reading accessibility settings">
+        <label for="textSizeSelect">Text size</label>
+        <select id="textSizeSelect" aria-label="Text size"><option value="standard">Standard</option><option value="large">Large</option><option value="extra">Extra large</option></select>
+        <label><input id="highContrastToggle" type="checkbox"> High contrast colors</label>
+        <p>Large text is the default. High contrast strengthens text and control outlines. Keyboard focus is highlighted clearly.</p>
+      </div>
       <div class="theme-options" id="themeOptions" aria-label="Color themes"></div>
       <div class="color-controls">
         <label class="color-control">Main accent <input id="accentColorInput" type="color" value="#256c54" aria-label="Main accent color"></label>
@@ -554,7 +574,7 @@
         { id: 'school', label: 'School', hint: 'Name and logo', title: 'School profile', description: 'Set the school identity that appears on rosters.', reset: true, resetLabel: 'Reset school info' },
         { id: 'classes', label: 'Classes', hint: 'Groups and sizes', title: 'Set up classes', description: 'Choose class names, set preferred sizes, and save reusable rosters.', reset: true, resetLabel: 'Reset classes' },
         { id: 'students', label: 'Students', hint: 'Import and review', title: 'Add student names', description: 'Paste a list or import a document, then review it before shuffling.', reset: true, resetLabel: 'Reset student names' },
-        { id: 'appearance', label: 'Appearance', hint: 'Colors and style', title: 'Customize appearance', description: 'Choose a color theme or adjust the main accent and page background.', reset: true, resetLabel: 'Reset colors' },
+        { id: 'appearance', label: 'Appearance', hint: 'Reading and colors', title: 'Reading and appearance', description: 'Adjust text size and contrast for comfortable reading, then choose your colors.', reset: true, resetLabel: 'Reset appearance' },
         { id: 'results', label: 'Results', hint: 'Edit and export', title: 'Your class roster', description: 'Edit student groups, search, rebalance, and print or export.' }
       ];
       const panels = new Map();
@@ -654,7 +674,7 @@
     let studentAttributes = {};
     let balanceByAttribute = false;
     let rosterHistory = [];
-    const defaultAppearance = { theme: 'forest', accent: '#256c54', background: '#f6f5f0', mode: 'light' };
+    const defaultAppearance = { theme: 'forest', accent: '#256c54', background: '#f6f5f0', mode: 'light', textSize: 'large', highContrast: true };
     let appearance = { ...defaultAppearance };
     try {
       const localAppearance = JSON.parse(localStorage.getItem('classroomShuffle.appearance') || '{}');
@@ -711,6 +731,12 @@
       return (values[0] + .05) / (values[1] + .05);
     }
     function updateContrastStatus() {
+      if (appearance.highContrast) {
+        const status = document.getElementById('contrastStatus');
+        status.classList.remove('low');
+        status.textContent = 'High-contrast colors are active for text and buttons.';
+        return;
+      }
       const ratio = contrastRatio('#ffffff', appearance.accent);
       const status = document.getElementById('contrastStatus');
       status.classList.toggle('low', ratio < 4.5);
@@ -729,14 +755,31 @@
         theme: themePalettes[nextAppearance.theme] ? nextAppearance.theme : 'custom',
         accent: validColor(nextAppearance.accent) ? nextAppearance.accent : defaultAppearance.accent,
         background: validColor(nextAppearance.background) ? nextAppearance.background : defaultAppearance.background,
-        mode: nextAppearance.mode === 'dark' ? 'dark' : nextAppearance.mode === 'light' ? 'light' : appearance.mode
+        mode: nextAppearance.mode === 'dark' ? 'dark' : nextAppearance.mode === 'light' ? 'light' : appearance.mode,
+        textSize: ['standard', 'large', 'extra'].includes(nextAppearance.textSize) ? nextAppearance.textSize : appearance.textSize || defaultAppearance.textSize,
+        highContrast: typeof nextAppearance.highContrast === 'boolean' ? nextAppearance.highContrast : typeof appearance.highContrast === 'boolean' ? appearance.highContrast : defaultAppearance.highContrast
       };
       const root = document.documentElement;
       root.dataset.mode = appearance.mode;
-      root.style.setProperty('--green', appearance.accent);
-      root.style.setProperty('--green-dark', `color-mix(in srgb, ${appearance.accent} 76%, #17231d)`);
-      root.style.setProperty('--mint', appearance.mode === 'dark' ? `color-mix(in srgb, ${appearance.accent} 28%, #18211d)` : `color-mix(in srgb, ${appearance.accent} 13%, white)`);
-      root.style.setProperty('--wash', appearance.background);
+      root.dataset.textSize = appearance.textSize;
+      root.dataset.contrast = appearance.highContrast ? 'high' : 'normal';
+      document.getElementById('textSizeSelect').value = appearance.textSize;
+      document.getElementById('highContrastToggle').checked = appearance.highContrast;
+      const contrastPalette = appearance.highContrast
+        ? (appearance.mode === 'dark'
+          ? { ink:'#fff', muted:'#f0f4f1', line:'#fff', paper:'#000', wash:'#000', mint:'#161b18', green:'#005239', greenDark:'#b8ffda' }
+          : { ink:'#111', muted:'#26332c', line:'#37433b', paper:'#fff', wash:'#fff', mint:'#e2f1e6', green:'#004b35', greenDark:'#003b2a' })
+        : null;
+      for (const [variable, key] of [['--ink','ink'],['--muted','muted'],['--line','line'],['--paper','paper'],['--wash','wash'],['--mint','mint'],['--green','green'],['--green-dark','greenDark']]) {
+        if (contrastPalette) root.style.setProperty(variable, contrastPalette[key]);
+        else root.style.removeProperty(variable);
+      }
+      if (!contrastPalette) {
+        root.style.setProperty('--green', appearance.accent);
+        root.style.setProperty('--green-dark', `color-mix(in srgb, ${appearance.accent} 76%, #17231d)`);
+        root.style.setProperty('--mint', appearance.mode === 'dark' ? `color-mix(in srgb, ${appearance.accent} 28%, #18211d)` : `color-mix(in srgb, ${appearance.accent} 13%, white)`);
+        root.style.setProperty('--wash', appearance.background);
+      }
       document.querySelector('meta[name="theme-color"]').content = appearance.mode === 'dark' ? '#151d19' : appearance.background;
       document.getElementById('accentColorInput').value = appearance.accent;
       document.getElementById('backgroundColorInput').value = appearance.background;
@@ -766,6 +809,14 @@
     applyAppearance(appearance);
     document.getElementById('modeToggle').addEventListener('click', () => {
       applyAppearance({ ...appearance, mode: appearance.mode === 'dark' ? 'light' : 'dark' });
+      scheduleCloudSave();
+    });
+    document.getElementById('textSizeSelect').addEventListener('change', event => {
+      applyAppearance({ ...appearance, textSize: event.target.value });
+      scheduleCloudSave();
+    });
+    document.getElementById('highContrastToggle').addEventListener('change', event => {
+      applyAppearance({ ...appearance, highContrast: event.target.checked });
       scheduleCloudSave();
     });
 
@@ -1749,7 +1800,7 @@
         school: 'Clear the school name, motto, address, contact, and logo?',
         classes: 'Clear all class names, preferred sizes, and current grouped results? Student names and saved rosters will remain.',
         students: 'Clear the current student list and grouped results? Saved rosters will remain.',
-        appearance: 'Reset the website colors to the default Forest theme?'
+        appearance: 'Reset text size, contrast, and colors to the accessible defaults?'
       };
       if (!window.confirm(prompts[section])) return;
       if (section === 'school') {
