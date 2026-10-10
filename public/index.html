@@ -29,6 +29,7 @@
         radial-gradient(ellipse at 82% 4%, rgba(244,162,97,.14), transparent 26rem),
         var(--wash);
       font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      transition: background-color .25s ease, color .25s ease;
     }
     button, textarea, input { font: inherit; }
     .shell { width: min(1120px, calc(100% - 40px)); margin: 0 auto; padding: 34px 0 56px; }
@@ -67,7 +68,10 @@
     .school-banner-logo img { width: 100%; height: 100%; object-fit: contain; background: white; }
     .school-banner-copy strong { display: block; font-size: 13px; }
     .school-banner-copy span { display: block; margin-top: 3px; color: var(--muted); font-size: 11px; }
-    .intro { max-width: 690px; margin-bottom: 27px; }
+    .intro { max-width: 690px; margin-bottom: 27px; position: relative; isolation: isolate; }
+    .intro::after { content: ""; position: absolute; z-index: -1; right: 4%; top: 5px; width: 82px; height: 82px; border-radius: 28px; border: 1px solid color-mix(in srgb, var(--green) 18%, transparent); background: radial-gradient(circle at 35% 30%, color-mix(in srgb, var(--mint) 90%, white), transparent 72%); animation: floaty 5s ease-in-out infinite; }
+    @keyframes floaty { 0%,100% { transform: translateY(0) rotate(-8deg); } 50% { transform: translateY(-9px) rotate(3deg); } }
+    @keyframes rise-in { from { opacity: 0; transform: translateY(9px); } to { opacity: 1; transform: translateY(0); } }
     .eyebrow { color: var(--green); font-size: 12px; text-transform: uppercase; letter-spacing: .12em; font-weight: 800; margin: 0 0 10px; }
     h1 { font-size: clamp(34px, 5vw, 51px); line-height: 1.05; letter-spacing: -.055em; margin: 0; }
     .intro p { margin: 13px 0 0; color: var(--muted); font-size: 16px; line-height: 1.6; }
@@ -142,7 +146,7 @@
     .empty p { max-width: 250px; margin: 6px 0 0; font-size: 13px; line-height: 1.5; }
     .summary { display: flex; gap: 8px; flex-wrap: wrap; margin: 0 0 15px; }
     .summary span { border-radius: 99px; padding: 6px 10px; color: #53605a; background: #f1f4ed; font-size: 11px; font-weight: 700; }
-    .class-group { border: 1px solid var(--line); border-radius: 14px; overflow: hidden; margin: 0 0 12px; }
+    .class-group { border: 1px solid var(--line); border-radius: 14px; overflow: hidden; margin: 0 0 12px; animation: rise-in .34s ease both; animation-delay: calc(var(--group-index, 0) * 55ms); }
     .class-title { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 11px 13px; background: #f2f6ef; font-weight: 760; font-size: 13px; }
     .count { color: var(--muted); font-size: 11px; font-weight: 650; }
     .student-list { list-style: none; margin: 0; padding: 0; counter-reset: student; }
@@ -166,9 +170,10 @@
     .notice { min-height: 18px; margin-top: 8px; color: var(--red); font-size: 12px; line-height: 1.45; }
     footer { margin-top: 25px; color: #7c8580; font-size: 11px; line-height: 1.5; text-align: center; }
     .hide { display: none !important; }
-    .section-tabs { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin: 0 auto 16px; max-width: 800px; }
+    .section-tabs { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; margin: 0 auto 16px; max-width: 1000px; }
     .section-tab { display: flex; align-items: center; gap: 10px; min-width: 0; padding: 11px 13px; border: 1px solid #e0e5dd; border-radius: 12px; background: rgba(255,254,250,.84); color: #627069; text-align: left; cursor: pointer; }
-    .section-tab:hover { border-color: #b7cbb9; }
+    .section-tab { transition: border-color .18s, background .18s, transform .18s; }
+    .section-tab:hover { border-color: #b7cbb9; transform: translateY(-2px); }
     .section-tab[aria-current="step"] { border-color: var(--green); background: #edf5ed; color: var(--green-dark); box-shadow: 0 4px 12px rgba(37,108,84,.08); }
     .tab-number { display: grid; place-items: center; width: 27px; height: 27px; flex: 0 0 auto; border-radius: 9px; background: #eff1ec; color: #6d7971; font-size: 11px; font-weight: 800; }
     .section-tab[aria-current="step"] .tab-number { background: var(--green); color: white; }
@@ -187,6 +192,21 @@
     .panel-content { padding: 22px 25px; }
     .panel-content .profile-card { margin: 0; box-shadow: none; }
     .panel-content .class-manager { margin-bottom: 14px; }
+    .appearance-card { border: 1px solid var(--line); border-radius: 15px; background: var(--paper); padding: 18px; box-shadow: var(--shadow); }
+    .appearance-card h3 { margin: 0; font-size: 15px; }
+    .appearance-card > p { margin: 5px 0 14px; color: var(--muted); font-size: 12px; line-height: 1.5; }
+    .theme-options { display: flex; flex-wrap: wrap; gap: 9px; }
+    .theme-option { display: flex; align-items: center; gap: 8px; border: 1px solid var(--line); border-radius: 11px; padding: 9px 11px; background: var(--paper); color: var(--ink); cursor: pointer; font-size: 12px; font-weight: 700; transition: transform .16s, border-color .16s; }
+    .theme-option:hover { transform: translateY(-2px); border-color: var(--green); }
+    .theme-option[aria-pressed="true"] { border-color: var(--green); box-shadow: 0 0 0 2px color-mix(in srgb, var(--green) 18%, transparent); }
+    .theme-dots { display: flex; gap: 3px; }
+    .theme-dots i { display: block; width: 12px; height: 12px; border-radius: 50%; }
+    .color-controls { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 15px; }
+    .color-control { display: flex; align-items: center; gap: 8px; border: 1px solid var(--line); background: var(--paper); border-radius: 10px; padding: 7px 10px; color: var(--muted); font-size: 11px; font-weight: 650; }
+    .color-control input { width: 30px; height: 26px; padding: 0; border: 0; background: transparent; cursor: pointer; }
+    .appearance-preview { margin-top: 14px; padding: 12px; border-radius: 12px; background: var(--wash); display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+    .appearance-preview span { color: var(--muted); font-size: 11px; }
+    .appearance-preview strong { display: inline-block; border-radius: 9px; padding: 8px 11px; background: var(--green); color: white; font-size: 11px; }
     .section-actions { display: flex; justify-content: space-between; gap: 12px; max-width: 900px; margin: 15px auto 0; }
     .section-actions .button { min-width: 130px; }
     .section-progress { height: 3px; background: #e4e9e1; max-width: 900px; margin: 0 auto 14px; border-radius: 9px; overflow: hidden; }
@@ -196,7 +216,7 @@
       header { margin-bottom: 27px; }
       .results { min-height: 320px; }
       .empty { min-height: 270px; }
-      .section-tabs { gap: 6px; }
+      .section-tabs { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
       .section-tab { padding: 10px; }
       .panel-heading, .panel-content { padding-left: 20px; padding-right: 20px; }
     }
@@ -208,6 +228,9 @@
       .intro { margin-bottom: 20px; }
       .intro p { font-size: 14px; }
       .section-tabs { grid-template-columns: repeat(2, minmax(0, 1fr)); margin-bottom: 11px; }
+      .intro::after { width: 52px; height: 52px; right: 0; top: -10px; opacity: .6; }
+      .panel-heading-top { align-items: flex-start; }
+      .panel-reset { white-space: normal; }
       .section-tab { padding: 9px; gap: 7px; }
       .tab-copy small { display: none; }
       .tab-copy strong { font-size: 11px; }
@@ -244,6 +267,9 @@
       .section-progress, .section-actions { max-width: 980px; }
       .panel-heading { padding: 26px 30px 20px; }
       .panel-content { padding: 28px 30px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
     }
     @media print {
       @page { margin: 14mm; }
@@ -295,6 +321,17 @@
         </div>
       </div>
     </details>
+
+    <section class="appearance-card" id="appearanceCard" aria-labelledby="appearanceTitle">
+      <h3 id="appearanceTitle">Make it yours</h3>
+      <p>Pick a ready-made palette, then adjust the main accent and page background. Your choice is saved for this school.</p>
+      <div class="theme-options" id="themeOptions" aria-label="Color themes"></div>
+      <div class="color-controls">
+        <label class="color-control">Main accent <input id="accentColorInput" type="color" value="#256c54" aria-label="Main accent color"></label>
+        <label class="color-control">Page background <input id="backgroundColorInput" type="color" value="#f6f5f0" aria-label="Page background color"></label>
+      </div>
+      <div class="appearance-preview"><span>Preview: buttons and highlights use your accent color.</span><strong>Example button</strong></div>
+    </section>
 
     <section class="intro">
       <p class="eyebrow">A simpler way to make class lists</p>
@@ -367,10 +404,11 @@
       const intro = document.querySelector('.intro');
       const layout = document.querySelector('.layout');
       const profile = document.querySelector('.profile-card');
+      const appearanceCard = document.getElementById('appearanceCard');
       const classManager = document.querySelector('.class-manager');
       const savedRostersPanel = document.querySelector('.saved-rosters');
       const resultCard = document.querySelector('.card.results');
-      if (!shell || !intro || !layout || !profile || !classManager || !savedRostersPanel || !resultCard) return;
+      if (!shell || !intro || !layout || !profile || !appearanceCard || !classManager || !savedRostersPanel || !resultCard) return;
 
       const studentNodes = [
         layout.querySelector('.file-drop'), layout.querySelector('.format-note'), layout.querySelector('label[for="roster"]'),
@@ -387,6 +425,7 @@
         { id: 'school', label: 'School', hint: 'Name and logo', title: 'School profile', description: 'Set the school identity that appears on rosters.', reset: true, resetLabel: 'Reset school info' },
         { id: 'classes', label: 'Classes', hint: 'Groups and sizes', title: 'Set up classes', description: 'Choose class names, set preferred sizes, and save reusable rosters.', reset: true, resetLabel: 'Reset classes' },
         { id: 'students', label: 'Students', hint: 'Import and review', title: 'Add student names', description: 'Paste a list or import a document, then review it before shuffling.', reset: true, resetLabel: 'Reset student names' },
+        { id: 'appearance', label: 'Appearance', hint: 'Colors and style', title: 'Customize appearance', description: 'Choose a color theme or adjust the main accent and page background.', reset: true, resetLabel: 'Reset colors' },
         { id: 'results', label: 'Results', hint: 'Edit and export', title: 'Your class roster', description: 'Edit student groups, search, rebalance, and print or export.' }
       ];
       const panels = new Map();
@@ -424,13 +463,14 @@
       createPanel(steps[0], [profile]);
       createPanel(steps[1], [classManager, savedRostersPanel]);
       createPanel(steps[2], studentNodes);
-      createPanel(steps[3], [], true);
+      createPanel(steps[3], [appearanceCard]);
+      createPanel(steps[4], [], true);
       function setActive(id) {
         for (const step of steps) {
           panels.get(step.id).classList.toggle('active', step.id === id);
           document.getElementById(`tab-${step.id}`).setAttribute('aria-current', step.id === id ? 'step' : 'false');
         }
-        progressBar.style.width = `${(steps.findIndex(step => step.id === id) + 1) * 25}%`;
+        progressBar.style.width = `${((steps.findIndex(step => step.id === id) + 1) / steps.length) * 100}%`;
         if (window.matchMedia('(max-width: 600px)').matches) nav.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }
       panelRoot.addEventListener('click', event => {
@@ -474,6 +514,12 @@
     let searchTerm = '';
     let privacyMode = false;
     let savedRosters = [];
+    const defaultAppearance = { theme: 'forest', accent: '#256c54', background: '#f6f5f0' };
+    let appearance = { ...defaultAppearance };
+    try {
+      const localAppearance = JSON.parse(localStorage.getItem('classroomShuffle.appearance') || '{}');
+      appearance = { ...appearance, ...localAppearance };
+    } catch { /* Keep the default theme if browser storage is unavailable. */ }
     let cloudApiMode = false;
     let cloudReady = false;
     let cloudSaveTimer = null;
@@ -491,6 +537,49 @@
       rosterDate = savedMeta.rosterDate || rosterDate;
     } catch { /* Use today's date if browser storage is unavailable. */ }
 
+    const themePalettes = {
+      forest: { label: 'Forest', accent: '#256c54', background: '#f6f5f0' },
+      ocean: { label: 'Ocean', accent: '#246b8f', background: '#f1f6f8' },
+      sunset: { label: 'Sunset', accent: '#b85636', background: '#faf4ee' },
+      violet: { label: 'Violet', accent: '#7051a3', background: '#f5f2f9' }
+    };
+    function applyAppearance(nextAppearance) {
+      const validColor = value => typeof value === 'string' && /^#[0-9a-f]{6}$/i.test(value);
+      appearance = {
+        theme: themePalettes[nextAppearance.theme] ? nextAppearance.theme : 'custom',
+        accent: validColor(nextAppearance.accent) ? nextAppearance.accent : defaultAppearance.accent,
+        background: validColor(nextAppearance.background) ? nextAppearance.background : defaultAppearance.background
+      };
+      const root = document.documentElement;
+      root.style.setProperty('--green', appearance.accent);
+      root.style.setProperty('--green-dark', `color-mix(in srgb, ${appearance.accent} 76%, #17231d)`);
+      root.style.setProperty('--mint', `color-mix(in srgb, ${appearance.accent} 13%, white)`);
+      root.style.setProperty('--wash', appearance.background);
+      document.getElementById('accentColorInput').value = appearance.accent;
+      document.getElementById('backgroundColorInput').value = appearance.background;
+      document.querySelectorAll('[data-theme]').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.theme === appearance.theme)));
+      try { localStorage.setItem('classroomShuffle.appearance', JSON.stringify(appearance)); } catch { /* Theme stays active for this page. */ }
+    }
+    function renderThemeOptions() {
+      const host = document.getElementById('themeOptions');
+      host.innerHTML = Object.entries(themePalettes).map(([key, palette]) => `<button type="button" class="theme-option" data-theme="${key}" aria-pressed="false"><span class="theme-dots" aria-hidden="true"><i style="background:${palette.accent}"></i><i style="background:${palette.background}"></i></span>${palette.label}</button>`).join('');
+      host.querySelectorAll('[data-theme]').forEach(button => button.addEventListener('click', () => {
+        const palette = themePalettes[button.dataset.theme];
+        applyAppearance({ theme: button.dataset.theme, accent: palette.accent, background: palette.background });
+        scheduleCloudSave();
+      }));
+      document.getElementById('accentColorInput').addEventListener('input', event => {
+        applyAppearance({ ...appearance, theme: 'custom', accent: event.target.value });
+        scheduleCloudSave();
+      });
+      document.getElementById('backgroundColorInput').addEventListener('input', event => {
+        applyAppearance({ ...appearance, theme: 'custom', background: event.target.value });
+        scheduleCloudSave();
+      });
+    }
+    renderThemeOptions();
+    applyAppearance(appearance);
+
     function setConnectionStatus(text, mode = '') {
       const pill = document.getElementById('connectionPill');
       pill.textContent = text;
@@ -500,6 +589,7 @@
     function currentAppState() {
       return {
         schoolProfile: profileData(),
+        appearance: { ...appearance },
         classNames: [...classNames],
         classTargets: { ...classTargets },
         savedRosters: savedRosters.map(record => ({ ...record, classes: [...(record.classes || [])], targets: { ...(record.targets || {}) }, groups: (record.groups || []).map(group => ({ className: group.className, students: [...group.students] })) })),
@@ -538,6 +628,7 @@
     }
     function applyCloudState(state) {
       if (!state) return false;
+      if (state.appearance && typeof state.appearance === 'object') applyAppearance(state.appearance);
       const profile = state.schoolProfile || {};
       schoolProfile.name.value = profile.name || '';
       schoolProfile.motto.value = profile.motto || '';
@@ -835,7 +926,7 @@
           const searchable = `${group.className} ${name}`.toLocaleLowerCase().includes(searchTerm.toLocaleLowerCase());
           return `<li class="student-row" ${searchTerm && !searchable ? 'hidden' : ''}>${nameControl}${moveControl}</li>`;
         }).join('');
-        return `<section class="class-group"><div class="class-title"><span>${escapeHtml(group.className)}</span><span class="count">${group.students.length} student${group.students.length === 1 ? '' : 's'}${targetLabel}</span></div><ol class="student-list">${studentsHtml}</ol><div class="add-student-row"><input type="text" placeholder="Add a student to ${escapeHtml(group.className)}" aria-label="New student name" data-new-student="${groupIndex}"><button type="button" data-add-student="${groupIndex}">Add</button></div></section>`;
+        return `<section class="class-group" style="--group-index:${groupIndex}"><div class="class-title"><span>${escapeHtml(group.className)}</span><span class="count">${group.students.length} student${group.students.length === 1 ? '' : 's'}${targetLabel}</span></div><ol class="student-list">${studentsHtml}</ol><div class="add-student-row"><input type="text" placeholder="Add a student to ${escapeHtml(group.className)}" aria-label="New student name" data-new-student="${groupIndex}"><button type="button" data-add-student="${groupIndex}">Add</button></div></section>`;
       }).join('');
       results.innerHTML = schoolBanner + `<div class="results-toolbar"><input id="studentSearch" type="search" placeholder="Search students or classes" aria-label="Search roster" value="${escapeHtml(searchTerm)}"><label class="meta-field">Teacher <input id="teacherNameInput" type="text" placeholder="Teacher name" value="${escapeHtml(teacherName)}"></label><label class="meta-field">Date <input id="rosterDateInput" type="date" value="${escapeHtml(rosterDate)}"></label><label class="privacy-toggle"><input id="privacyToggle" type="checkbox" ${privacyMode ? 'checked' : ''}> Hide names on screen</label></div><div class="summary"><span>✦ Randomized roster</span><span>${students} students</span><span>${groups.length} ${classWord}</span>${skippedCount ? `<span>${skippedCount} row${skippedCount === 1 ? '' : 's'} skipped</span>` : ''}</div>${rows}`;
       document.getElementById('reshuffleBtn').addEventListener('click', reshuffle);
@@ -1194,7 +1285,8 @@
       const prompts = {
         school: 'Clear the school name, motto, address, contact, and logo?',
         classes: 'Clear all class names, preferred sizes, and current grouped results? Student names and saved rosters will remain.',
-        students: 'Clear the current student list and grouped results? Saved rosters will remain.'
+        students: 'Clear the current student list and grouped results? Saved rosters will remain.',
+        appearance: 'Reset the website colors to the default Forest theme?'
       };
       if (!window.confirm(prompts[section])) return;
       if (section === 'school') {
@@ -1213,6 +1305,9 @@
         document.getElementById('allowDuplicates').checked = false;
         updateDuplicateReview();
         clearResults();
+        scheduleCloudSave();
+      } else if (section === 'appearance') {
+        applyAppearance(defaultAppearance);
         scheduleCloudSave();
       }
       notice.textContent = `${button.textContent} completed.`;
