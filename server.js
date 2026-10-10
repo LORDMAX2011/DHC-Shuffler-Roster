@@ -292,7 +292,13 @@ app.put('/api/data', requireAuth, async (req, res, next) => {
 });
 
 app.use('/api', (_req, res) => res.status(404).json({ error: 'API route not found.' }));
-app.use(express.static(PUBLIC_DIR, { index: 'index.html', maxAge: process.env.NODE_ENV === 'production' ? '1h' : 0 }));
+app.use(express.static(PUBLIC_DIR, {
+  index: 'index.html',
+  maxAge: process.env.NODE_ENV === 'production' ? '1h' : 0,
+  setHeaders(res, filePath) {
+    if (path.basename(filePath) === 'index.html' || path.basename(filePath) === 'sw.js') res.setHeader('Cache-Control', 'no-cache');
+  }
+}));
 app.get('*', (_req, res) => res.sendFile(path.join(PUBLIC_DIR, 'index.html')));
 
 app.use((error, _req, res, _next) => {
