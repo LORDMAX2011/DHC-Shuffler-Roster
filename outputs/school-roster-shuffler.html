@@ -1,0 +1,1192 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f6f5f0">
+  <title>Classroom Shuffle — Student Roster</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #202b28;
+      --muted: #66716c;
+      --line: #e4e8e1;
+      --paper: #fffefa;
+      --wash: #f6f5f0;
+      --green: #256c54;
+      --green-dark: #1c5541;
+      --mint: #e7f1e8;
+      --orange: #f4a261;
+      --red: #a84438;
+      --shadow: 0 16px 44px rgba(39, 54, 45, .08);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--ink);
+      background:
+        radial-gradient(ellipse at 82% 4%, rgba(244,162,97,.14), transparent 26rem),
+        var(--wash);
+      font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    button, textarea, input { font: inherit; }
+    .shell { width: min(1120px, calc(100% - 40px)); margin: 0 auto; padding: 34px 0 56px; }
+    header { display: flex; align-items: center; justify-content: space-between; gap: 20px; margin-bottom: 42px; }
+    .brand { display: flex; align-items: center; gap: 12px; font-weight: 760; letter-spacing: -.03em; }
+    .brand-mark { display: grid; place-items: center; width: 42px; height: 42px; border-radius: 14px; background: var(--green); color: white; font-size: 21px; box-shadow: 0 6px 16px rgba(37,108,84,.2); }
+    .local-pill { border: 1px solid #dce5da; color: var(--green-dark); background: rgba(255,254,250,.75); border-radius: 99px; padding: 8px 12px; font-size: 12px; font-weight: 650; display: flex; align-items: center; gap: 7px; }
+    .local-pill::before { content: ""; width: 7px; height: 7px; background: #61a877; border-radius: 50%; }
+    .local-pill.cloud::before { background: #3b82c4; }
+    .local-pill.offline::before { background: #d5963a; }
+    .auth-gate { display: none; position: fixed; inset: 0; z-index: 50; align-items: center; justify-content: center; padding: 20px; background: rgba(26,38,33,.58); backdrop-filter: blur(5px); }
+    .auth-gate.visible { display: flex; }
+    .login-card { width: min(430px, 100%); border-radius: 20px; background: var(--paper); padding: 27px; box-shadow: 0 22px 70px rgba(0,0,0,.2); }
+    .login-card h2 { margin: 0; font-size: 22px; letter-spacing: -.03em; }
+    .login-card p { margin: 8px 0 19px; color: var(--muted); font-size: 13px; line-height: 1.5; }
+    .login-card label { margin: 12px 0 6px; }
+    .login-card input { width: 100%; border: 1px solid #dce2da; border-radius: 10px; padding: 11px; font-size: 14px; }
+    .login-card .button { width: 100%; margin-top: 15px; }
+    .login-error { min-height: 18px; color: var(--red); font-size: 12px; margin-top: 9px; }
+    .profile-card { margin: -20px 0 31px; box-shadow: none; }
+    .profile-card summary { cursor: pointer; list-style: none; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 15px 19px; font-weight: 750; font-size: 14px; }
+    .profile-card summary::-webkit-details-marker { display: none; }
+    .profile-card summary::after { content: "＋"; color: var(--green); font-size: 18px; }
+    .profile-card[open] summary::after { content: "−"; }
+    .profile-form { border-top: 1px solid var(--line); padding: 17px 19px 19px; display: grid; grid-template-columns: 1fr 1fr; gap: 13px; }
+    .profile-field label { margin-bottom: 6px; }
+    .profile-field input { width: 100%; border: 1px solid #dce2da; border-radius: 10px; padding: 9px 11px; background: #fff; outline: none; font-size: 13px; }
+    .profile-field input:focus { border-color: #78a991; box-shadow: 0 0 0 3px rgba(37,108,84,.1); }
+    .profile-logo-row { grid-column: 1 / -1; display: flex; align-items: center; flex-wrap: wrap; gap: 12px; }
+    .logo-preview { width: 54px; height: 54px; display: grid; place-items: center; border: 1px dashed #cdd8cd; border-radius: 13px; overflow: hidden; background: #f4f6f1; color: #849088; font-size: 10px; text-align: center; }
+    .logo-preview img { width: 100%; height: 100%; object-fit: contain; background: white; }
+    .profile-hint { margin: 0; color: var(--muted); font-size: 11px; }
+    .brand-mark img { width: 100%; height: 100%; object-fit: contain; border-radius: inherit; background: white; padding: 3px; }
+    .school-banner { display: flex; align-items: center; gap: 12px; border: 1px solid var(--line); border-radius: 13px; padding: 12px; margin-bottom: 14px; background: #fbfcf8; }
+    .school-banner-logo { width: 42px; height: 42px; flex: 0 0 auto; display: grid; place-items: center; overflow: hidden; border-radius: 11px; background: var(--mint); color: var(--green); font-size: 17px; font-weight: 800; }
+    .school-banner-logo img { width: 100%; height: 100%; object-fit: contain; background: white; }
+    .school-banner-copy strong { display: block; font-size: 13px; }
+    .school-banner-copy span { display: block; margin-top: 3px; color: var(--muted); font-size: 11px; }
+    .intro { max-width: 690px; margin-bottom: 27px; }
+    .eyebrow { color: var(--green); font-size: 12px; text-transform: uppercase; letter-spacing: .12em; font-weight: 800; margin: 0 0 10px; }
+    h1 { font-size: clamp(34px, 5vw, 51px); line-height: 1.05; letter-spacing: -.055em; margin: 0; }
+    .intro p { margin: 13px 0 0; color: var(--muted); font-size: 16px; line-height: 1.6; }
+    .layout { display: grid; grid-template-columns: minmax(310px, .86fr) minmax(0, 1.14fr); gap: 20px; align-items: start; }
+    .card { background: var(--paper); border: 1px solid rgba(218,225,216,.9); border-radius: 20px; box-shadow: var(--shadow); overflow: hidden; }
+    .card-head { padding: 21px 23px 17px; border-bottom: 1px solid var(--line); display: flex; justify-content: space-between; align-items: flex-start; gap: 14px; }
+    .card-head h2 { margin: 0; font-size: 17px; letter-spacing: -.02em; }
+    .card-head p { margin: 5px 0 0; color: var(--muted); font-size: 13px; line-height: 1.45; }
+    .step { display: grid; place-items: center; flex: 0 0 auto; width: 28px; height: 28px; border-radius: 9px; color: var(--green); background: var(--mint); font-size: 12px; font-weight: 800; }
+    .card-body { padding: 20px 23px 23px; }
+    label { display: block; margin-bottom: 8px; font-weight: 700; font-size: 13px; }
+    .format-note { display: flex; align-items: flex-start; gap: 9px; padding: 11px 12px; border-radius: 11px; color: #58635e; background: #f4f6f1; font-size: 12px; line-height: 1.5; margin-bottom: 12px; }
+    .format-note strong { color: var(--ink); }
+    textarea { width: 100%; min-height: 272px; resize: vertical; padding: 14px; border: 1px solid #dce2da; border-radius: 12px; background: #fff; color: var(--ink); line-height: 1.58; font-size: 13px; outline: none; transition: border .15s, box-shadow .15s; }
+    textarea:focus { border-color: #78a991; box-shadow: 0 0 0 3px rgba(37,108,84,.1); }
+    textarea::placeholder { color: #a2aaa5; }
+    .class-manager { border: 1px solid var(--line); background: #fbfcf8; border-radius: 13px; padding: 13px; margin-bottom: 18px; }
+    .class-manager label { margin-bottom: 8px; }
+    .class-add-row { display: flex; gap: 8px; }
+    .class-add-row input { min-width: 0; flex: 1; border: 1px solid #dce2da; border-radius: 10px; padding: 9px 11px; background: white; outline: none; font-size: 13px; }
+    .class-add-row input:focus { border-color: #78a991; box-shadow: 0 0 0 3px rgba(37,108,84,.1); }
+    .class-add-row .button { padding: 9px 12px; }
+    .class-chips { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 10px; }
+    .class-chip { display: inline-flex; align-items: center; gap: 7px; background: var(--mint); color: var(--green-dark); border-radius: 99px; padding: 6px 8px 6px 10px; font-size: 11px; font-weight: 750; }
+    .class-size { width: 42px; border: 1px solid #cddbcf; border-radius: 7px; padding: 3px 4px; color: var(--ink); background: white; font-size: 10px; font-weight: 600; }
+    .class-chip button { border: 0; border-radius: 50%; width: 17px; height: 17px; padding: 0; background: rgba(37,108,84,.12); color: var(--green-dark); cursor: pointer; line-height: 17px; }
+    .class-help { color: var(--muted); font-size: 11px; line-height: 1.45; margin: 8px 0 0; }
+    .ideas-box { border-top: 1px solid var(--line); margin-top: 13px; padding-top: 13px; }
+    .ideas-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 9px; }
+    .ideas-top label { margin: 0; font-size: 12px; }
+    .ideas-top select { max-width: 55%; border: 1px solid #dce2da; border-radius: 9px; padding: 7px 9px; background: white; color: var(--ink); font-size: 11px; }
+    .idea-list { display: flex; flex-wrap: wrap; gap: 6px; }
+    .idea-chip { border: 1px solid #dce6dc; border-radius: 99px; background: white; color: #46554c; padding: 6px 9px; font-size: 11px; font-weight: 650; cursor: pointer; }
+    .idea-chip:hover { border-color: #9ab8a2; }
+    .idea-chip[aria-pressed="true"] { border-color: var(--green); background: var(--mint); color: var(--green-dark); box-shadow: inset 0 0 0 1px var(--green); }
+    .ideas-actions { display: flex; align-items: center; gap: 11px; margin-top: 10px; }
+    .ideas-actions .button { padding: 8px 10px; font-size: 11px; }
+    .ideas-actions .quiet { font-size: 11px; }
+    .idea-description { color: var(--muted); font-size: 10px; margin: 0 0 8px; }
+    .saved-rosters { border: 1px solid var(--line); border-radius: 13px; background: #fbfcf8; padding: 13px; margin-bottom: 15px; }
+    .saved-rosters h3 { margin: 0 0 9px; font-size: 12px; }
+    .saved-row { display: flex; gap: 7px; margin-top: 7px; }
+    .saved-row input, .saved-row select { min-width: 0; flex: 1; border: 1px solid #dce2da; border-radius: 9px; padding: 8px 9px; background: white; font-size: 11px; }
+    .saved-row .button { padding: 8px 9px; font-size: 11px; }
+    .saved-hint { margin: 8px 0 0; color: var(--muted); font-size: 10px; line-height: 1.4; }
+    .file-drop { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px; border: 1px dashed #bfd0c2; border-radius: 12px; margin-bottom: 13px; background: #fcfdf9; }
+    .file-drop p { margin: 0; color: var(--muted); font-size: 11px; line-height: 1.45; }
+    .file-drop p strong { display: block; color: var(--ink); font-size: 12px; margin-bottom: 2px; }
+    .processing { display: flex; align-items: center; gap: 8px; color: var(--green-dark); font-size: 12px; margin: 10px 0 0; }
+    .spinner { width: 14px; height: 14px; border: 2px solid #d8e5d8; border-top-color: var(--green); border-radius: 50%; animation: spin .8s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; margin-top: 13px; }
+    .file-label { display: inline-flex; align-items: center; gap: 7px; color: var(--green-dark); font-weight: 700; font-size: 13px; cursor: pointer; padding: 8px 0; }
+    .file-label:hover { color: var(--green); }
+    input[type=file] { display: none; }
+    .button { border: 0; cursor: pointer; border-radius: 11px; padding: 11px 15px; font-weight: 750; font-size: 13px; transition: transform .12s, background .12s, box-shadow .12s; }
+    .button:active { transform: translateY(1px); }
+    .primary { color: white; background: var(--green); box-shadow: 0 5px 12px rgba(37,108,84,.17); }
+    .primary:hover { background: var(--green-dark); }
+    .secondary { color: var(--green-dark); background: #edf4ec; }
+    .secondary:hover { background: #e3eee3; }
+    .quiet { color: var(--muted); background: transparent; padding: 8px 4px; }
+    .quiet:hover { color: var(--red); }
+    .results { min-height: 440px; }
+    .results-head { align-items: center; }
+    .result-tools { display: flex; gap: 7px; }
+    .result-tools .button { padding: 9px 11px; }
+    .results-body { padding: 18px 20px 22px; }
+    .empty { min-height: 365px; display: grid; place-content: center; justify-items: center; text-align: center; padding: 24px; color: var(--muted); }
+    .empty-icon { display: grid; place-items: center; width: 64px; height: 64px; background: #f1f4ed; border-radius: 20px; font-size: 29px; margin-bottom: 15px; }
+    .empty strong { color: var(--ink); font-size: 15px; }
+    .empty p { max-width: 250px; margin: 6px 0 0; font-size: 13px; line-height: 1.5; }
+    .summary { display: flex; gap: 8px; flex-wrap: wrap; margin: 0 0 15px; }
+    .summary span { border-radius: 99px; padding: 6px 10px; color: #53605a; background: #f1f4ed; font-size: 11px; font-weight: 700; }
+    .class-group { border: 1px solid var(--line); border-radius: 14px; overflow: hidden; margin: 0 0 12px; }
+    .class-title { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 11px 13px; background: #f2f6ef; font-weight: 760; font-size: 13px; }
+    .count { color: var(--muted); font-size: 11px; font-weight: 650; }
+    .student-list { list-style: none; margin: 0; padding: 0; counter-reset: student; }
+    .student-list li { display: flex; align-items: center; gap: 8px; padding: 7px 10px; border-top: 1px solid #eef0eb; font-size: 13px; }
+    .student-list li::before { counter-increment: student; content: counter(student, decimal-leading-zero); color: #97a19b; font-size: 10px; font-variant-numeric: tabular-nums; font-weight: 700; min-width: 20px; }
+    .student-name-input { min-width: 60px; flex: 1; border: 1px solid transparent; border-radius: 6px; background: transparent; padding: 5px; color: var(--ink); font-size: 12px; }
+    .student-name-input:focus { border-color: #9ab8a2; outline: none; background: white; }
+    .move-select { width: auto; max-width: 105px; border: 1px solid var(--line); border-radius: 7px; background: white; padding: 5px 3px; color: var(--muted); font-size: 10px; }
+    .student-remove { border: 0; background: transparent; color: #8a9690; padding: 4px 6px; cursor: pointer; font-size: 13px; }
+    .student-remove:hover { color: var(--red); }
+    .add-student-row { display: flex; gap: 7px; border-top: 1px solid var(--line); padding: 9px; }
+    .add-student-row input { min-width: 0; flex: 1; border: 1px solid #dce2da; border-radius: 8px; padding: 7px 8px; font-size: 11px; }
+    .add-student-row button { border: 0; background: var(--mint); border-radius: 8px; padding: 6px 9px; color: var(--green-dark); cursor: pointer; font-size: 11px; font-weight: 700; }
+    .results-toolbar { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 13px; align-items: center; }
+    .results-toolbar input { min-width: 150px; flex: 1; border: 1px solid var(--line); border-radius: 9px; padding: 8px 10px; font-size: 11px; }
+    .results-toolbar .meta-field { display: flex; align-items: center; gap: 5px; color: var(--muted); font-size: 10px; white-space: nowrap; }
+    .results-toolbar .meta-field input { min-width: 0; width: 130px; flex: initial; }
+    .results-toolbar .meta-field input[type=date] { width: 125px; }
+    .result-tools { flex-wrap: wrap; justify-content: flex-end; }
+    .privacy-toggle { display: inline-flex; align-items: center; gap: 6px; color: var(--muted); font-size: 10px; }
+    .notice { min-height: 18px; margin-top: 8px; color: var(--red); font-size: 12px; line-height: 1.45; }
+    footer { margin-top: 25px; color: #7c8580; font-size: 11px; line-height: 1.5; text-align: center; }
+    .hide { display: none !important; }
+    .section-tabs { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin: 0 auto 16px; max-width: 800px; }
+    .section-tab { display: flex; align-items: center; gap: 10px; min-width: 0; padding: 11px 13px; border: 1px solid #e0e5dd; border-radius: 12px; background: rgba(255,254,250,.84); color: #627069; text-align: left; cursor: pointer; }
+    .section-tab:hover { border-color: #b7cbb9; }
+    .section-tab[aria-current="step"] { border-color: var(--green); background: #edf5ed; color: var(--green-dark); box-shadow: 0 4px 12px rgba(37,108,84,.08); }
+    .tab-number { display: grid; place-items: center; width: 27px; height: 27px; flex: 0 0 auto; border-radius: 9px; background: #eff1ec; color: #6d7971; font-size: 11px; font-weight: 800; }
+    .section-tab[aria-current="step"] .tab-number { background: var(--green); color: white; }
+    .tab-copy { min-width: 0; }
+    .tab-copy strong { display: block; font-size: 12px; }
+    .tab-copy small { display: block; margin-top: 2px; color: var(--muted); font-size: 10px; }
+    .section-panel { display: none; max-width: 900px; margin: 0 auto; }
+    .section-panel.active { display: block; animation: appear .18s ease-out; }
+    @keyframes appear { from { opacity: .65; transform: translateY(3px); } to { opacity: 1; transform: translateY(0); } }
+    .panel-card { border: 1px solid rgba(218,225,216,.9); border-radius: 20px; background: var(--paper); box-shadow: var(--shadow); overflow: hidden; }
+    .panel-heading { padding: 22px 25px 18px; border-bottom: 1px solid var(--line); }
+    .panel-heading h2 { margin: 0; font-size: 19px; letter-spacing: -.025em; }
+    .panel-heading p { margin: 5px 0 0; color: var(--muted); font-size: 13px; line-height: 1.45; }
+    .panel-content { padding: 22px 25px; }
+    .panel-content .profile-card { margin: 0; box-shadow: none; }
+    .panel-content .class-manager { margin-bottom: 14px; }
+    .section-actions { display: flex; justify-content: space-between; gap: 12px; max-width: 900px; margin: 15px auto 0; }
+    .section-actions .button { min-width: 130px; }
+    .section-progress { height: 3px; background: #e4e9e1; max-width: 900px; margin: 0 auto 14px; border-radius: 9px; overflow: hidden; }
+    .section-progress span { display: block; width: 25%; height: 100%; background: var(--green); transition: width .2s ease; }
+    @media (max-width: 780px) {
+      .shell { width: min(900px, calc(100% - 32px)); padding-top: 23px; }
+      header { margin-bottom: 27px; }
+      .results { min-height: 320px; }
+      .empty { min-height: 270px; }
+      .section-tabs { gap: 6px; }
+      .section-tab { padding: 10px; }
+      .panel-heading, .panel-content { padding-left: 20px; padding-right: 20px; }
+    }
+    @media (max-width: 600px) {
+      .shell { width: calc(100% - 24px); padding-top: 15px; padding-bottom: 32px; }
+      header { margin-bottom: 22px; }
+      .brand { font-size: 13px; gap: 8px; }
+      .brand-mark { width: 36px; height: 36px; }
+      .intro { margin-bottom: 20px; }
+      .intro p { font-size: 14px; }
+      .section-tabs { grid-template-columns: repeat(2, minmax(0, 1fr)); margin-bottom: 11px; }
+      .section-tab { padding: 9px; gap: 7px; }
+      .tab-copy small { display: none; }
+      .tab-copy strong { font-size: 11px; }
+      .tab-number { width: 24px; height: 24px; }
+      .panel-heading { padding: 17px 16px 14px; }
+      .panel-heading h2 { font-size: 17px; }
+      .panel-content { padding: 14px; }
+      .section-actions { margin-top: 10px; }
+      .section-actions .button { min-width: 0; flex: 1; }
+      .card-head { padding-left: 17px; padding-right: 17px; }
+      .card-body { padding: 17px; }
+      .results-body { padding: 15px; }
+      .local-pill { font-size: 0; padding: 9px; }
+      .result-tools .button { font-size: 11px; padding: 9px; }
+      .profile-form { grid-template-columns: 1fr; }
+      .file-drop { align-items: flex-start; }
+      .file-drop p { flex: 1; }
+      .saved-row { flex-wrap: wrap; }
+      .saved-row input, .saved-row select { flex-basis: 100%; }
+      .saved-row .button { flex: 1; }
+      .results-toolbar .meta-field { flex: 1; }
+      .results-toolbar .meta-field input { width: 100%; }
+      .student-list li { flex-wrap: wrap; }
+      .student-name-input { flex-basis: 48%; }
+      .move-select { max-width: 45%; }
+      .add-student-row { flex-wrap: wrap; }
+      .add-student-row input { flex-basis: 100%; }
+      .result-tools { justify-content: flex-start; }
+      .result-tools .button { flex: 1 1 auto; }
+    }
+    @media (min-width: 1200px) {
+      .shell { width: min(1180px, calc(100% - 64px)); padding-top: 42px; }
+      .section-panel { max-width: 980px; }
+      .section-progress, .section-actions { max-width: 980px; }
+      .panel-heading { padding: 26px 30px 20px; }
+      .panel-content { padding: 28px 30px; }
+    }
+    @media print {
+      @page { margin: 14mm; }
+      body { background: white; color: #111; }
+      .shell { width: 100%; padding: 0; }
+      header, .profile-card, .intro, .section-tabs, .section-progress, .section-actions, .layout > article:first-child, footer, .results-head .step, .result-tools, .results-toolbar, .add-student-row, .student-remove, .move-select { display: none !important; }
+      .layout { display: block; }
+      .results { display: block; min-height: 0; border: 0; box-shadow: none; overflow: visible; }
+      .results-head { display: block; padding: 0 0 12px; border: 0; }
+      .results-head h2 { display: none; }
+      .results-head p { margin: 0; color: #555; }
+      .results-body { padding: 0; }
+      .school-banner { border-color: #bbb; background: white; }
+      .class-group { break-inside: avoid; border-color: #bbb; }
+      .class-title { background: #f2f2f2; }
+      .student-name-input { border: 0; padding: 3px 0; color: #111; }
+    }
+  </style>
+</head>
+<body>
+  <div id="authGate" class="auth-gate" role="dialog" aria-modal="true" aria-labelledby="loginTitle">
+    <form id="loginForm" class="login-card">
+      <h2 id="loginTitle">Sign in to your school roster</h2>
+      <p>This app is connected to a private school database. Sign in with the admin email and password configured for your deployment.</p>
+      <label for="loginEmail">Admin email</label><input id="loginEmail" type="email" autocomplete="username" required>
+      <label for="loginPassword">Password</label><input id="loginPassword" type="password" autocomplete="current-password" required>
+      <button id="loginButton" class="button primary" type="submit">Sign in</button>
+      <div id="loginError" class="login-error" role="alert"></div>
+    </form>
+  </div>
+  <main class="shell">
+    <header>
+      <div class="brand"><div class="brand-mark" id="brandMark" aria-hidden="true">↗</div><span id="brandName">Classroom Shuffle</span></div>
+      <div class="local-pill" id="connectionPill">Local storage only</div>
+      <button id="logoutButton" class="button quiet hide" type="button">Sign out</button>
+    </header>
+
+    <details class="card profile-card" open>
+      <summary>School information</summary>
+      <div class="profile-form">
+        <div class="profile-field"><label for="schoolNameInput">Name of school</label><input id="schoolNameInput" type="text" maxlength="100" placeholder="e.g. Greenfield Academy"></div>
+        <div class="profile-field"><label for="schoolMottoInput">School motto</label><input id="schoolMottoInput" type="text" maxlength="120" placeholder="Optional"></div>
+        <div class="profile-field"><label for="schoolAddressInput">Address</label><input id="schoolAddressInput" type="text" maxlength="160" placeholder="Optional"></div>
+        <div class="profile-field"><label for="schoolPhoneInput">Phone or email</label><input id="schoolPhoneInput" type="text" maxlength="120" placeholder="Optional"></div>
+        <div class="profile-logo-row">
+          <div id="logoPreview" class="logo-preview">Logo</div>
+          <div><label class="file-label" for="schoolLogoInput" style="padding:0">Upload school logo</label><input id="schoolLogoInput" type="file" accept="image/*"><p class="profile-hint">A square logo works best. Saved only in this browser.</p></div>
+          <button id="removeLogoBtn" class="button quiet hide" type="button">Remove logo</button>
+        </div>
+      </div>
+    </details>
+
+    <section class="intro">
+      <p class="eyebrow">A simpler way to make class lists</p>
+      <h1>Shuffle the roster.<br>Keep every class together.</h1>
+      <p>Paste a student list, mix up the order, and get a fresh roster sorted into classes in seconds.</p>
+    </section>
+
+    <section class="layout" aria-label="Student roster shuffler">
+      <article class="card">
+        <div class="card-head">
+          <div><h2>Add your students</h2><p>Enter one student per row with their class.</p></div>
+          <div class="step" aria-label="Step 1">1</div>
+        </div>
+        <div class="card-body">
+          <div class="class-manager">
+            <label for="classNameInput">Classes to group students into</label>
+            <div class="class-add-row"><input id="classNameInput" type="text" placeholder="e.g. JSS 1A" maxlength="60"><button id="addClassBtn" class="button secondary" type="button">Add class</button></div>
+            <div id="classChips" class="class-chips" aria-live="polite"></div>
+            <p class="class-help">When you enter names only, students will be shuffled and shared as evenly as possible across these classes. You can also provide a class beside each name.</p>
+            <p class="class-help">Set a preferred size on each class chip; students are assigned to meet those targets first, then remaining students are balanced.</p>
+            <div class="ideas-box">
+              <div class="ideas-top"><label for="ideaCategory">Class name ideas</label><select id="ideaCategory" aria-label="Choose a class name theme"></select></div>
+              <p id="ideaDescription" class="idea-description"></p>
+              <div id="ideaList" class="idea-list"></div>
+              <div class="ideas-actions"><button id="addIdeasBtn" class="button secondary" type="button">Add selected</button><button id="addAllIdeasBtn" class="button quiet" type="button">Add all in this set</button></div>
+            </div>
+          </div>
+          <section class="saved-rosters" aria-label="Saved rosters">
+            <h3>Save and reuse a roster</h3>
+            <div class="saved-row"><input id="rosterSaveName" type="text" placeholder="e.g. JSS 1 · Term 1" aria-label="Roster name"><button id="saveRosterBtn" class="button secondary" type="button">Save current</button></div>
+            <div class="saved-row"><select id="savedRosterSelect" aria-label="Saved rosters"><option value="">No saved rosters yet</option></select><button id="loadRosterBtn" class="button secondary" type="button">Load</button><button id="deleteRosterBtn" class="button quiet" type="button">Delete</button></div>
+            <p class="saved-hint">Saved rosters include student names and stay in this browser. Use Delete to remove a saved list.</p>
+          </section>
+          <div class="file-drop">
+            <p><strong>Import a list or a picture</strong>CSV, text, Word (.docx), PDF, or a clear image of a class list.</p>
+            <label class="file-label" for="csvFile" style="padding:0;white-space:nowrap">↑ Choose file</label>
+            <input id="csvFile" type="file" accept=".csv,.tsv,.txt,.docx,.pdf,image/*">
+          </div>
+          <div class="format-note"><span aria-hidden="true">✳</span><span><strong>Format:</strong> one student per line, or student name then class separated by a comma or tab. A header row is okay.</span></div>
+          <label for="roster">Student roster</label>
+          <textarea id="roster" spellcheck="false" aria-describedby="format-example" placeholder="Name, Class&#10;Ada Okafor, JSS 1A&#10;Tunde Bello, JSS 1B&#10;Mina Yusuf, JSS 1A"></textarea>
+          <div id="format-example" class="row" style="margin-top:7px;justify-content:flex-start;color:var(--muted);font-size:11px">You can also upload a CSV file.</div>
+          <div id="duplicateControls" class="hide"><div id="duplicateMessage" class="notice"></div><label class="privacy-toggle"><input id="allowDuplicates" type="checkbox"> I checked; keep repeated names</label></div>
+          <div class="row">
+            <button id="clearRosterBtn" class="button quiet" type="button">Clear student list</button>
+            <button id="shuffleBtn" class="button primary" type="button">✦ &nbsp;Shuffle students</button>
+          </div>
+          <div id="notice" class="notice" role="status" aria-live="polite"></div>
+          <div id="processing" class="processing hide" role="status"><span class="spinner" aria-hidden="true"></span><span id="processingText">Reading file…</span></div>
+        </div>
+      </article>
+
+      <article class="card results">
+        <div class="card-head results-head">
+          <div><h2>Your shuffled classes</h2><p id="resultSubtitle">Your grouped roster will appear here.</p></div>
+          <div class="result-tools hide" id="resultTools"></div>
+          <div class="step" aria-label="Step 2">2</div>
+        </div>
+        <div id="results" class="results-body">
+          <div class="empty"><div class="empty-icon" aria-hidden="true">▤</div><strong>Ready when you are</strong><p>Add your student names and classes, then shuffle to see the new order.</p></div>
+        </div>
+      </article>
+    </section>
+    <footer>Class names are arranged alphabetically. Student order is randomized within each class.<br>Files are processed in your browser. Image and scanned-PDF OCR may download its reading engine the first time; file contents stay on this device.</footer>
+  </main>
+
+  <script>
+    function assembleAppSections() {
+      const shell = document.querySelector('.shell');
+      const intro = document.querySelector('.intro');
+      const layout = document.querySelector('.layout');
+      const profile = document.querySelector('.profile-card');
+      const classManager = document.querySelector('.class-manager');
+      const savedRostersPanel = document.querySelector('.saved-rosters');
+      const resultCard = document.querySelector('.card.results');
+      if (!shell || !intro || !layout || !profile || !classManager || !savedRostersPanel || !resultCard) return;
+
+      const studentNodes = [
+        layout.querySelector('.file-drop'), layout.querySelector('.format-note'), layout.querySelector('label[for="roster"]'),
+        layout.querySelector('#roster'), layout.querySelector('#format-example'), layout.querySelector('#duplicateControls'),
+        layout.querySelector('#clearRosterBtn')?.closest('.row'), layout.querySelector('#notice'), layout.querySelector('#processing')
+      ].filter(Boolean);
+      const nav = document.createElement('nav');
+      nav.className = 'section-tabs'; nav.setAttribute('aria-label', 'App sections');
+      const progress = document.createElement('div'); progress.className = 'section-progress'; progress.setAttribute('aria-hidden', 'true');
+      progress.innerHTML = '<span></span>';
+      const progressBar = progress.firstElementChild;
+      const panelRoot = document.createElement('div'); panelRoot.className = 'section-panels';
+      const steps = [
+        { id: 'school', label: 'School', hint: 'Name and logo', title: 'School profile', description: 'Set the school identity that appears on rosters.' },
+        { id: 'classes', label: 'Classes', hint: 'Groups and sizes', title: 'Set up classes', description: 'Choose class names, set preferred sizes, and save reusable rosters.' },
+        { id: 'students', label: 'Students', hint: 'Import and review', title: 'Add student names', description: 'Paste a list or import a document, then review it before shuffling.' },
+        { id: 'results', label: 'Results', hint: 'Edit and export', title: 'Your class roster', description: 'Edit student groups, search, rebalance, and print or export.' }
+      ];
+      const panels = new Map();
+      function createPanel(step, children, useResultCard = false) {
+        const section = document.createElement('section');
+        section.className = `section-panel${step.id === 'school' ? ' active' : ''}`;
+        section.id = `panel-${step.id}`;
+        section.setAttribute('aria-labelledby', `tab-${step.id}`);
+        if (useResultCard) {
+          section.appendChild(resultCard);
+        } else {
+          const card = document.createElement('div'); card.className = 'panel-card';
+          card.innerHTML = `<div class="panel-heading"><h2>${step.title}</h2><p>${step.description}</p></div>`;
+          const content = document.createElement('div'); content.className = 'panel-content';
+          children.forEach(child => content.appendChild(child));
+          card.appendChild(content); section.appendChild(card);
+        }
+        const index = steps.findIndex(item => item.id === step.id);
+        const actions = document.createElement('div'); actions.className = 'section-actions';
+        if (index > 0) actions.innerHTML += `<button class="button secondary" type="button" data-section-go="${steps[index - 1].id}">← ${steps[index - 1].label}</button>`;
+        if (index < steps.length - 1) actions.innerHTML += `<button class="button primary" type="button" data-section-go="${steps[index + 1].id}">Continue to ${steps[index + 1].label} →</button>`;
+        if (actions.childElementCount) section.appendChild(actions);
+        panelRoot.appendChild(section); panels.set(step.id, section);
+      }
+      for (const [index, step] of steps.entries()) {
+        const button = document.createElement('button');
+        button.className = 'section-tab'; button.type = 'button'; button.id = `tab-${step.id}`;
+        button.setAttribute('aria-controls', `panel-${step.id}`);
+        button.setAttribute('aria-current', index === 0 ? 'step' : 'false');
+        button.innerHTML = `<span class="tab-number">${index + 1}</span><span class="tab-copy"><strong>${step.label}</strong><small>${step.hint}</small></span>`;
+        button.addEventListener('click', () => setActive(step.id));
+        nav.appendChild(button);
+      }
+      createPanel(steps[0], [profile]);
+      createPanel(steps[1], [classManager, savedRostersPanel]);
+      createPanel(steps[2], studentNodes);
+      createPanel(steps[3], [], true);
+      function setActive(id) {
+        for (const step of steps) {
+          panels.get(step.id).classList.toggle('active', step.id === id);
+          document.getElementById(`tab-${step.id}`).setAttribute('aria-current', step.id === id ? 'step' : 'false');
+        }
+        progressBar.style.width = `${(steps.findIndex(step => step.id === id) + 1) * 25}%`;
+        if (window.matchMedia('(max-width: 600px)').matches) nav.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+      panelRoot.addEventListener('click', event => {
+        const button = event.target.closest('[data-section-go]');
+        if (button) setActive(button.dataset.sectionGo);
+      });
+      intro.after(nav, progress, panelRoot);
+      layout.remove();
+      setActive('school');
+    }
+    assembleAppSections();
+
+    const rosterInput = document.getElementById('roster');
+    const shuffleButton = document.getElementById('shuffleBtn');
+    const fileInput = document.getElementById('csvFile');
+    const results = document.getElementById('results');
+    const notice = document.getElementById('notice');
+    const subtitle = document.getElementById('resultSubtitle');
+    const classInput = document.getElementById('classNameInput');
+    const classChips = document.getElementById('classChips');
+    const ideaCategory = document.getElementById('ideaCategory');
+    const ideaDescription = document.getElementById('ideaDescription');
+    const ideaList = document.getElementById('ideaList');
+    const selectedIdeas = new Set();
+    const processing = document.getElementById('processing');
+    const processingText = document.getElementById('processingText');
+    const schoolProfile = {
+      name: document.getElementById('schoolNameInput'),
+      motto: document.getElementById('schoolMottoInput'),
+      address: document.getElementById('schoolAddressInput'),
+      contact: document.getElementById('schoolPhoneInput')
+    };
+    const logoInput = document.getElementById('schoolLogoInput');
+    const logoPreview = document.getElementById('logoPreview');
+    const brandMark = document.getElementById('brandMark');
+    const removeLogoButton = document.getElementById('removeLogoBtn');
+    let schoolLogo = '';
+    let currentGroups = [];
+    let classNames = [];
+    let classTargets = {};
+    let searchTerm = '';
+    let privacyMode = false;
+    let savedRosters = [];
+    let cloudApiMode = false;
+    let cloudReady = false;
+    let cloudSaveTimer = null;
+    let cloudToken = '';
+    try { cloudToken = sessionStorage.getItem('classroomShuffle.authToken') || ''; } catch { /* Session storage may be disabled. */ }
+    let teacherName = '';
+    function localToday() {
+      const now = new Date();
+      return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+    }
+    let rosterDate = localToday();
+    try {
+      const savedMeta = JSON.parse(localStorage.getItem('classroomShuffle.rosterMeta') || '{}');
+      teacherName = savedMeta.teacherName || '';
+      rosterDate = savedMeta.rosterDate || rosterDate;
+    } catch { /* Use today's date if browser storage is unavailable. */ }
+
+    function setConnectionStatus(text, mode = '') {
+      const pill = document.getElementById('connectionPill');
+      pill.textContent = text;
+      pill.classList.toggle('cloud', mode === 'cloud');
+      pill.classList.toggle('offline', mode === 'offline');
+    }
+    function currentAppState() {
+      return {
+        schoolProfile: profileData(),
+        classNames: [...classNames],
+        classTargets: { ...classTargets },
+        savedRosters: savedRosters.map(record => ({ ...record, classes: [...(record.classes || [])], targets: { ...(record.targets || {}) }, groups: (record.groups || []).map(group => ({ className: group.className, students: [...group.students] })) })),
+        rosterDraft: rosterInput.value,
+        groups: currentGroups.map(group => ({ className: group.className, students: [...group.students] })),
+        teacherName,
+        rosterDate
+      };
+    }
+    async function apiRequest(path, options = {}) {
+      const headers = new Headers(options.headers || {});
+      if (options.body) headers.set('Content-Type', 'application/json');
+      if (cloudToken) headers.set('Authorization', `Bearer ${cloudToken}`);
+      const response = await fetch(path, { ...options, headers, cache: 'no-store' });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        const error = new Error(payload.error || `Request failed (${response.status}).`);
+        error.status = response.status;
+        throw error;
+      }
+      return payload;
+    }
+    function scheduleCloudSave() {
+      if (!cloudReady) return;
+      clearTimeout(cloudSaveTimer);
+      cloudSaveTimer = setTimeout(async () => {
+        try {
+          await apiRequest('/api/data', { method: 'PUT', body: JSON.stringify({ state: currentAppState() }) });
+          setConnectionStatus('Connected · saved to cloud', 'cloud');
+        } catch (error) {
+          setConnectionStatus('Cloud save failed · retrying', 'offline');
+          if (error.status === 401) signOut(true);
+          else notice.textContent = `Cloud sync issue: ${error.message}`;
+        }
+      }, 700);
+    }
+    function applyCloudState(state) {
+      if (!state) return false;
+      const profile = state.schoolProfile || {};
+      schoolProfile.name.value = profile.name || '';
+      schoolProfile.motto.value = profile.motto || '';
+      schoolProfile.address.value = profile.address || '';
+      schoolProfile.contact.value = profile.contact || '';
+      schoolLogo = profile.logo || '';
+      classNames = Array.isArray(state.classNames) ? [...state.classNames] : [];
+      classTargets = state.classTargets && typeof state.classTargets === 'object' ? { ...state.classTargets } : {};
+      savedRosters = Array.isArray(state.savedRosters) ? state.savedRosters : [];
+      rosterInput.value = state.rosterDraft || '';
+      currentGroups = Array.isArray(state.groups) ? state.groups.map(group => ({ className: group.className, students: [...group.students] })) : [];
+      teacherName = state.teacherName || '';
+      rosterDate = state.rosterDate || localToday();
+      try { localStorage.setItem('classroomShuffle.savedRosters', JSON.stringify(savedRosters)); } catch { /* Cloud remains the primary copy. */ }
+      try { localStorage.setItem('classroomShuffle.rosterMeta', JSON.stringify({ teacherName, rosterDate })); } catch { /* Cloud remains the primary copy. */ }
+      saveSchoolProfile();
+      renderClasses();
+      refreshSavedRosterOptions();
+      updateDuplicateReview();
+      document.getElementById('brandName').textContent = profile.name || 'Classroom Shuffle';
+      if (currentGroups.length) render(currentGroups); else clearResults();
+      return true;
+    }
+    function showLogin(message = '') {
+      cloudReady = false;
+      document.getElementById('authGate').classList.add('visible');
+      document.getElementById('loginError').textContent = message;
+      document.getElementById('loginEmail').focus();
+    }
+    function signOut(showGate = false) {
+      cloudReady = false;
+      cloudToken = '';
+      try { sessionStorage.removeItem('classroomShuffle.authToken'); } catch { /* Ignore unavailable session storage. */ }
+      document.getElementById('logoutButton').classList.add('hide');
+      if (showGate && cloudApiMode) showLogin('Your sign-in expired. Please sign in again.');
+      else if (cloudApiMode) showLogin();
+    }
+    async function completeSignIn(token, shouldMigrateLocal = false) {
+      cloudToken = token;
+      try { sessionStorage.setItem('classroomShuffle.authToken', cloudToken); } catch { /* The token remains in memory for this page. */ }
+      const result = await apiRequest('/api/data');
+      if (result.state) applyCloudState(result.state);
+      else if (shouldMigrateLocal) await apiRequest('/api/data', { method: 'PUT', body: JSON.stringify({ state: currentAppState() }) });
+      document.getElementById('authGate').classList.remove('visible');
+      document.getElementById('logoutButton').classList.remove('hide');
+      cloudReady = true;
+      setConnectionStatus('Connected · saved to cloud', 'cloud');
+      if (!result.state) scheduleCloudSave();
+    }
+    document.getElementById('loginForm').addEventListener('submit', async event => {
+      event.preventDefault();
+      const button = document.getElementById('loginButton');
+      const errorBox = document.getElementById('loginError');
+      button.disabled = true; button.textContent = 'Signing in…'; errorBox.textContent = '';
+      try {
+        const result = await apiRequest('/api/auth/login', { method: 'POST', body: JSON.stringify({ email: document.getElementById('loginEmail').value, password: document.getElementById('loginPassword').value }) });
+        await completeSignIn(result.token, true);
+        document.getElementById('loginPassword').value = '';
+      } catch (error) { errorBox.textContent = error.message; }
+      finally { button.disabled = false; button.textContent = 'Sign in'; }
+    });
+    document.getElementById('logoutButton').addEventListener('click', () => signOut());
+    async function initializeBackend() {
+      if (location.protocol === 'file:') return;
+      try {
+        const health = await fetch('/api/health', { cache: 'no-store' });
+        if (!health.ok) throw new Error('API unavailable');
+        cloudApiMode = true;
+        setConnectionStatus('Sign in to sync', 'cloud');
+        if (cloudToken) {
+          try { await apiRequest('/api/auth/me'); await completeSignIn(cloudToken, false); return; }
+          catch { cloudToken = ''; try { sessionStorage.removeItem('classroomShuffle.authToken'); } catch { /* Ignore. */ } }
+        }
+        showLogin();
+      } catch {
+        cloudApiMode = false;
+        cloudReady = false;
+        setConnectionStatus('Local mode · not synced', 'offline');
+      }
+    }
+    const classIdeaSets = {
+      christian: { label: 'Christian church traditions', description: 'Church tradition names for classes.', names: ['Anglican', 'Baptist', 'Catholic', 'Lutheran', 'Methodist', 'Orthodox', 'Pentecostal', 'Presbyterian', 'Reformed', 'Seventh-day Adventist'] },
+      continents: { label: 'Continents', description: 'Use the seven continent names as house or class groups.', names: ['Africa', 'Antarctica', 'Asia', 'Europe', 'North America', 'Oceania', 'South America'] },
+      lagos: { label: 'Lagos places', description: 'Lagos divisions, local areas, and familiar neighbourhoods.', names: ['Agege', 'Ajah', 'Alimosho', 'Alausa', 'Anthony', 'Apapa', 'Badagry', 'Bariga', 'Ebute Metta', 'Epe', 'Festac', 'Gbagada', 'Ikeja', 'Ikorodu', 'Ikoyi', 'Ketu', 'Lagos Island', 'Lagos Mainland', 'Lekki', 'Maryland', 'Mushin', 'Ojo', 'Ojota', 'Oshodi', 'Surulere', 'Victoria Island', 'Yaba'] },
+      states: { label: 'Nigerian states', description: 'State names from across Nigeria, plus the Federal Capital Territory.', names: ['Abia', 'Adamawa', 'Akwa Ibom', 'Anambra', 'Bauchi', 'Bayelsa', 'Benue', 'Borno', 'Cross River', 'Delta', 'Ebonyi', 'Edo', 'Ekiti', 'Enugu', 'Federal Capital Territory', 'Gombe', 'Imo', 'Jigawa', 'Kaduna', 'Kano', 'Katsina', 'Kebbi', 'Kogi', 'Kwara', 'Lagos', 'Nasarawa', 'Niger', 'Ogun', 'Ondo', 'Osun', 'Oyo', 'Plateau', 'Rivers', 'Sokoto', 'Taraba', 'Yobe', 'Zamfara'] },
+      africa: { label: 'African countries', description: 'A selection of country names from across the continent.', names: ['Botswana', 'Cameroon', 'Côte d’Ivoire', 'Egypt', 'Ethiopia', 'Ghana', 'Kenya', 'Morocco', 'Namibia', 'Nigeria', 'Rwanda', 'Senegal', 'South Africa', 'Tanzania', 'Uganda', 'Zambia', 'Zimbabwe'] },
+      values: { label: 'Values', description: 'Positive qualities that make encouraging class names.', names: ['Courage', 'Curiosity', 'Discipline', 'Excellence', 'Faith', 'Gratitude', 'Honesty', 'Hope', 'Kindness', 'Perseverance', 'Respect', 'Responsibility', 'Service', 'Teamwork', 'Wisdom'] },
+      nature: { label: 'Nature and plants', description: 'Names inspired by trees, flowers, and the natural world.', names: ['Acacia', 'Baobab', 'Cedar', 'Daisy', 'Fern', 'Iroko', 'Jasmine', 'Lily', 'Maple', 'Oak', 'Orchid', 'Rose', 'Sunflower', 'Tulip', 'Willow'] },
+      space: { label: 'Space', description: 'Planet names for a science-inspired theme.', names: ['Earth', 'Jupiter', 'Mars', 'Mercury', 'Neptune', 'Saturn', 'Uranus', 'Venus'] },
+      landmarks: { label: 'Landmarks and wonders', description: 'Places and natural landmarks from around the world.', names: ['Amazon', 'Grand Canyon', 'Great Barrier Reef', 'Great Wall', 'Kilimanjaro', 'Machu Picchu', 'Mount Everest', 'Nile', 'Sahara', 'Victoria Falls'] },
+      nigeriaLandmarks: { label: 'Nigerian landmarks', description: 'Famous natural, cultural, and historic places in Nigeria.', names: ['Erin-Ijesha Waterfalls', 'Idanre Hills', 'Ikogosi Warm Springs', 'Kajuru Castle', 'Olumo Rock', 'Osun-Osogbo Grove', 'Ogbunike Caves', 'Yankari', 'Zuma Rock'] },
+      wildlife: { label: 'African wildlife', description: 'Memorable animal names for energetic class groups.', names: ['Cheetah', 'Elephant', 'Falcon', 'Giraffe', 'Hippo', 'Leopard', 'Lion', 'Meerkat', 'Ostrich', 'Rhino', 'Zebra'] },
+      colors: { label: 'Colors', description: 'Bright, simple names that are easy to recognize.', names: ['Amber', 'Blue', 'Coral', 'Emerald', 'Gold', 'Indigo', 'Jade', 'Ruby', 'Silver', 'Teal', 'Violet'] },
+      shapes: { label: 'Shapes and patterns', description: 'A maths-friendly set of class names.', names: ['Circle', 'Cube', 'Diamond', 'Hexagon', 'Oval', 'Pentagon', 'Rectangle', 'Sphere', 'Square', 'Star', 'Triangle'] },
+      subjects: { label: 'School subjects', description: 'Use subjects to celebrate different areas of learning.', names: ['Art', 'Computing', 'English', 'Geography', 'History', 'Literature', 'Mathematics', 'Music', 'Science', 'Technology'] },
+      instruments: { label: 'Musical instruments', description: 'A cheerful music-themed set.', names: ['Drum', 'Flute', 'Guitar', 'Harp', 'Keyboard', 'Piano', 'Saxophone', 'Talking Drum', 'Trumpet', 'Violin'] },
+      rivers: { label: 'Nigerian rivers', description: 'River names from across Nigeria.', names: ['Anambra', 'Benue', 'Cross River', 'Hadejia', 'Imo', 'Kaduna', 'Niger', 'Ogun', 'Osun', 'Sokoto'] },
+      cities: { label: 'World cities', description: 'Well-known city names from different regions.', names: ['Accra', 'Cairo', 'Dakar', 'Lagos', 'London', 'Nairobi', 'New York', 'Paris', 'Rio de Janeiro', 'Tokyo'] },
+      oceans: { label: 'Oceans and seas', description: 'A geography-inspired collection of water names.', names: ['Arctic', 'Atlantic', 'Indian Ocean', 'Mediterranean', 'Pacific', 'Red Sea', 'Southern Ocean'] }
+    };
+
+    for (const [key, set] of Object.entries(classIdeaSets)) {
+      const option = document.createElement('option'); option.value = key; option.textContent = set.label; ideaCategory.appendChild(option);
+    }
+    function renderIdeas() {
+      const set = classIdeaSets[ideaCategory.value];
+      ideaDescription.textContent = set.description;
+      ideaList.innerHTML = set.names.map(name => `<button class="idea-chip" type="button" aria-pressed="${selectedIdeas.has(name)}" data-idea="${escapeHtml(name)}">${escapeHtml(name)}</button>`).join('');
+      ideaList.querySelectorAll('[data-idea]').forEach(button => button.addEventListener('click', () => {
+        const name = button.dataset.idea;
+        if (selectedIdeas.has(name)) selectedIdeas.delete(name); else selectedIdeas.add(name);
+        button.setAttribute('aria-pressed', String(selectedIdeas.has(name)));
+      }));
+    }
+    ideaCategory.addEventListener('change', renderIdeas);
+    renderIdeas();
+
+    function profileData() {
+      return { name: schoolProfile.name.value.trim(), motto: schoolProfile.motto.value.trim(), address: schoolProfile.address.value.trim(), contact: schoolProfile.contact.value.trim(), logo: schoolLogo };
+    }
+    function saveSchoolProfile() {
+      const profile = profileData();
+      try { localStorage.setItem('classroomShuffle.schoolProfile', JSON.stringify(profile)); }
+      catch { notice.textContent = 'School details could not be saved. Try a smaller logo image.'; }
+      document.getElementById('brandName').textContent = profile.name || 'Classroom Shuffle';
+      document.title = profile.name ? `${profile.name} — Classroom Shuffle` : 'Classroom Shuffle — Student Roster';
+      if (schoolLogo) {
+        logoPreview.innerHTML = `<img src="${schoolLogo}" alt="School logo preview">`;
+        brandMark.innerHTML = `<img src="${schoolLogo}" alt="">`;
+        removeLogoButton.classList.remove('hide');
+      } else {
+        logoPreview.textContent = 'Logo';
+        brandMark.textContent = '↗';
+        removeLogoButton.classList.add('hide');
+      }
+      if (currentGroups.length) render(currentGroups);
+      scheduleCloudSave();
+    }
+    try {
+      const saved = JSON.parse(localStorage.getItem('classroomShuffle.schoolProfile') || '{}');
+      schoolProfile.name.value = saved.name || '';
+      schoolProfile.motto.value = saved.motto || '';
+      schoolProfile.address.value = saved.address || '';
+      schoolProfile.contact.value = saved.contact || '';
+      schoolLogo = saved.logo || '';
+    } catch { /* Ignore unavailable or invalid local profile data. */ }
+    Object.values(schoolProfile).forEach(input => input.addEventListener('input', saveSchoolProfile));
+    logoInput.addEventListener('change', async () => {
+      const file = logoInput.files?.[0];
+      if (!file) return;
+      if (!file.type.startsWith('image/')) { notice.textContent = 'Choose an image file for the school logo.'; return; }
+      try {
+        const image = await createImageBitmap(file);
+        const canvas = document.createElement('canvas');
+        const size = 320;
+        const scale = Math.min(size / image.width, size / image.height, 1);
+        canvas.width = Math.max(1, Math.round(image.width * scale));
+        canvas.height = Math.max(1, Math.round(image.height * scale));
+        canvas.getContext('2d').drawImage(image, 0, 0, canvas.width, canvas.height);
+        schoolLogo = canvas.toDataURL('image/png');
+        saveSchoolProfile();
+        notice.textContent = '';
+      } catch { notice.textContent = 'Could not read that logo image. Try a PNG or JPEG.'; }
+      logoInput.value = '';
+    });
+    removeLogoButton.addEventListener('click', () => { schoolLogo = ''; saveSchoolProfile(); });
+    saveSchoolProfile();
+
+    function renderClasses() {
+      classChips.innerHTML = classNames.map((name, index) => `<span class="class-chip"><span>${escapeHtml(name)}</span><input class="class-size" type="number" min="1" max="500" placeholder="auto" title="Preferred class size" aria-label="Preferred size for ${escapeHtml(name)}" data-class-target="${index}" value="${classTargets[name] || ''}"><button type="button" aria-label="Remove ${escapeHtml(name)}" data-class-index="${index}">×</button></span>`).join('');
+      classChips.querySelectorAll('[data-class-index]').forEach(button => button.addEventListener('click', () => {
+        const [removed] = classNames.splice(Number(button.dataset.classIndex), 1);
+        delete classTargets[removed];
+        renderClasses();
+        scheduleCloudSave();
+      }));
+      classChips.querySelectorAll('[data-class-target]').forEach(input => input.addEventListener('change', () => {
+        const name = classNames[Number(input.dataset.classTarget)];
+        const value = Number(input.value);
+        if (value > 0) classTargets[name] = Math.min(value, 500); else delete classTargets[name];
+        input.value = classTargets[name] || '';
+        scheduleCloudSave();
+      }));
+    }
+    function addClass(value, shouldFocus = true) {
+      const name = value.trim().replace(/\s+/g, ' ');
+      if (!name) return;
+      if (classNames.some(existing => existing.toLocaleLowerCase() === name.toLocaleLowerCase())) {
+        notice.textContent = `${name} is already in your class list.`;
+        return;
+      }
+      classNames.push(name);
+      if (!Object.hasOwn(classTargets, name)) classTargets[name] = 0;
+      classNames.sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
+      classInput.value = '';
+      notice.textContent = '';
+      renderClasses();
+      scheduleCloudSave();
+      if (shouldFocus) classInput.focus();
+    }
+    document.getElementById('addClassBtn').addEventListener('click', () => addClass(classInput.value));
+    classInput.addEventListener('keydown', event => { if (event.key === 'Enter') { event.preventDefault(); addClass(classInput.value); } });
+    function addIdeaNames(names) {
+      const before = classNames.length;
+      names.forEach(name => addClass(name, false));
+      const added = classNames.length - before;
+      if (added) notice.textContent = `Added ${added} class name${added === 1 ? '' : 's'}.`;
+      selectedIdeas.clear();
+      renderIdeas();
+    }
+    document.getElementById('addIdeasBtn').addEventListener('click', () => {
+      const names = [...selectedIdeas];
+      if (!names.length) { notice.textContent = 'Choose one or more class name ideas first.'; return; }
+      addIdeaNames(names);
+    });
+    document.getElementById('addAllIdeasBtn').addEventListener('click', () => addIdeaNames(classIdeaSets[ideaCategory.value].names));
+
+    function parseRows(text) {
+      const lines = text.replace(/^\uFEFF/, '').split(/\r?\n/).filter(line => line.trim());
+      const students = [];
+      const skipped = [];
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i].trim();
+        const delimiter = line.includes('\t') ? '\t' : ',';
+        // Supports CSV quoted fields, including commas inside quoted names.
+        const fields = (delimiter === '\t' ? line.split('\t') : line.split(/,(?=(?:[^"]*"[^"]*")*[^"]*$)/)).map(value => value.trim().replace(/^"|"$/g, '').replace(/""/g, '"'));
+        if (i === 0 && /^(name|student|student name)$/i.test(fields[0] || '') && (!fields[1] || /class|grade|form|section/i.test(fields[1]))) continue;
+        const name = fields[0] || '';
+        const className = fields[1] || '';
+        if (!name) { skipped.push(i + 1); continue; }
+        students.push({ name, className });
+      }
+      return { students, skipped };
+    }
+
+    function findDuplicates(students) {
+      const counts = new Map();
+      for (const student of students) {
+        const name = student.name.trim().replace(/\s+/g, ' ').toLocaleLowerCase();
+        const className = student.className.trim().replace(/\s+/g, ' ').toLocaleLowerCase();
+        const key = `${name}\u0000${className}`;
+        counts.set(key, { count: (counts.get(key)?.count || 0) + 1, name: student.name.trim(), className: student.className.trim() });
+      }
+      return [...counts.values()].filter(entry => entry.count > 1);
+    }
+    function updateDuplicateReview() {
+      const { students } = parseRows(rosterInput.value);
+      const duplicates = findDuplicates(students);
+      const controls = document.getElementById('duplicateControls');
+      const message = document.getElementById('duplicateMessage');
+      if (!duplicates.length) {
+        controls.classList.add('hide');
+        document.getElementById('allowDuplicates').checked = false;
+        return [];
+      }
+      controls.classList.remove('hide');
+      const names = duplicates.slice(0, 5).map(entry => entry.className ? `${entry.name} (${entry.className})` : entry.name);
+      message.textContent = `Possible duplicate entries: ${names.join(', ')}${duplicates.length > 5 ? ` and ${duplicates.length - 5} more` : ''}. Check for OCR mistakes or repeated rows.`;
+      return duplicates;
+    }
+    rosterInput.addEventListener('input', updateDuplicateReview);
+    rosterInput.addEventListener('input', scheduleCloudSave);
+
+    function shuffle(items) {
+      const copy = [...items];
+      for (let i = copy.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [copy[i], copy[j]] = [copy[j], copy[i]];
+      }
+      return copy;
+    }
+
+    function escapeHtml(value) {
+      return value.replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char]));
+    }
+
+    function render(groups, skippedCount = 0) {
+      currentGroups = groups;
+      const students = groups.reduce((sum, group) => sum + group.students.length, 0);
+      const classWord = groups.length === 1 ? 'class' : 'classes';
+      subtitle.textContent = `${students} student${students === 1 ? '' : 's'} across ${groups.length} ${classWord}`;
+      const profile = profileData();
+      const schoolBanner = profile.name || profile.motto || profile.address || profile.contact || teacherName || rosterDate ? `<div class="school-banner"><div class="school-banner-logo">${schoolLogo ? `<img src="${schoolLogo}" alt="School logo">` : escapeHtml((profile.name || 'School').slice(0, 1).toUpperCase())}</div><div class="school-banner-copy"><strong>${escapeHtml(profile.name || 'Class roster')}</strong><span>${[profile.motto, profile.address, profile.contact, teacherName ? `Teacher: ${teacherName}` : '', rosterDate ? `Date: ${rosterDate}` : ''].filter(Boolean).map(escapeHtml).join(' · ')}</span></div></div>` : '';
+      const destinations = [...new Set([...groups.map(group => group.className), ...classNames])].sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
+      document.getElementById('resultTools').innerHTML = '<button id="reshuffleBtn" class="button secondary" type="button">↻ Shuffle order</button><button id="rebalanceBtn" class="button secondary" type="button">⇄ Rebalance</button><button id="printBtn" class="button secondary" type="button">Print / Save PDF</button><button id="xlsxBtn" class="button secondary" type="button">Export Excel</button><button id="downloadBtn" class="button secondary" type="button">Export CSV</button>';
+      document.getElementById('resultTools').classList.remove('hide');
+      const rows = groups.map((group, groupIndex) => {
+        const targetLabel = classTargets[group.className] ? ` · target ${classTargets[group.className]}` : '';
+        const studentsHtml = group.students.map((name, studentIndex) => {
+          const visible = !privacyMode;
+          const nameControl = visible
+            ? `<input class="student-name-input" type="text" aria-label="Edit student name" value="${escapeHtml(name)}" data-student-name="${groupIndex}:${studentIndex}">`
+            : '<span class="student-name-input" aria-label="Student name hidden">Name hidden</span>';
+          const moveControl = visible ? `<select class="move-select" aria-label="Move student to another class" data-move-student="${groupIndex}:${studentIndex}">${destinations.map(destination => `<option value="${escapeHtml(destination)}" ${destination === group.className ? 'selected' : ''}>${escapeHtml(destination)}</option>`).join('')}</select><button class="student-remove" type="button" title="Remove student" aria-label="Remove student" data-remove-student="${groupIndex}:${studentIndex}">×</button>` : '';
+          const searchable = `${group.className} ${name}`.toLocaleLowerCase().includes(searchTerm.toLocaleLowerCase());
+          return `<li class="student-row" ${searchTerm && !searchable ? 'hidden' : ''}>${nameControl}${moveControl}</li>`;
+        }).join('');
+        return `<section class="class-group"><div class="class-title"><span>${escapeHtml(group.className)}</span><span class="count">${group.students.length} student${group.students.length === 1 ? '' : 's'}${targetLabel}</span></div><ol class="student-list">${studentsHtml}</ol><div class="add-student-row"><input type="text" placeholder="Add a student to ${escapeHtml(group.className)}" aria-label="New student name" data-new-student="${groupIndex}"><button type="button" data-add-student="${groupIndex}">Add</button></div></section>`;
+      }).join('');
+      results.innerHTML = schoolBanner + `<div class="results-toolbar"><input id="studentSearch" type="search" placeholder="Search students or classes" aria-label="Search roster" value="${escapeHtml(searchTerm)}"><label class="meta-field">Teacher <input id="teacherNameInput" type="text" placeholder="Teacher name" value="${escapeHtml(teacherName)}"></label><label class="meta-field">Date <input id="rosterDateInput" type="date" value="${escapeHtml(rosterDate)}"></label><label class="privacy-toggle"><input id="privacyToggle" type="checkbox" ${privacyMode ? 'checked' : ''}> Hide names on screen</label></div><div class="summary"><span>✦ Randomized roster</span><span>${students} students</span><span>${groups.length} ${classWord}</span>${skippedCount ? `<span>${skippedCount} row${skippedCount === 1 ? '' : 's'} skipped</span>` : ''}</div>${rows}`;
+      document.getElementById('reshuffleBtn').addEventListener('click', reshuffle);
+      document.getElementById('rebalanceBtn').addEventListener('click', rebalance);
+      document.getElementById('printBtn').addEventListener('click', () => {
+        if (privacyMode) { notice.textContent = 'Turn off “Hide names on screen” before printing or saving as PDF.'; return; }
+        window.print();
+      });
+      document.getElementById('downloadBtn').addEventListener('click', downloadCsv);
+      document.getElementById('xlsxBtn').addEventListener('click', downloadExcel);
+      document.getElementById('studentSearch').addEventListener('input', event => {
+        searchTerm = event.target.value;
+        results.querySelectorAll('.student-row').forEach(row => {
+          const input = row.querySelector('.student-name-input');
+          const groupTitle = row.closest('.class-group')?.querySelector('.class-title')?.textContent || '';
+          const matches = `${groupTitle} ${input?.value || ''}`.toLocaleLowerCase().includes(searchTerm.toLocaleLowerCase());
+          row.hidden = !matches;
+        });
+      });
+      document.getElementById('privacyToggle').addEventListener('change', event => { privacyMode = event.target.checked; render(currentGroups); });
+      const saveRosterMeta = () => {
+        teacherName = document.getElementById('teacherNameInput').value.trim();
+        rosterDate = document.getElementById('rosterDateInput').value;
+        try { localStorage.setItem('classroomShuffle.rosterMeta', JSON.stringify({ teacherName, rosterDate })); } catch { /* Metadata can still be used for this roster. */ }
+        render(currentGroups);
+      };
+      document.getElementById('teacherNameInput').addEventListener('change', saveRosterMeta);
+      document.getElementById('rosterDateInput').addEventListener('change', saveRosterMeta);
+      results.querySelectorAll('[data-student-name]').forEach(input => input.addEventListener('change', () => {
+        const [gi, si] = input.dataset.studentName.split(':').map(Number);
+        const value = input.value.trim();
+        if (!value) { notice.textContent = 'Student names cannot be empty.'; input.value = currentGroups[gi].students[si]; return; }
+        currentGroups[gi].students[si] = value;
+        render(currentGroups);
+      }));
+      results.querySelectorAll('[data-move-student]').forEach(select => select.addEventListener('change', () => {
+        const [gi, si] = select.dataset.moveStudent.split(':').map(Number);
+        const [student] = currentGroups[gi].students.splice(si, 1);
+        const target = currentGroups.find(group => group.className === select.value) || { className: select.value, students: [] };
+        if (!currentGroups.includes(target)) currentGroups.push(target);
+        target.students.push(student);
+        currentGroups = currentGroups.filter(group => group.students.length || classNames.includes(group.className)).sort((a, b) => a.className.localeCompare(b.className, undefined, { numeric: true, sensitivity: 'base' }));
+        render(currentGroups);
+      }));
+      results.querySelectorAll('[data-remove-student]').forEach(button => button.addEventListener('click', () => {
+        const [gi, si] = button.dataset.removeStudent.split(':').map(Number);
+        currentGroups[gi].students.splice(si, 1);
+        currentGroups = currentGroups.filter(group => group.students.length || classNames.includes(group.className));
+        if (currentGroups.length) render(currentGroups); else clearResults();
+      }));
+      results.querySelectorAll('[data-add-student]').forEach(button => button.addEventListener('click', () => {
+        const index = Number(button.dataset.addStudent);
+        const input = results.querySelector(`[data-new-student="${index}"]`);
+        const name = input.value.trim();
+        if (!name) return;
+        currentGroups[index].students.push(name);
+        render(currentGroups);
+      }));
+      results.querySelectorAll('[data-new-student]').forEach(input => input.addEventListener('keydown', event => {
+        if (event.key === 'Enter') { event.preventDefault(); results.querySelector(`[data-add-student="${input.dataset.newStudent}"]`).click(); }
+      }));
+      scheduleCloudSave();
+    }
+
+    function clearResults() {
+      currentGroups = [];
+      subtitle.textContent = 'Your grouped roster will appear here.';
+      document.getElementById('resultTools').classList.add('hide');
+      results.innerHTML = '<div class="empty"><div class="empty-icon" aria-hidden="true">▤</div><strong>No students in this roster</strong><p>Add names above and shuffle to create groups.</p></div>';
+    }
+
+    const savedRosterSelect = document.getElementById('savedRosterSelect');
+    function refreshSavedRosterOptions(selectedId = '') {
+      if (!cloudApiMode) {
+        try { savedRosters = JSON.parse(localStorage.getItem('classroomShuffle.savedRosters') || '[]'); }
+        catch { savedRosters = []; }
+      }
+      savedRosterSelect.innerHTML = savedRosters.length
+        ? '<option value="">Choose a saved roster</option>' + savedRosters.map(record => `<option value="${escapeHtml(record.id)}" ${record.id === selectedId ? 'selected' : ''}>${escapeHtml(record.name)}</option>`).join('')
+        : '<option value="">No saved rosters yet</option>';
+    }
+    function saveCurrentRoster() {
+      const nameInput = document.getElementById('rosterSaveName');
+      const name = nameInput.value.trim();
+      if (!name) { notice.textContent = 'Give this roster a name, such as a class and term.'; nameInput.focus(); return; }
+      const rosterText = rosterInput.value;
+      if (!rosterText.trim() && !classNames.length && !currentGroups.length) { notice.textContent = 'Add some classes or students before saving.'; return; }
+      const record = {
+        id: `roster-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+        name,
+        savedAt: new Date().toISOString(),
+        teacherName,
+        rosterDate,
+        rosterText,
+        classes: [...classNames],
+        targets: { ...classTargets },
+        groups: currentGroups.map(group => ({ className: group.className, students: [...group.students] }))
+      };
+      savedRosters.push(record);
+      try {
+        localStorage.setItem('classroomShuffle.savedRosters', JSON.stringify(savedRosters));
+        refreshSavedRosterOptions(record.id);
+        notice.textContent = `Saved “${name}” in this browser.`;
+      } catch {
+        savedRosters.pop();
+        notice.textContent = 'Could not save this roster. Browser storage may be full; delete older saved rosters and try again.';
+      }
+    }
+    document.getElementById('saveRosterBtn').addEventListener('click', saveCurrentRoster);
+    document.getElementById('rosterSaveName').addEventListener('keydown', event => { if (event.key === 'Enter') saveCurrentRoster(); });
+    document.getElementById('loadRosterBtn').addEventListener('click', () => {
+      const record = savedRosters.find(item => item.id === savedRosterSelect.value);
+      if (!record) { notice.textContent = 'Choose a saved roster to load.'; return; }
+      classNames = [...record.classes];
+      classTargets = { ...record.targets };
+      teacherName = record.teacherName || '';
+      rosterDate = record.rosterDate || localToday();
+      try { localStorage.setItem('classroomShuffle.rosterMeta', JSON.stringify({ teacherName, rosterDate })); } catch { /* The saved record remains loadable. */ }
+      rosterInput.value = record.rosterText || '';
+      currentGroups = (record.groups || []).map(group => ({ className: group.className, students: [...group.students] }));
+      renderClasses();
+      updateDuplicateReview();
+      if (currentGroups.length) render(currentGroups); else clearResults();
+      document.getElementById('rosterSaveName').value = record.name;
+      notice.textContent = `Loaded “${record.name}”.`;
+    });
+    document.getElementById('deleteRosterBtn').addEventListener('click', () => {
+      const selectedId = savedRosterSelect.value;
+      if (!selectedId) { notice.textContent = 'Choose a saved roster to delete.'; return; }
+      const record = savedRosters.find(item => item.id === selectedId);
+      savedRosters = savedRosters.filter(item => item.id !== selectedId);
+      localStorage.setItem('classroomShuffle.savedRosters', JSON.stringify(savedRosters));
+      refreshSavedRosterOptions();
+      notice.textContent = record ? `Deleted “${record.name}”.` : 'Saved roster deleted.';
+    });
+    refreshSavedRosterOptions();
+
+    function makeGroups(students) {
+      const byClass = new Map();
+      const explicit = students.filter(student => student.className.trim());
+      const namesOnly = students.filter(student => !student.className.trim());
+      for (const name of classNames) byClass.set(name, []);
+      for (const student of explicit) {
+        const requested = student.className.trim();
+        const existing = classNames.find(name => name.toLocaleLowerCase() === requested.toLocaleLowerCase());
+        const key = existing || requested;
+        if (!byClass.has(key)) byClass.set(key, []);
+        byClass.get(key).push(student.name.trim());
+      }
+      const targets = [...classNames];
+      if (!targets.length && namesOnly.length) {
+        notice.textContent = 'Add at least one class above to group rows that have a name only.';
+        return [];
+      }
+      // Fill preferred class sizes first; place any remaining students in the smallest class.
+      const mixed = shuffle(namesOnly);
+      for (const student of mixed) {
+        let candidates = targets.filter(name => classTargets[name] > 0 && byClass.get(name).length < classTargets[name]);
+        if (candidates.length) {
+          candidates.sort((a, b) => byClass.get(a).length / classTargets[a] - byClass.get(b).length / classTargets[b]);
+          const bestRatio = byClass.get(candidates[0]).length / classTargets[candidates[0]];
+          candidates = candidates.filter(name => byClass.get(name).length / classTargets[name] === bestRatio);
+        } else {
+          const minSize = Math.min(...targets.map(name => byClass.get(name).length));
+          candidates = targets.filter(name => byClass.get(name).length === minSize);
+        }
+        const target = candidates[Math.floor(Math.random() * candidates.length)];
+        byClass.get(target).push(student.name.trim());
+      }
+      return [...byClass.entries()]
+        .sort(([a], [b]) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }))
+        .map(([className, names]) => ({ className, students: shuffle(names) }));
+    }
+
+    function reshuffle() {
+      const students = currentGroups.length
+        ? currentGroups.flatMap(group => group.students.map(name => ({ name, className: group.className })))
+        : parseRows(rosterInput.value).students;
+      if (students.length) {
+        const groups = makeGroups(students);
+        if (groups.length) render(groups);
+      }
+    }
+    function rebalance() {
+      if (!currentGroups.length) return reshuffle();
+      for (const group of currentGroups) if (!classNames.some(name => name.toLocaleLowerCase() === group.className.toLocaleLowerCase())) classNames.push(group.className);
+      classNames.sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
+      renderClasses();
+      const students = currentGroups.flatMap(group => group.students.map(name => ({ name, className: '' })));
+      const groups = makeGroups(students);
+      if (groups.length) render(groups);
+    }
+
+    shuffleButton.addEventListener('click', () => {
+      notice.textContent = '';
+      const { students, skipped } = parseRows(rosterInput.value);
+      const duplicateRows = updateDuplicateReview();
+      if (!students.length) {
+        notice.textContent = 'Add at least one student name first.';
+        return;
+      }
+      if (duplicateRows.length && !document.getElementById('allowDuplicates').checked) {
+        notice.textContent = 'Review the repeated entries above. Correct them, or check the box to keep them.';
+        return;
+      }
+      const groups = makeGroups(students);
+      if (!groups.length) return;
+      render(groups, skipped.length);
+      notice.textContent = duplicateRows.length ? `Included ${duplicateRows.length} repeated name entr${duplicateRows.length === 1 ? 'y' : 'ies'} as requested.` : skipped.length ? `Skipped ${skipped.length} empty row${skipped.length === 1 ? '' : 's'}.` : '';
+    });
+
+    function loadScript(src) {
+      return new Promise((resolve, reject) => {
+        const existing = [...document.scripts].find(script => script.src === src);
+        if (existing) { existing.dataset.loaded === 'true' ? resolve() : existing.addEventListener('load', resolve, { once: true }); return; }
+        const script = document.createElement('script'); script.src = src; script.async = true;
+        script.onload = () => { script.dataset.loaded = 'true'; resolve(); };
+        script.onerror = () => reject(new Error('Could not load the document reader. Check your internet connection and try again.'));
+        document.head.appendChild(script);
+      });
+    }
+    function cleanExtractedText(text) {
+      return text.split(/\r?\n/).map(line => line.replace(/[|•·]+/g, ' ').replace(/^\s*(?:\d{1,3}[.)]|[-*])\s*/, '').trim()).filter(Boolean).join('\n');
+    }
+    async function textFromDocx(file) {
+      await loadScript('https://cdn.jsdelivr.net/npm/mammoth@1.9.1/mammoth.browser.min.js');
+      const result = await window.mammoth.extractRawText({ arrayBuffer: await file.arrayBuffer() });
+      return result.value;
+    }
+    async function textFromPdf(file) {
+      await loadScript('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js');
+      window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+      const data = new Uint8Array(await file.arrayBuffer());
+      const pdf = await window.pdfjsLib.getDocument({ data }).promise;
+      let text = '';
+      const pages = [];
+      for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber++) {
+        const page = await pdf.getPage(pageNumber);
+        const content = await page.getTextContent();
+        const lineMap = new Map();
+        for (const item of content.items) {
+          if (!item.str || !item.str.trim()) continue;
+          const y = Math.round(item.transform?.[5] || 0);
+          if (!lineMap.has(y)) lineMap.set(y, []);
+          lineMap.get(y).push({ x: item.transform?.[4] || 0, text: item.str.trim() });
+        }
+        const pageText = [...lineMap.entries()].sort((a, b) => b[0] - a[0]).map(([, items]) => items.sort((a, b) => a.x - b.x).map(item => item.text).join('  ')).join('\n');
+        pages.push({ page, pageText });
+        text += pageText + '\n';
+      }
+      if (text.replace(/\s/g, '').length > 30) return text;
+      await loadScript('https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js');
+      processingText.textContent = `Scanning ${pdf.numPages} PDF page${pdf.numPages === 1 ? '' : 's'} with OCR…`;
+      let ocrText = '';
+      for (let i = 0; i < pages.length; i++) {
+        processingText.textContent = `Reading PDF page ${i + 1} of ${pages.length}…`;
+        const viewport = pages[i].page.getViewport({ scale: 1.7 });
+        const canvas = document.createElement('canvas');
+        canvas.width = Math.ceil(viewport.width); canvas.height = Math.ceil(viewport.height);
+        await pages[i].page.render({ canvasContext: canvas.getContext('2d'), viewport }).promise;
+        const result = await window.Tesseract.recognize(canvas, 'eng');
+        ocrText += result.data.text + '\n';
+      }
+      return ocrText;
+    }
+    async function textFromImage(file) {
+      await loadScript('https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js');
+      processingText.textContent = 'Reading names from image with OCR…';
+      const result = await window.Tesseract.recognize(file, 'eng');
+      return result.data.text;
+    }
+    fileInput.addEventListener('change', async event => {
+      const file = event.target.files && event.target.files[0];
+      if (!file) return;
+      notice.textContent = '';
+      processing.classList.remove('hide');
+      processingText.textContent = `Reading ${file.name}…`;
+      try {
+        const ext = file.name.split('.').pop().toLowerCase();
+        let text;
+        if (['csv', 'tsv', 'txt'].includes(ext)) text = await file.text();
+        else if (ext === 'docx') text = await textFromDocx(file);
+        else if (ext === 'pdf') text = await textFromPdf(file);
+        else if (file.type.startsWith('image/')) text = await textFromImage(file);
+        else throw new Error('This file type is not supported. Use a CSV, TXT, DOCX, PDF, or image file.');
+        const cleaned = cleanExtractedText(text);
+        if (!cleaned) throw new Error('No readable text was found in this file. Try a clearer image or a text-based document.');
+        rosterInput.value = cleaned;
+        updateDuplicateReview();
+        notice.textContent = `Read text from ${file.name}. Review the names below, then shuffle.`;
+      } catch (error) {
+        notice.textContent = error.message || 'Could not read that file. Try another file.';
+      } finally {
+        processing.classList.add('hide');
+        fileInput.value = '';
+      }
+    });
+
+    function csvCell(value) { return `"${String(value).replace(/"/g, '""')}"`; }
+    function downloadCsv() {
+      if (!currentGroups.length) return;
+      const profile = profileData();
+      const rows = [['School', 'Teacher', 'Date', 'Class', 'Student name']];
+      for (const group of currentGroups) for (const name of group.students) rows.push([profile.name, teacherName, rosterDate, group.className, name]);
+      const blob = new Blob(['\uFEFF' + rows.map(row => row.map(csvCell).join(',')).join('\r\n')], { type: 'text/csv;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url; link.download = `${exportBaseName()}-roster.csv`; link.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function exportBaseName() {
+      return (profileData().name || 'school').normalize('NFKD').replace(/[^a-zA-Z0-9]+/g, '-').replace(/^-|-$/g, '').toLowerCase() || 'school';
+    }
+    async function downloadExcel() {
+      if (!currentGroups.length) return;
+      const button = document.getElementById('xlsxBtn');
+      button.disabled = true;
+      button.textContent = 'Preparing Excel…';
+      try {
+        await loadScript('https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js');
+        const profile = profileData();
+        const rosterRows = [['School', profile.name], ['Motto', profile.motto], ['Address', profile.address], ['Contact', profile.contact], ['Teacher', teacherName], ['Date', rosterDate], [], ['Class', 'Student name']];
+        const summaryRows = [['Class', 'Students', 'Preferred size']];
+        for (const group of currentGroups) {
+          summaryRows.push([group.className, group.students.length, classTargets[group.className] || '']);
+          for (const name of group.students) rosterRows.push([group.className, name]);
+        }
+        const workbook = window.XLSX.utils.book_new();
+        const rosterSheet = window.XLSX.utils.aoa_to_sheet(rosterRows);
+        rosterSheet['!cols'] = [{ wch: 24 }, { wch: 36 }];
+        const summarySheet = window.XLSX.utils.aoa_to_sheet(summaryRows);
+        summarySheet['!cols'] = [{ wch: 28 }, { wch: 12 }, { wch: 18 }];
+        window.XLSX.utils.book_append_sheet(workbook, rosterSheet, 'Roster');
+        window.XLSX.utils.book_append_sheet(workbook, summarySheet, 'Class summary');
+        window.XLSX.writeFile(workbook, `${exportBaseName()}-roster.xlsx`);
+        notice.textContent = 'Excel roster downloaded.';
+      } catch (error) {
+        notice.textContent = error.message || 'Could not prepare the Excel file. Check your internet connection and try again.';
+      } finally {
+        button.disabled = false;
+        button.textContent = 'Export Excel';
+      }
+    }
+
+    document.getElementById('clearRosterBtn').addEventListener('click', () => {
+      rosterInput.value = '';
+      document.getElementById('allowDuplicates').checked = false;
+      updateDuplicateReview();
+      clearResults();
+      scheduleCloudSave();
+      notice.textContent = 'Student list cleared. Your school details and class names are still here.';
+    });
+    initializeBackend();
+  </script>
+</body>
+</html>
