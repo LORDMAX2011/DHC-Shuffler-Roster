@@ -1,6 +1,6 @@
 # School Classroom Shuffle
 
-A responsive school roster app with a password-protected Express API and MongoDB Atlas storage. It serves the browser app and API from one Render web service. The first account is a single school administrator configured in Render; there is no public registration.
+A responsive school roster app with a password-protected Express API and MongoDB Atlas storage. One Render web service serves the app and API. The first administrator is configured with Render environment variables; administrators can create teacher/admin accounts, deactivate teachers, manage backups, and review a recent activity log. There is no public registration.
 
 ## Run locally
 
@@ -9,7 +9,7 @@ Requirements: Node.js 20 or newer and a MongoDB Atlas connection string.
 1. Copy `.env.example` to `.env` and fill in `MONGODB_URI`, `ADMIN_EMAIL`, `ADMIN_PASSWORD`, and `JWT_SECRET`.
 2. Use an admin password with at least 12 characters. Use a random JWT secret at least 48 characters long.
 3. In PowerShell, run `npm install`, then `npm start`.
-4. Open `http://localhost:3000` and sign in with the configured admin email and password.
+4. Open `http://localhost:3000` and sign in with the configured admin email and password. The bootstrap administrator is created from the environment settings the first time the server starts against an empty account collection; later password changes remain in effect across restarts.
 
 Never commit `.env`. `.gitignore` excludes it. `.env.example` contains placeholders only.
 
@@ -69,4 +69,8 @@ Render can redeploy the service after you push later commits to the connected br
 
 ## Data and access
 
-The app stores the school profile, class names and target sizes, student list, current groups, and saved rosters in MongoDB after sign-in. Login uses a single administrator configured through environment variables. Sessions expire after 12 hours. Student data is sensitive: use a private GitHub repository, keep database credentials and app secrets out of source control, and limit Atlas network access to Render's listed outbound ranges.
+After sign-in, the app stores school profile and appearance settings, classes, student names, current groups, saved rosters, and grouping rules in MongoDB. Teachers can manage rosters and change their own password. Administrators can create or deactivate accounts, export school data, restore backups, and review recent account and data activity. Accounts use 12+ character passwords; sign-in sessions expire after 12 hours.
+
+The server makes a MongoDB snapshot before each school-data update and a scheduled snapshot every 24 hours. Up to 30 snapshots are retained; administrators can also create and restore backups manually. These snapshots are stored in the same MongoDB cluster, so they are not a substitute for an independent Atlas backup plan. Roster history undo is available during the current browser session. Saved-roster retention can be configured in the Classes section; the default is to keep rosters until manually deleted.
+
+The app includes print layouts, CSV/Excel/JSON exports, high-contrast and reduced-motion support, date formats for Nigeria/UK/US, and an installable PWA. If the API is unavailable, it can run in local browser mode; local changes do not sync until you sign in. Review imported/OCR-extracted names before shuffling. Student names and any optional grouping attributes are sensitive school data: use a private GitHub repository, keep credentials out of source control, and limit Atlas network access to Render's listed outbound ranges.

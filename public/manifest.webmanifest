@@ -1,0 +1,13 @@
+{
+  "name": "School Classroom Shuffle",
+  "short_name": "Class Shuffle",
+  "description": "Shuffle and organize school class rosters.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f6f5f0",
+  "theme_color": "#256c54",
+  "icons": [
+    { "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}

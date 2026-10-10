@@ -4,6 +4,9 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#f6f5f0">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <link id="appFavicon" rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='18' fill='%23256c54'/%3E%3Cpath d='M18 34 28 44 47 21' fill='none' stroke='white' stroke-width='6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
   <title>Classroom Shuffle — Student Roster</title>
   <style>
@@ -213,6 +216,26 @@
     .panel-content .profile-card { margin: 0; box-shadow: none; }
     .panel-content .class-manager { margin-bottom: 14px; }
     .appearance-card { border: 1px solid var(--line); border-radius: 15px; background: var(--paper); padding: 18px; box-shadow: var(--shadow); }
+    .admin-tools { margin-top:14px; border:1px solid var(--line); border-radius:15px; padding:18px; background:var(--paper); }
+    .admin-tools h3 { margin:0 0 10px; font-size:14px; }
+    .admin-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; }
+    .admin-box { min-width:0; border:1px solid var(--line); border-radius:12px; padding:12px; }
+    .admin-box input, .admin-box select { min-width:0; width:100%; margin:5px 0; padding:8px; border:1px solid var(--line); border-radius:8px; color:var(--ink); background:var(--paper); font-size:12px; }
+    .admin-box button { margin-top:6px; }
+    .admin-list { max-height:180px; overflow:auto; margin:8px 0 0; padding:0; list-style:none; font-size:11px; }
+    .admin-list li { display:flex; justify-content:space-between; align-items:center; gap:8px; border-top:1px solid var(--line); padding:7px 0; }
+    .admin-list button { margin:0; padding:5px 8px; }
+    .roster-settings { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; margin:12px 0; }
+    .roster-settings label { min-width:0; margin:0; color:var(--muted); font-size:10px; }
+    .roster-settings select { display:block; width:100%; margin-top:5px; padding:8px; border:1px solid var(--line); border-radius:8px; color:var(--ink); background:var(--paper); font-size:11px; }
+    .constraint-controls { display:grid; grid-template-columns:1fr 1fr; gap:9px; margin:10px 0 13px; }
+    .constraint-controls label { margin:0; color:var(--muted); font-size:11px; }
+    .constraint-controls textarea { min-height:62px; margin-top:5px; padding:8px; font-size:11px; }
+    .balance-controls { margin:9px 0; padding:10px; border-radius:10px; background:var(--wash); }
+    .balance-controls label { margin:0; font-size:11px; }
+    .balance-controls p { margin:5px 0 0 21px; color:var(--muted); font-size:10px; line-height:1.4; }
+    .history-tools { display:flex; gap:7px; flex-wrap:wrap; }
+    .print-signatures { display:none; }
     .appearance-card h3 { margin: 0; font-size: 15px; }
     .appearance-card > p { margin: 5px 0 14px; color: var(--muted); font-size: 12px; line-height: 1.5; }
     .theme-options { display: flex; flex-wrap: wrap; gap: 9px; }
@@ -254,6 +277,8 @@
       .brand-mark { width: 36px; height: 36px; }
       .header-actions { flex: 0 0 auto; gap: 4px; }
       .mode-toggle { padding: 7px 8px; font-size: 10px; }
+      .roster-settings { grid-template-columns:1fr; }
+      .constraint-controls, .admin-grid { grid-template-columns:1fr; }
       .intro { margin-bottom: 20px; }
       .intro p { font-size: 14px; }
       .section-tabs { grid-template-columns: repeat(2, minmax(0, 1fr)); margin-bottom: 11px; }
@@ -315,6 +340,11 @@
       .class-group { break-inside: avoid; border-color: #bbb; }
       .class-title { background: #f2f2f2; }
       .student-name-input { border: 0; padding: 3px 0; color: #111; }
+      .print-signatures { display:none; }
+      :root[data-print-layout="compact"] .student-list li { padding:3px 7px; font-size:10px; }
+      :root[data-print-layout="compact"] .class-group { margin-bottom:6px; }
+      :root[data-print-layout="signoff"] .print-signatures { display:flex; gap:30px; margin-top:24px; break-inside:avoid; }
+      .print-signatures span { flex:1; border-top:1px solid #555; padding-top:6px; color:#333; font-size:10px; }
     }
   </style>
 </head>
@@ -334,7 +364,7 @@
   <main class="shell">
     <header>
       <div class="brand"><div class="brand-mark" id="brandMark" aria-hidden="true">↗</div><span id="brandName">Classroom Shuffle</span></div>
-      <div class="header-actions"><button id="modeToggle" class="mode-toggle" type="button" aria-pressed="false">Dark mode</button><div class="local-pill" id="connectionPill">Local storage only</div>
+      <div class="header-actions"><button id="installAppButton" class="mode-toggle hide" type="button">Install app</button><button id="modeToggle" class="mode-toggle" type="button" aria-pressed="false">Dark mode</button><div class="local-pill" id="connectionPill">Local storage only</div>
       <button id="logoutButton" class="button quiet hide" type="button" title="End this admin session">Log out</button></div>
     </header>
 
@@ -347,11 +377,47 @@
         <div class="profile-field"><label for="schoolPhoneInput">Phone or email</label><input id="schoolPhoneInput" type="text" maxlength="120" placeholder="Optional"></div>
         <div class="profile-logo-row">
           <div id="logoPreview" class="logo-preview">Logo</div>
-          <div><label class="file-label" for="schoolLogoInput" style="padding:0">Upload school logo</label><input id="schoolLogoInput" type="file" accept="image/*"><p class="profile-hint">A square logo works best. Saved only in this browser.</p></div>
+          <div><label class="file-label" for="schoolLogoInput" style="padding:0">Upload school logo</label><input id="schoolLogoInput" type="file" accept="image/*"><p class="profile-hint">A square logo works best. It syncs with the school profile when signed in.</p></div>
           <button id="removeLogoBtn" class="button quiet hide" type="button">Remove logo</button>
         </div>
       </div>
     </details>
+
+    <section id="accountSettingsCard" class="admin-tools hide" aria-labelledby="accountSettingsTitle">
+      <h3 id="accountSettingsTitle">My account</h3>
+      <div class="admin-box">
+        <strong>Change password</strong>
+        <form id="changePasswordForm">
+          <input id="currentPassword" type="password" autocomplete="current-password" placeholder="Current password" required aria-label="Current password">
+          <input id="newPassword" type="password" autocomplete="new-password" minlength="12" maxlength="256" placeholder="New password (12+ characters)" required aria-label="New password">
+          <button class="button secondary" type="submit">Update password</button>
+        </form>
+      </div>
+    </section>
+
+    <section id="adminToolsCard" class="admin-tools hide" aria-labelledby="adminToolsTitle">
+      <h3 id="adminToolsTitle">School administration</h3>
+      <div class="admin-grid">
+        <div class="admin-box">
+          <strong>Teacher accounts</strong>
+          <form id="accountForm">
+            <input id="accountName" placeholder="Teacher name" maxlength="100" required aria-label="Teacher name">
+            <input id="accountEmail" type="email" placeholder="Teacher email" required aria-label="Teacher email">
+            <input id="accountPassword" type="password" minlength="12" placeholder="Temporary password (12+ characters)" required aria-label="Temporary password">
+            <select id="accountRole" aria-label="Account role"><option value="teacher">Teacher</option><option value="admin">Administrator</option></select>
+            <button class="button secondary" type="submit">Create account</button>
+          </form>
+          <ul id="accountList" class="admin-list" aria-label="School accounts"></ul>
+        </div>
+        <div class="admin-box">
+          <strong>Backups and activity</strong>
+          <button id="manualBackupButton" class="button quiet" type="button">Create cloud backup now</button>
+          <button id="exportAllButton" class="button secondary" type="button">Export all school data</button>
+          <ul id="backupList" class="admin-list" aria-label="Available backups"></ul>
+          <details><summary>Recent audit activity</summary><ul id="auditList" class="admin-list" aria-label="Recent audit activity"></ul></details>
+        </div>
+      </div>
+    </section>
 
     <section class="appearance-card" id="appearanceCard" aria-labelledby="appearanceTitle">
       <h3 id="appearanceTitle">Make it yours</h3>
@@ -379,9 +445,18 @@
         </div>
         <div class="card-body">
           <div class="class-manager">
+            <div class="roster-settings">
+              <label>School year<select id="schoolYearSelect" aria-label="School year"></select></label>
+              <label>Keep saved rosters<select id="retentionSelect" aria-label="Saved roster retention"><option value="0">Never delete</option><option value="90">90 days</option><option value="180">180 days</option><option value="365">1 year</option></select></label>
+              <label>Date format<select id="dateLocaleSelect" aria-label="Date format"><option value="en-NG">Day / month / year</option><option value="en-GB">Day / month / year (UK)</option><option value="en-US">Month / day / year</option></select></label>
+            </div>
             <label for="classNameInput">Classes to group students into</label>
             <div class="class-add-row"><input id="classNameInput" type="text" placeholder="e.g. JSS 1A" maxlength="60"><button id="addClassBtn" class="button secondary" type="button">Add class</button></div>
             <div id="classChips" class="class-chips" aria-live="polite"></div>
+            <div class="constraint-controls">
+              <label>Keep together (one pair per line)<textarea id="togetherRules" placeholder="Ada Okafor, Tunde Bello" aria-label="Student pairs to keep together"></textarea></label>
+              <label>Keep apart (one pair per line)<textarea id="apartRules" placeholder="Mina Yusuf, Leo James" aria-label="Student pairs to keep apart"></textarea></label>
+            </div>
             <p class="class-help">When you enter names only, students will be shuffled and shared as evenly as possible across these classes. You can also provide a class beside each name.</p>
             <p class="class-help">Set a preferred size on each class chip; students are assigned to meet those targets first, then remaining students are balanced.</p>
             <div class="ideas-box">
@@ -395,7 +470,7 @@
             <h3>Save and reuse a roster</h3>
             <div class="saved-row"><input id="rosterSaveName" type="text" placeholder="e.g. JSS 1 · Term 1" aria-label="Roster name"><button id="saveRosterBtn" class="button secondary" type="button">Save current</button></div>
             <div class="saved-row"><select id="savedRosterSelect" aria-label="Saved rosters"><option value="">No saved rosters yet</option></select><button id="loadRosterBtn" class="button secondary" type="button">Load</button><button id="deleteRosterBtn" class="button quiet" type="button">Delete</button></div>
-            <p class="saved-hint">Saved rosters include student names and stay in this browser. Use Delete to remove a saved list.</p>
+            <p class="saved-hint">Saved rosters sync to your school account when signed in; local mode keeps them in this browser. Use Delete to remove a saved list.</p>
           </section>
           <div class="file-drop">
             <p><strong>Import a list or a picture</strong>CSV, text, Word (.docx), PDF, or a clear image of a class list.</p>
@@ -405,10 +480,12 @@
           <div class="format-note"><span aria-hidden="true">✳</span><span><strong>Format:</strong> one student per line, or student name then class separated by a comma or tab. A header row is okay.</span></div>
           <label for="roster">Student roster</label>
           <textarea id="roster" spellcheck="false" aria-describedby="format-example" placeholder="Name, Class&#10;Ada Okafor, JSS 1A&#10;Tunde Bello, JSS 1B&#10;Mina Yusuf, JSS 1A"></textarea>
-          <div id="format-example" class="row" style="margin-top:7px;justify-content:flex-start;color:var(--muted);font-size:11px">You can also upload a CSV file.</div>
+          <div id="format-example" class="row" style="margin-top:7px;justify-content:flex-start;color:var(--muted);font-size:11px">CSV columns: student name, class (optional), balance group (optional). Check imported names and groups before shuffling.</div>
+          <div class="balance-controls"><label><input id="balanceFieldToggle" type="checkbox"> Balance classes using the third CSV column</label><p>Use only school-approved grouping information. The value is used to spread matching groups evenly.</p></div>
           <div id="duplicateControls" class="hide"><div id="duplicateMessage" class="notice"></div><label class="privacy-toggle"><input id="allowDuplicates" type="checkbox"> I checked; keep repeated names</label></div>
           <div class="row">
             <button id="clearRosterBtn" class="button quiet" type="button">Clear student list</button>
+            <button id="undoFromStudents" class="button secondary" type="button" disabled>Undo last change</button>
             <button id="shuffleBtn" class="button primary" type="button">✦ &nbsp;Shuffle students</button>
           </div>
           <div id="notice" class="notice" role="status" aria-live="polite"></div>
@@ -436,11 +513,13 @@
       const intro = document.querySelector('.intro');
       const layout = document.querySelector('.layout');
       const profile = document.querySelector('.profile-card');
+      const accountSettingsCard = document.getElementById('accountSettingsCard');
+      const adminToolsCard = document.getElementById('adminToolsCard');
       const appearanceCard = document.getElementById('appearanceCard');
       const classManager = document.querySelector('.class-manager');
       const savedRostersPanel = document.querySelector('.saved-rosters');
       const resultCard = document.querySelector('.card.results');
-      if (!shell || !intro || !layout || !profile || !appearanceCard || !classManager || !savedRostersPanel || !resultCard) return;
+      if (!shell || !intro || !layout || !profile || !accountSettingsCard || !adminToolsCard || !appearanceCard || !classManager || !savedRostersPanel || !resultCard) return;
 
       const studentNodes = [
         layout.querySelector('.file-drop'), layout.querySelector('.format-note'), layout.querySelector('label[for="roster"]'),
@@ -492,7 +571,7 @@
         button.addEventListener('click', () => setActive(step.id));
         nav.appendChild(button);
       }
-      createPanel(steps[0], [profile]);
+      createPanel(steps[0], [profile, accountSettingsCard, adminToolsCard]);
       createPanel(steps[1], [classManager, savedRostersPanel]);
       createPanel(steps[2], studentNodes);
       createPanel(steps[3], [appearanceCard]);
@@ -546,6 +625,17 @@
     let searchTerm = '';
     let privacyMode = false;
     let savedRosters = [];
+    let currentUser = null;
+    const todayYear = new Date().getFullYear();
+    const academicStartYear = new Date().getMonth() >= 7 ? todayYear : todayYear - 1;
+    let schoolYear = `${academicStartYear}/${academicStartYear + 1}`;
+    let retentionDays = 0;
+    let dateLocale = 'en-NG';
+    let togetherRules = '';
+    let apartRules = '';
+    let studentAttributes = {};
+    let balanceByAttribute = false;
+    let rosterHistory = [];
     const defaultAppearance = { theme: 'forest', accent: '#256c54', background: '#f6f5f0', mode: 'light' };
     let appearance = { ...defaultAppearance };
     try {
@@ -554,6 +644,7 @@
     } catch { /* Keep the default theme if browser storage is unavailable. */ }
     let cloudApiMode = false;
     let cloudReady = false;
+    let cloudNeedsSync = false;
     let cloudSaveTimer = null;
     let cloudToken = '';
     try { cloudToken = sessionStorage.getItem('classroomShuffle.authToken') || ''; } catch { /* Session storage may be disabled. */ }
@@ -568,6 +659,22 @@
       teacherName = savedMeta.teacherName || '';
       rosterDate = savedMeta.rosterDate || rosterDate;
     } catch { /* Use today's date if browser storage is unavailable. */ }
+
+    function setupSchoolYearOptions() {
+      const select = document.getElementById('schoolYearSelect');
+      for (let year = academicStartYear - 5; year <= academicStartYear + 2; year++) {
+        const value = `${year}/${year + 1}`;
+        const option = document.createElement('option'); option.value = value; option.textContent = value; select.appendChild(option);
+      }
+      select.value = schoolYear;
+    }
+    setupSchoolYearOptions();
+    document.getElementById('schoolYearSelect').addEventListener('change', event => { schoolYear = event.target.value; scheduleCloudSave(); });
+    document.getElementById('retentionSelect').addEventListener('change', event => { retentionDays = Number(event.target.value) || 0; pruneSavedRosters(); scheduleCloudSave(); });
+    document.getElementById('dateLocaleSelect').addEventListener('change', event => { dateLocale = event.target.value; if (currentGroups.length) render(currentGroups); scheduleCloudSave(); });
+    document.getElementById('togetherRules').addEventListener('change', event => { captureRosterHistory(); togetherRules = event.target.value; scheduleCloudSave(); });
+    document.getElementById('apartRules').addEventListener('change', event => { captureRosterHistory(); apartRules = event.target.value; scheduleCloudSave(); });
+    document.getElementById('balanceFieldToggle').addEventListener('change', event => { captureRosterHistory(); balanceByAttribute = event.target.checked; scheduleCloudSave(); });
 
     const themePalettes = {
       forest: { label: 'Forest', accent: '#256c54', background: '#f6f5f0' },
@@ -678,9 +785,57 @@
         rosterDraft: rosterInput.value,
         groups: currentGroups.map(group => ({ className: group.className, students: [...group.students] })),
         teacherName,
-        rosterDate
+        rosterDate,
+        schoolYear,
+        retentionDays,
+        dateLocale,
+        togetherRules,
+        apartRules,
+        studentAttributes: { ...studentAttributes },
+        balanceByAttribute
       };
     }
+    function updateUndoButtons() {
+      document.getElementById('undoFromStudents').disabled = rosterHistory.length === 0;
+      const resultUndo = document.getElementById('undoFromResults');
+      if (resultUndo) resultUndo.disabled = rosterHistory.length === 0;
+    }
+    function captureRosterHistory() {
+      rosterHistory.push(JSON.parse(JSON.stringify({
+        classNames, classTargets, rosterDraft: rosterInput.value, groups: currentGroups,
+        teacherName, rosterDate, schoolYear, togetherRules, apartRules, studentAttributes, balanceByAttribute, savedRosters
+      })));
+      if (rosterHistory.length > 20) rosterHistory.shift();
+      updateUndoButtons();
+    }
+    function undoRosterChange() {
+      const previous = rosterHistory.pop();
+      if (!previous) return;
+      classNames = previous.classNames;
+      classTargets = previous.classTargets;
+      rosterInput.value = previous.rosterDraft;
+      currentGroups = previous.groups;
+      teacherName = previous.teacherName;
+      rosterDate = previous.rosterDate;
+      schoolYear = previous.schoolYear;
+      togetherRules = previous.togetherRules;
+      apartRules = previous.apartRules;
+      studentAttributes = previous.studentAttributes;
+      balanceByAttribute = previous.balanceByAttribute;
+      savedRosters = previous.savedRosters;
+      document.getElementById('schoolYearSelect').value = schoolYear;
+      document.getElementById('togetherRules').value = togetherRules;
+      document.getElementById('apartRules').value = apartRules;
+      document.getElementById('balanceFieldToggle').checked = balanceByAttribute;
+      renderClasses();
+      refreshSavedRosterOptions();
+      updateDuplicateReview();
+      if (currentGroups.length) render(currentGroups); else clearResults();
+      updateUndoButtons();
+      scheduleCloudSave();
+      showToast('Last roster change undone.');
+    }
+    document.getElementById('undoFromStudents').addEventListener('click', undoRosterChange);
     async function apiRequest(path, options = {}) {
       const headers = new Headers(options.headers || {});
       if (options.body) headers.set('Content-Type', 'application/json');
@@ -694,7 +849,66 @@
       }
       return payload;
     }
+    async function loadAdminTools() {
+      if (currentUser?.role !== 'admin') return;
+      const panel = document.getElementById('adminToolsCard');
+      panel.classList.remove('hide');
+      try {
+        const [usersResult, backupsResult, auditResult] = await Promise.all([
+          apiRequest('/api/users'), apiRequest('/api/backups'), apiRequest('/api/audit')
+        ]);
+        document.getElementById('accountList').innerHTML = usersResult.users.map(user => `<li><span>${escapeHtml(user.displayName)} · ${escapeHtml(user.role)}${user.active ? '' : ' · inactive'}</span>${user.role === 'teacher' && user.active ? `<button class="button quiet" type="button" data-deactivate-user="${escapeHtml(user._id)}">Deactivate</button>` : ''}</li>`).join('') || '<li>No accounts yet.</li>';
+        document.getElementById('backupList').innerHTML = backupsResult.backups.map(backup => `<li><span>${new Date(backup.createdAt).toLocaleString(dateLocale)} · ${escapeHtml(backup.reason)}</span><button class="button quiet" type="button" data-restore-backup="${escapeHtml(backup._id)}">Restore</button></li>`).join('') || '<li>No backups yet.</li>';
+        document.getElementById('auditList').innerHTML = auditResult.entries.map(entry => `<li><span>${new Date(entry.createdAt).toLocaleString(dateLocale)} · ${escapeHtml(entry.actor)} · ${escapeHtml(entry.action)}</span></li>`).join('') || '<li>No recorded activity yet.</li>';
+      } catch (error) { showToast(`Admin data could not load: ${error.message}`, true); }
+    }
+    document.getElementById('accountForm').addEventListener('submit', async event => {
+      event.preventDefault();
+      try {
+        await apiRequest('/api/users', { method: 'POST', body: JSON.stringify({ displayName: document.getElementById('accountName').value, email: document.getElementById('accountEmail').value, password: document.getElementById('accountPassword').value, role: document.getElementById('accountRole').value }) });
+        event.target.reset();
+        await loadAdminTools();
+        showToast('School account created.');
+      } catch (error) { showToast(error.message, true); }
+    });
+    document.getElementById('accountList').addEventListener('click', async event => {
+      const button = event.target.closest('[data-deactivate-user]');
+      if (!button || !confirm('Deactivate this teacher account? They will no longer be able to sign in.')) return;
+      try { await apiRequest(`/api/users/${encodeURIComponent(button.dataset.deactivateUser)}`, { method: 'DELETE' }); await loadAdminTools(); showToast('Teacher account deactivated.'); }
+      catch (error) { showToast(error.message, true); }
+    });
+    document.getElementById('backupList').addEventListener('click', async event => {
+      const button = event.target.closest('[data-restore-backup]');
+      if (!button || !confirm('Restore this backup? Current school data will be replaced.')) return;
+      try {
+        const result = await apiRequest(`/api/backups/${encodeURIComponent(button.dataset.restoreBackup)}/restore`, { method: 'POST' });
+        captureRosterHistory();
+        applyCloudState(result.state);
+        await loadAdminTools();
+        showToast('Backup restored.');
+      } catch (error) { showToast(error.message, true); }
+    });
+    document.getElementById('exportAllButton').addEventListener('click', () => {
+      const blob = new Blob([JSON.stringify({ exportedAt: new Date().toISOString(), schoolData: currentAppState() }, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a'); link.href = url; link.download = `${exportBaseName()}-school-backup.json`; link.click();
+      URL.revokeObjectURL(url);
+      showToast('Full school data backup downloaded.');
+      if (cloudReady) apiRequest('/api/audit', { method: 'POST', body: JSON.stringify({ action: 'data.exported', detail: 'Full JSON export' }) }).catch(() => {});
+    });
+    document.getElementById('manualBackupButton').addEventListener('click', async () => {
+      try { await apiRequest('/api/backups', { method: 'POST', body: '{}' }); await loadAdminTools(); showToast('MongoDB backup created.'); }
+      catch (error) { showToast(error.message, true); }
+    });
     function scheduleCloudSave() {
+      if (!cloudApiMode) {
+        clearTimeout(cloudSaveTimer);
+        cloudSaveTimer = setTimeout(() => {
+          try { localStorage.setItem('classroomShuffle.localState', JSON.stringify(currentAppState())); }
+          catch { showToast('Could not save a local copy. Browser storage may be full.', true); }
+        }, 500);
+        return;
+      }
       if (!cloudReady) return;
       clearTimeout(cloudSaveTimer);
       cloudSaveTimer = setTimeout(async () => {
@@ -711,6 +925,13 @@
     function applyCloudState(state) {
       if (!state) return false;
       if (state.appearance && typeof state.appearance === 'object') applyAppearance(state.appearance);
+      schoolYear = typeof state.schoolYear === 'string' ? state.schoolYear : schoolYear;
+      retentionDays = [0, 90, 180, 365].includes(Number(state.retentionDays)) ? Number(state.retentionDays) : 0;
+      dateLocale = ['en-NG', 'en-GB', 'en-US'].includes(state.dateLocale) ? state.dateLocale : 'en-NG';
+      togetherRules = typeof state.togetherRules === 'string' ? state.togetherRules : '';
+      apartRules = typeof state.apartRules === 'string' ? state.apartRules : '';
+      studentAttributes = state.studentAttributes && typeof state.studentAttributes === 'object' ? { ...state.studentAttributes } : {};
+      balanceByAttribute = state.balanceByAttribute === true;
       const profile = state.schoolProfile || {};
       schoolProfile.name.value = profile.name || '';
       schoolProfile.motto.value = profile.motto || '';
@@ -720,12 +941,21 @@
       classNames = Array.isArray(state.classNames) ? [...state.classNames] : [];
       classTargets = state.classTargets && typeof state.classTargets === 'object' ? { ...state.classTargets } : {};
       savedRosters = Array.isArray(state.savedRosters) ? state.savedRosters : [];
+      const yearSelect = document.getElementById('schoolYearSelect');
+      if (![...yearSelect.options].some(option => option.value === schoolYear)) { const option = document.createElement('option'); option.value = schoolYear; option.textContent = schoolYear; yearSelect.appendChild(option); }
+      yearSelect.value = schoolYear;
+      document.getElementById('retentionSelect').value = String(retentionDays);
+      document.getElementById('dateLocaleSelect').value = dateLocale;
+      document.getElementById('togetherRules').value = togetherRules;
+      document.getElementById('apartRules').value = apartRules;
+      document.getElementById('balanceFieldToggle').checked = balanceByAttribute;
       rosterInput.value = state.rosterDraft || '';
       currentGroups = Array.isArray(state.groups) ? state.groups.map(group => ({ className: group.className, students: [...group.students] })) : [];
       teacherName = state.teacherName || '';
       rosterDate = state.rosterDate || localToday();
       try { localStorage.setItem('classroomShuffle.savedRosters', JSON.stringify(savedRosters)); } catch { /* Cloud remains the primary copy. */ }
       try { localStorage.setItem('classroomShuffle.rosterMeta', JSON.stringify({ teacherName, rosterDate })); } catch { /* Cloud remains the primary copy. */ }
+      if (pruneSavedRosters()) cloudNeedsSync = true;
       saveSchoolProfile();
       renderClasses();
       refreshSavedRosterOptions();
@@ -743,13 +973,17 @@
     function signOut(showGate = false) {
       cloudReady = false;
       cloudToken = '';
+      currentUser = null;
+      document.getElementById('accountSettingsCard').classList.add('hide');
+      document.getElementById('adminToolsCard').classList.add('hide');
       try { sessionStorage.removeItem('classroomShuffle.authToken'); } catch { /* Ignore unavailable session storage. */ }
       document.getElementById('logoutButton').classList.add('hide');
       if (showGate && cloudApiMode) showLogin('Your sign-in expired. Please sign in again.');
       else if (cloudApiMode) showLogin();
     }
-    async function completeSignIn(token, shouldMigrateLocal = false) {
+    async function completeSignIn(token, shouldMigrateLocal = false, user = null) {
       cloudToken = token;
+      if (user) currentUser = user;
       try { sessionStorage.setItem('classroomShuffle.authToken', cloudToken); } catch { /* The token remains in memory for this page. */ }
       const result = await apiRequest('/api/data');
       if (result.state) applyCloudState(result.state);
@@ -757,8 +991,10 @@
       document.getElementById('authGate').classList.remove('visible');
       document.getElementById('logoutButton').classList.remove('hide');
       cloudReady = true;
+      document.getElementById('accountSettingsCard').classList.remove('hide');
+      if (currentUser?.role === 'admin') await loadAdminTools();
       setConnectionStatus('Connected · saved to cloud', 'cloud');
-      if (!result.state) scheduleCloudSave();
+      if (!result.state || cloudNeedsSync) { cloudNeedsSync = false; scheduleCloudSave(); }
     }
     document.getElementById('loginForm').addEventListener('submit', async event => {
       event.preventDefault();
@@ -767,12 +1003,20 @@
       button.disabled = true; button.textContent = 'Signing in…'; errorBox.textContent = '';
       try {
         const result = await apiRequest('/api/auth/login', { method: 'POST', body: JSON.stringify({ email: document.getElementById('loginEmail').value, password: document.getElementById('loginPassword').value }) });
-        await completeSignIn(result.token, true);
+        await completeSignIn(result.token, true, result.user);
         document.getElementById('loginPassword').value = '';
       } catch (error) { errorBox.textContent = error.message; }
       finally { button.disabled = false; button.textContent = 'Sign in'; }
     });
     document.getElementById('logoutButton').addEventListener('click', () => signOut());
+    document.getElementById('changePasswordForm').addEventListener('submit', async event => {
+      event.preventDefault();
+      try {
+        await apiRequest('/api/auth/change-password', { method: 'POST', body: JSON.stringify({ currentPassword: document.getElementById('currentPassword').value, newPassword: document.getElementById('newPassword').value }) });
+        event.target.reset();
+        showToast('Password updated.');
+      } catch (error) { showToast(error.message, true); }
+    });
     async function initializeBackend() {
       if (location.protocol === 'file:') { dismissStartup(); return; }
       try {
@@ -781,7 +1025,7 @@
         cloudApiMode = true;
         setConnectionStatus('Sign in to sync', 'cloud');
         if (cloudToken) {
-          try { await apiRequest('/api/auth/me'); await completeSignIn(cloudToken, false); return; }
+          try { const me = await apiRequest('/api/auth/me'); await completeSignIn(cloudToken, false, me.user); return; }
           catch { cloudToken = ''; try { sessionStorage.removeItem('classroomShuffle.authToken'); } catch { /* Ignore. */ } }
         }
         showLogin();
@@ -885,12 +1129,14 @@
     function renderClasses() {
       classChips.innerHTML = classNames.map((name, index) => `<span class="class-chip"><span>${escapeHtml(name)}</span><input class="class-size" type="number" min="1" max="500" placeholder="auto" title="Preferred class size" aria-label="Preferred size for ${escapeHtml(name)}" data-class-target="${index}" value="${classTargets[name] || ''}"><button type="button" aria-label="Remove ${escapeHtml(name)}" data-class-index="${index}">×</button></span>`).join('');
       classChips.querySelectorAll('[data-class-index]').forEach(button => button.addEventListener('click', () => {
+        captureRosterHistory();
         const [removed] = classNames.splice(Number(button.dataset.classIndex), 1);
         delete classTargets[removed];
         renderClasses();
         scheduleCloudSave();
       }));
       classChips.querySelectorAll('[data-class-target]').forEach(input => input.addEventListener('change', () => {
+        captureRosterHistory();
         const name = classNames[Number(input.dataset.classTarget)];
         const value = Number(input.value);
         if (value > 0) classTargets[name] = Math.min(value, 500); else delete classTargets[name];
@@ -905,6 +1151,7 @@
         notice.textContent = `${name} is already in your class list.`;
         return;
       }
+      captureRosterHistory();
       classNames.push(name);
       if (!Object.hasOwn(classTargets, name)) classTargets[name] = 0;
       classNames.sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
@@ -944,7 +1191,7 @@
         const name = fields[0] || '';
         const className = fields[1] || '';
         if (!name) { skipped.push(i + 1); continue; }
-        students.push({ name, className });
+        students.push({ name, className, groupAttribute: fields[2] || '' });
       }
       return { students, skipped };
     }
@@ -990,6 +1237,11 @@
       return value.replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char]));
     }
 
+    function formatRosterDate(value) {
+      if (!value) return '';
+      const [year, month, day] = value.split('-').map(Number);
+      return new Intl.DateTimeFormat(dateLocale, { dateStyle: 'medium', timeZone: 'UTC' }).format(new Date(Date.UTC(year, month - 1, day)));
+    }
     function render(groups, skippedCount = 0) {
       currentGroups = groups;
       const students = groups.reduce((sum, group) => sum + group.students.length, 0);
@@ -1014,6 +1266,21 @@
         return `<section class="class-group" style="--group-index:${groupIndex}"><div class="class-title"><span>${escapeHtml(group.className)}</span><span class="count">${group.students.length} student${group.students.length === 1 ? '' : 's'}${targetLabel}</span></div><ol class="student-list">${studentsHtml}</ol><div class="add-student-row"><input type="text" placeholder="Add a student to ${escapeHtml(group.className)}" aria-label="New student name" data-new-student="${groupIndex}"><button type="button" data-add-student="${groupIndex}">Add</button></div></section>`;
       }).join('');
       results.innerHTML = schoolBanner + `<div class="results-toolbar"><input id="studentSearch" type="search" placeholder="Search students or classes" aria-label="Search roster" value="${escapeHtml(searchTerm)}"><label class="meta-field">Teacher <input id="teacherNameInput" type="text" placeholder="Teacher name" value="${escapeHtml(teacherName)}"></label><label class="meta-field">Date <input id="rosterDateInput" type="date" value="${escapeHtml(rosterDate)}"></label><label class="privacy-toggle"><input id="privacyToggle" type="checkbox" ${privacyMode ? 'checked' : ''}> Hide names on screen</label></div><div class="summary"><span>✦ Randomized roster</span><span>${students} students</span><span>${groups.length} ${classWord}</span>${skippedCount ? `<span>${skippedCount} row${skippedCount === 1 ? '' : 's'} skipped</span>` : ''}</div>${rows}`;
+      const printSelect = document.createElement('select');
+      printSelect.id = 'printLayout'; printSelect.setAttribute('aria-label', 'Print layout');
+      printSelect.innerHTML = '<option value="standard">Standard print</option><option value="compact">Compact print</option><option value="signoff">Signature lines</option>';
+      printSelect.value = localStorage.getItem('classroomShuffle.printLayout') || 'standard';
+      printSelect.addEventListener('change', () => { document.documentElement.dataset.printLayout = printSelect.value; localStorage.setItem('classroomShuffle.printLayout', printSelect.value); });
+      document.documentElement.dataset.printLayout = printSelect.value;
+      results.querySelector('.results-toolbar').appendChild(printSelect);
+      const resultUndo = document.createElement('button');
+      resultUndo.id = 'undoFromResults'; resultUndo.className = 'button secondary'; resultUndo.type = 'button'; resultUndo.textContent = 'Undo last change';
+      resultUndo.addEventListener('click', undoRosterChange);
+      document.getElementById('resultTools').prepend(resultUndo);
+      updateUndoButtons();
+      results.insertAdjacentHTML('beforeend', '<div class="print-signatures"><span>Teacher signature</span><span>School approval</span></div>');
+      const bannerMeta = results.querySelector('.school-banner-copy span');
+      if (bannerMeta) bannerMeta.textContent = [profile.motto, profile.address, profile.contact, teacherName ? `Teacher: ${teacherName}` : '', rosterDate ? `Date: ${formatRosterDate(rosterDate)}` : '', `School year: ${schoolYear}`].filter(Boolean).join(' · ');
       document.getElementById('reshuffleBtn').addEventListener('click', reshuffle);
       document.getElementById('rebalanceBtn').addEventListener('click', rebalance);
       document.getElementById('printBtn').addEventListener('click', () => {
@@ -1033,6 +1300,7 @@
       });
       document.getElementById('privacyToggle').addEventListener('change', event => { privacyMode = event.target.checked; render(currentGroups); });
       const saveRosterMeta = () => {
+        captureRosterHistory();
         teacherName = document.getElementById('teacherNameInput').value.trim();
         rosterDate = document.getElementById('rosterDateInput').value;
         try { localStorage.setItem('classroomShuffle.rosterMeta', JSON.stringify({ teacherName, rosterDate })); } catch { /* Metadata can still be used for this roster. */ }
@@ -1044,11 +1312,13 @@
         const [gi, si] = input.dataset.studentName.split(':').map(Number);
         const value = input.value.trim();
         if (!value) { notice.textContent = 'Student names cannot be empty.'; input.value = currentGroups[gi].students[si]; return; }
+        captureRosterHistory();
         currentGroups[gi].students[si] = value;
         render(currentGroups);
       }));
       results.querySelectorAll('[data-move-student]').forEach(select => select.addEventListener('change', () => {
         const [gi, si] = select.dataset.moveStudent.split(':').map(Number);
+        captureRosterHistory();
         const [student] = currentGroups[gi].students.splice(si, 1);
         const target = currentGroups.find(group => group.className === select.value) || { className: select.value, students: [] };
         if (!currentGroups.includes(target)) currentGroups.push(target);
@@ -1058,6 +1328,7 @@
       }));
       results.querySelectorAll('[data-remove-student]').forEach(button => button.addEventListener('click', () => {
         const [gi, si] = button.dataset.removeStudent.split(':').map(Number);
+        captureRosterHistory();
         currentGroups[gi].students.splice(si, 1);
         currentGroups = currentGroups.filter(group => group.students.length || classNames.includes(group.className));
         if (currentGroups.length) render(currentGroups); else clearResults();
@@ -1067,6 +1338,7 @@
         const input = results.querySelector(`[data-new-student="${index}"]`);
         const name = input.value.trim();
         if (!name) return;
+        captureRosterHistory();
         currentGroups[index].students.push(name);
         render(currentGroups);
       }));
@@ -1090,8 +1362,18 @@
         catch { savedRosters = []; }
       }
       savedRosterSelect.innerHTML = savedRosters.length
-        ? '<option value="">Choose a saved roster</option>' + savedRosters.map(record => `<option value="${escapeHtml(record.id)}" ${record.id === selectedId ? 'selected' : ''}>${escapeHtml(record.name)}</option>`).join('')
+        ? '<option value="">Choose a saved roster</option>' + savedRosters.map(record => `<option value="${escapeHtml(record.id)}" ${record.id === selectedId ? 'selected' : ''}>${escapeHtml(record.schoolYear || 'School year not set')} · ${escapeHtml(record.name)}</option>`).join('')
         : '<option value="">No saved rosters yet</option>';
+    }
+    function pruneSavedRosters() {
+      if (!retentionDays) return false;
+      const cutoff = Date.now() - retentionDays * 86400000;
+      const before = savedRosters.length;
+      savedRosters = savedRosters.filter(record => !record.savedAt || Date.parse(record.savedAt) >= cutoff);
+      if (savedRosters.length === before) return false;
+      try { localStorage.setItem('classroomShuffle.savedRosters', JSON.stringify(savedRosters)); } catch { /* Cloud storage can still be updated. */ }
+      refreshSavedRosterOptions();
+      return true;
     }
     function saveCurrentRoster() {
       const nameInput = document.getElementById('rosterSaveName');
@@ -1103,6 +1385,13 @@
         id: `roster-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
         name,
         savedAt: new Date().toISOString(),
+        schoolYear,
+        retentionDays,
+        dateLocale,
+        togetherRules,
+        apartRules,
+        studentAttributes: { ...studentAttributes },
+        balanceByAttribute,
         teacherName,
         rosterDate,
         rosterText,
@@ -1110,6 +1399,7 @@
         targets: { ...classTargets },
         groups: currentGroups.map(group => ({ className: group.className, students: [...group.students] }))
       };
+      captureRosterHistory();
       savedRosters.push(record);
       try {
         localStorage.setItem('classroomShuffle.savedRosters', JSON.stringify(savedRosters));
@@ -1128,10 +1418,20 @@
     document.getElementById('loadRosterBtn').addEventListener('click', () => {
       const record = savedRosters.find(item => item.id === savedRosterSelect.value);
       if (!record) { notice.textContent = 'Choose a saved roster to load.'; return; }
+      captureRosterHistory();
       classNames = [...record.classes];
       classTargets = { ...record.targets };
       teacherName = record.teacherName || '';
       rosterDate = record.rosterDate || localToday();
+      schoolYear = record.schoolYear || schoolYear;
+      togetherRules = record.togetherRules || '';
+      apartRules = record.apartRules || '';
+      studentAttributes = record.studentAttributes || {};
+      balanceByAttribute = record.balanceByAttribute === true;
+      document.getElementById('schoolYearSelect').value = schoolYear;
+      document.getElementById('togetherRules').value = togetherRules;
+      document.getElementById('apartRules').value = apartRules;
+      document.getElementById('balanceFieldToggle').checked = balanceByAttribute;
       try { localStorage.setItem('classroomShuffle.rosterMeta', JSON.stringify({ teacherName, rosterDate })); } catch { /* The saved record remains loadable. */ }
       rosterInput.value = record.rosterText || '';
       currentGroups = (record.groups || []).map(group => ({ className: group.className, students: [...group.students] }));
@@ -1146,6 +1446,7 @@
       const selectedId = savedRosterSelect.value;
       if (!selectedId) { notice.textContent = 'Choose a saved roster to delete.'; return; }
       const record = savedRosters.find(item => item.id === selectedId);
+      captureRosterHistory();
       savedRosters = savedRosters.filter(item => item.id !== selectedId);
       localStorage.setItem('classroomShuffle.savedRosters', JSON.stringify(savedRosters));
       refreshSavedRosterOptions();
@@ -1157,15 +1458,25 @@
 
     function makeGroups(students) {
       const byClass = new Map();
+      const attributeCounts = new Map();
       const explicit = students.filter(student => student.className.trim());
       const namesOnly = students.filter(student => !student.className.trim());
-      for (const name of classNames) byClass.set(name, []);
+      for (const name of classNames) { byClass.set(name, []); attributeCounts.set(name, new Map()); }
+      const normalizedName = name => name.trim().toLocaleLowerCase();
+      function addAttributeCount(className, attribute) {
+        if (!attribute) return;
+        if (!attributeCounts.has(className)) attributeCounts.set(className, new Map());
+        const key = attribute.trim().toLocaleLowerCase();
+        const counts = attributeCounts.get(className);
+        counts.set(key, (counts.get(key) || 0) + 1);
+      }
       for (const student of explicit) {
         const requested = student.className.trim();
         const existing = classNames.find(name => name.toLocaleLowerCase() === requested.toLocaleLowerCase());
         const key = existing || requested;
         if (!byClass.has(key)) byClass.set(key, []);
         byClass.get(key).push(student.name.trim());
+        addAttributeCount(key, student.groupAttribute || studentAttributes[normalizedName(student.name)] || '');
       }
       const targets = [...classNames];
       if (!targets.length && namesOnly.length) {
@@ -1175,6 +1486,7 @@
       // Fill preferred class sizes first; place any remaining students in the smallest class.
       const mixed = shuffle(namesOnly);
       for (const student of mixed) {
+        const attribute = student.groupAttribute || studentAttributes[normalizedName(student.name)] || '';
         let candidates = targets.filter(name => classTargets[name] > 0 && byClass.get(name).length < classTargets[name]);
         if (candidates.length) {
           candidates.sort((a, b) => byClass.get(a).length / classTargets[a] - byClass.get(b).length / classTargets[b]);
@@ -1184,12 +1496,43 @@
           const minSize = Math.min(...targets.map(name => byClass.get(name).length));
           candidates = targets.filter(name => byClass.get(name).length === minSize);
         }
+        if (balanceByAttribute && attribute) {
+          const key = attribute.trim().toLocaleLowerCase();
+          const minimum = Math.min(...candidates.map(name => attributeCounts.get(name)?.get(key) || 0));
+          candidates = candidates.filter(name => (attributeCounts.get(name)?.get(key) || 0) === minimum);
+        }
         const target = candidates[Math.floor(Math.random() * candidates.length)];
         byClass.get(target).push(student.name.trim());
+        addAttributeCount(target, attribute);
       }
-      return [...byClass.entries()]
+      const groups = [...byClass.entries()]
         .sort(([a], [b]) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }))
         .map(([className, names]) => ({ className, students: shuffle(names) }));
+      const normalized = name => name.trim().toLocaleLowerCase();
+      const parsePairs = text => text.split(/\r?\n/).map(line => line.split(',').map(name => name.trim()).filter(Boolean)).filter(names => names.length >= 2);
+      const locate = name => groups.find(group => group.students.some(student => normalized(student) === normalized(name)));
+      for (const names of parsePairs(togetherRules)) {
+        const target = locate(names[0]);
+        if (!target) continue;
+        for (const name of names.slice(1)) {
+          const source = locate(name);
+          if (source && source !== target) {
+            const index = source.students.findIndex(student => normalized(student) === normalized(name));
+            target.students.push(source.students.splice(index, 1)[0]);
+          }
+        }
+      }
+      for (const names of parsePairs(apartRules)) {
+        for (let i = 0; i < names.length; i++) for (let j = i + 1; j < names.length; j++) {
+          const first = locate(names[i]); const second = locate(names[j]);
+          if (!first || !second || first !== second) continue;
+          const destination = groups.filter(group => group !== first).sort((a, b) => a.students.length - b.students.length)[0];
+          if (!destination) { notice.textContent = 'A keep-apart rule needs at least two classes.'; continue; }
+          const index = second.students.findIndex(student => normalized(student) === normalized(names[j]));
+          destination.students.push(second.students.splice(index, 1)[0]);
+        }
+      }
+      return groups.filter(group => group.students.length || classNames.includes(group.className));
     }
 
     function reshuffle() {
@@ -1198,11 +1541,12 @@
         : parseRows(rosterInput.value).students;
       if (students.length) {
         const groups = makeGroups(students);
-        if (groups.length) render(groups);
+        if (groups.length) { captureRosterHistory(); render(groups); }
       }
     }
     function rebalance() {
       if (!currentGroups.length) return reshuffle();
+      captureRosterHistory();
       for (const group of currentGroups) if (!classNames.some(name => name.toLocaleLowerCase() === group.className.toLocaleLowerCase())) classNames.push(group.className);
       classNames.sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
       renderClasses();
@@ -1225,6 +1569,8 @@
       }
       const groups = makeGroups(students);
       if (!groups.length) return;
+      captureRosterHistory();
+      students.forEach(student => { if (student.groupAttribute) studentAttributes[student.name.trim().toLocaleLowerCase()] = student.groupAttribute.trim(); });
       render(groups, skipped.length);
       showToast('Your student roster has been shuffled.');
       notice.textContent = duplicateRows.length ? `Included ${duplicateRows.length} repeated name entr${duplicateRows.length === 1 ? 'y' : 'ies'} as requested.` : skipped.length ? `Skipped ${skipped.length} empty row${skipped.length === 1 ? '' : 's'}.` : '';
@@ -1306,6 +1652,7 @@
         else throw new Error('This file type is not supported. Use a CSV, TXT, DOCX, PDF, or image file.');
         const cleaned = cleanExtractedText(text);
         if (!cleaned) throw new Error('No readable text was found in this file. Try a clearer image or a text-based document.');
+        captureRosterHistory();
         rosterInput.value = cleaned;
         updateDuplicateReview();
         notice.textContent = `Read text from ${file.name}. Review the names below, then shuffle.`;
@@ -1322,14 +1669,15 @@
     function downloadCsv() {
       if (!currentGroups.length) return;
       const profile = profileData();
-      const rows = [['School', 'Teacher', 'Date', 'Class', 'Student name']];
-      for (const group of currentGroups) for (const name of group.students) rows.push([profile.name, teacherName, rosterDate, group.className, name]);
+      const rows = [['School', 'School year', 'Teacher', 'Date', 'Class', 'Student name']];
+      for (const group of currentGroups) for (const name of group.students) rows.push([profile.name, schoolYear, teacherName, formatRosterDate(rosterDate), group.className, name]);
       const blob = new Blob(['\uFEFF' + rows.map(row => row.map(csvCell).join(',')).join('\r\n')], { type: 'text/csv;charset=utf-8' });
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url; link.download = `${exportBaseName()}-roster.csv`; link.click();
       URL.revokeObjectURL(url);
       showToast('CSV roster downloaded.');
+      if (cloudReady) apiRequest('/api/audit', { method: 'POST', body: JSON.stringify({ action: 'roster.exported', detail: 'CSV' }) }).catch(() => {});
     }
 
     function exportBaseName() {
@@ -1343,7 +1691,7 @@
       try {
         await loadScript('https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js');
         const profile = profileData();
-        const rosterRows = [['School', profile.name], ['Motto', profile.motto], ['Address', profile.address], ['Contact', profile.contact], ['Teacher', teacherName], ['Date', rosterDate], [], ['Class', 'Student name']];
+        const rosterRows = [['School', profile.name], ['School year', schoolYear], ['Motto', profile.motto], ['Address', profile.address], ['Contact', profile.contact], ['Teacher', teacherName], ['Date', formatRosterDate(rosterDate)], [], ['Class', 'Student name']];
         const summaryRows = [['Class', 'Students', 'Preferred size']];
         for (const group of currentGroups) {
           summaryRows.push([group.className, group.students.length, classTargets[group.className] || '']);
@@ -1359,6 +1707,7 @@
         window.XLSX.writeFile(workbook, `${exportBaseName()}-roster.xlsx`);
         notice.textContent = 'Excel roster downloaded.';
         showToast('Excel roster downloaded.');
+        if (cloudReady) apiRequest('/api/audit', { method: 'POST', body: JSON.stringify({ action: 'roster.exported', detail: 'Excel' }) }).catch(() => {});
       } catch (error) {
         notice.textContent = error.message || 'Could not prepare the Excel file. Check your internet connection and try again.';
       } finally {
@@ -1368,6 +1717,7 @@
     }
 
     document.getElementById('clearRosterBtn').addEventListener('click', () => {
+      captureRosterHistory();
       rosterInput.value = '';
       document.getElementById('allowDuplicates').checked = false;
       updateDuplicateReview();
@@ -1390,12 +1740,14 @@
         logoInput.value = '';
         saveSchoolProfile();
       } else if (section === 'classes') {
+        captureRosterHistory();
         classNames = [];
         classTargets = {};
         renderClasses();
         clearResults();
         scheduleCloudSave();
       } else if (section === 'students') {
+        captureRosterHistory();
         rosterInput.value = '';
         document.getElementById('allowDuplicates').checked = false;
         updateDuplicateReview();
@@ -1407,6 +1759,24 @@
       }
       notice.textContent = `${button.textContent} completed.`;
     }));
+    let installPrompt = null;
+    window.addEventListener('beforeinstallprompt', event => {
+      event.preventDefault();
+      installPrompt = event;
+      document.getElementById('installAppButton').classList.remove('hide');
+    });
+    document.getElementById('installAppButton').addEventListener('click', async () => {
+      if (!installPrompt) return;
+      installPrompt.prompt();
+      await installPrompt.userChoice;
+      installPrompt = null;
+      document.getElementById('installAppButton').classList.add('hide');
+    });
+    if ('serviceWorker' in navigator && location.protocol !== 'file:') navigator.serviceWorker.register('/sw.js').catch(() => {});
+    try {
+      const localState = JSON.parse(localStorage.getItem('classroomShuffle.localState') || 'null');
+      if (localState) applyCloudState(localState);
+    } catch { /* Ignore unavailable or malformed offline state. */ }
     initializeBackend();
   </script>
 </body>
