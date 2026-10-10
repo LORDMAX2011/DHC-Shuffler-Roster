@@ -4,6 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#f6f5f0">
+  <link id="appFavicon" rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='18' fill='%23256c54'/%3E%3Cpath d='M18 34 28 44 47 21' fill='none' stroke='white' stroke-width='6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
   <title>Classroom Shuffle — Student Roster</title>
   <style>
     :root {
@@ -20,6 +21,17 @@
       --red: #a84438;
       --shadow: 0 16px 44px rgba(39, 54, 45, .08);
     }
+    :root[data-mode="dark"] { color-scheme: dark; --ink:#edf2ef; --muted:#a9b6af; --line:#3b4942; --paper:#202a25; --wash:#151d19; --mint:#2d4438; --shadow:0 16px 44px rgba(0,0,0,.22); }
+    :root[data-mode="dark"] body { background:radial-gradient(ellipse at 82% 4%, color-mix(in srgb,var(--green) 17%,transparent),transparent 26rem),#151d19; }
+    :root[data-mode="dark"] .profile-field input, :root[data-mode="dark"] .login-card input, :root[data-mode="dark"] textarea, :root[data-mode="dark"] .class-add-row input, :root[data-mode="dark"] .ideas-top select, :root[data-mode="dark"] .saved-row input, :root[data-mode="dark"] .saved-row select, :root[data-mode="dark"] .class-size, :root[data-mode="dark"] .move-select, :root[data-mode="dark"] .results-toolbar input, :root[data-mode="dark"] .add-student-row input { color:var(--ink); background:#18211d; border-color:var(--line); }
+    :root[data-mode="dark"] .class-manager, :root[data-mode="dark"] .saved-rosters, :root[data-mode="dark"] .file-drop, :root[data-mode="dark"] .format-note, :root[data-mode="dark"] .school-banner, :root[data-mode="dark"] .class-title, :root[data-mode="dark"] .summary span { color:var(--ink); background:#26332c; }
+    :root[data-mode="dark"] .section-tab { background:#202a25; border-color:var(--line); color:var(--muted); }
+    :root[data-mode="dark"] .section-tab[aria-current="step"], :root[data-mode="dark"] .secondary { background:#304239; }
+    :root[data-mode="dark"] .idea-chip, :root[data-mode="dark"] .theme-option, :root[data-mode="dark"] .appearance-preview { color:var(--ink); background:#18211d; border-color:var(--line); }
+    :root[data-mode="dark"] .local-pill { color:var(--ink); background:#202a25; border-color:var(--line); }
+    :root[data-mode="dark"] .empty-icon, :root[data-mode="dark"] .student-name-input:focus { background:#26332c; }
+    :root[data-mode="dark"] .student-list li { border-color:#303b35; }
+    :root[data-mode="dark"] .student-name-input:focus { color:var(--ink); }
     * { box-sizing: border-box; }
     body {
       margin: 0;
@@ -40,6 +52,12 @@
     .local-pill::before { content: ""; width: 7px; height: 7px; background: #61a877; border-radius: 50%; }
     .local-pill.cloud::before { background: #3b82c4; }
     .local-pill.offline::before { background: #d5963a; }
+    .header-actions { display:flex; align-items:center; gap:10px; }
+    .mode-toggle { border:1px solid var(--line); border-radius:99px; padding:8px 11px; color:var(--ink); background:var(--paper); font-size:11px; font-weight:700; cursor:pointer; }
+    .startup-screen { position:fixed; inset:0; z-index:100; display:grid; place-content:center; justify-items:center; gap:13px; background:var(--wash); color:var(--ink); transition:opacity .3s,visibility .3s; }
+    .startup-screen.done { opacity:0; visibility:hidden; pointer-events:none; }
+    .startup-mark { display:grid; place-items:center; width:56px; height:56px; border-radius:18px; background:var(--green); color:white; font-size:25px; animation:floaty 1.5s ease-in-out infinite; }
+    .startup-screen p { margin:0; color:var(--muted); font-size:13px; }
     .auth-gate { display: none; position: fixed; inset: 0; z-index: 50; align-items: center; justify-content: center; padding: 20px; background: rgba(26,38,33,.58); backdrop-filter: blur(5px); }
     .auth-gate.visible { display: flex; }
     .login-card { width: min(430px, 100%); border-radius: 20px; background: var(--paper); padding: 27px; box-shadow: 0 22px 70px rgba(0,0,0,.2); }
@@ -184,6 +202,8 @@
     .section-panel.active { display: block; animation: appear .18s ease-out; }
     @keyframes appear { from { opacity: .65; transform: translateY(3px); } to { opacity: 1; transform: translateY(0); } }
     .panel-card { border: 1px solid rgba(218,225,216,.9); border-radius: 20px; background: var(--paper); box-shadow: var(--shadow); overflow: hidden; }
+    .panel-card, .appearance-card { transition: transform .2s ease, box-shadow .2s ease; }
+    .panel-card:hover, .appearance-card:hover { transform: translateY(-2px); box-shadow: 0 20px 48px rgba(39,54,45,.11); }
     .panel-heading { padding: 22px 25px 18px; border-bottom: 1px solid var(--line); }
     .panel-heading-top { display: flex; align-items: center; gap: 12px; }
     .panel-heading h2 { margin: 0; font-size: 19px; letter-spacing: -.025em; }
@@ -207,6 +227,12 @@
     .appearance-preview { margin-top: 14px; padding: 12px; border-radius: 12px; background: var(--wash); display: flex; align-items: center; justify-content: space-between; gap: 10px; }
     .appearance-preview span { color: var(--muted); font-size: 11px; }
     .appearance-preview strong { display: inline-block; border-radius: 9px; padding: 8px 11px; background: var(--green); color: white; font-size: 11px; }
+    .contrast-status { margin:12px 0 0; border-radius:10px; padding:9px 11px; color:var(--green-dark); background:var(--mint); font-size:11px; line-height:1.45; }
+    .contrast-status.low { color:#8a371f; background:#fff0e9; }
+    :root[data-mode="dark"] .contrast-status.low { color:#ffd4c2; background:#4a3028; }
+    .toast { position:fixed; z-index:80; right:20px; bottom:20px; max-width:min(420px,calc(100% - 40px)); padding:12px 16px; border:1px solid var(--line); border-radius:13px; background:var(--paper); color:var(--ink); box-shadow:var(--shadow); font-size:13px; opacity:0; transform:translateY(12px); pointer-events:none; transition:opacity .2s,transform .2s; }
+    .toast.visible { opacity:1; transform:translateY(0); }
+    .toast.error { border-color:#d99883; }
     .section-actions { display: flex; justify-content: space-between; gap: 12px; max-width: 900px; margin: 15px auto 0; }
     .section-actions .button { min-width: 130px; }
     .section-progress { height: 3px; background: #e4e9e1; max-width: 900px; margin: 0 auto 14px; border-radius: 9px; overflow: hidden; }
@@ -223,8 +249,11 @@
     @media (max-width: 600px) {
       .shell { width: calc(100% - 24px); padding-top: 15px; padding-bottom: 32px; }
       header { margin-bottom: 22px; }
-      .brand { font-size: 13px; gap: 8px; }
+      .brand { min-width: 0; flex: 1; font-size: 13px; gap: 8px; }
+      .brand span { max-width: 115px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
       .brand-mark { width: 36px; height: 36px; }
+      .header-actions { flex: 0 0 auto; gap: 4px; }
+      .mode-toggle { padding: 7px 8px; font-size: 10px; }
       .intro { margin-bottom: 20px; }
       .intro p { font-size: 14px; }
       .section-tabs { grid-template-columns: repeat(2, minmax(0, 1fr)); margin-bottom: 11px; }
@@ -290,6 +319,8 @@
   </style>
 </head>
 <body>
+  <div id="startupScreen" class="startup-screen" aria-live="polite"><div class="startup-mark" id="startupMark">↗</div><p>Preparing your school roster…</p></div>
+  <div id="successToast" class="toast" role="status" aria-live="polite"></div>
   <div id="authGate" class="auth-gate" role="dialog" aria-modal="true" aria-labelledby="loginTitle">
     <form id="loginForm" class="login-card">
       <h2 id="loginTitle">Sign in to your school roster</h2>
@@ -303,8 +334,8 @@
   <main class="shell">
     <header>
       <div class="brand"><div class="brand-mark" id="brandMark" aria-hidden="true">↗</div><span id="brandName">Classroom Shuffle</span></div>
-      <div class="local-pill" id="connectionPill">Local storage only</div>
-      <button id="logoutButton" class="button quiet hide" type="button">Sign out</button>
+      <div class="header-actions"><button id="modeToggle" class="mode-toggle" type="button" aria-pressed="false">Dark mode</button><div class="local-pill" id="connectionPill">Local storage only</div>
+      <button id="logoutButton" class="button quiet hide" type="button">Sign out</button></div>
     </header>
 
     <details class="card profile-card" open>
@@ -331,6 +362,7 @@
         <label class="color-control">Page background <input id="backgroundColorInput" type="color" value="#f6f5f0" aria-label="Page background color"></label>
       </div>
       <div class="appearance-preview"><span>Preview: buttons and highlights use your accent color.</span><strong>Example button</strong></div>
+      <p id="contrastStatus" class="contrast-status" role="status"></p>
     </section>
 
     <section class="intro">
@@ -514,7 +546,7 @@
     let searchTerm = '';
     let privacyMode = false;
     let savedRosters = [];
-    const defaultAppearance = { theme: 'forest', accent: '#256c54', background: '#f6f5f0' };
+    const defaultAppearance = { theme: 'forest', accent: '#256c54', background: '#f6f5f0', mode: 'light' };
     let appearance = { ...defaultAppearance };
     try {
       const localAppearance = JSON.parse(localStorage.getItem('classroomShuffle.appearance') || '{}');
@@ -541,23 +573,51 @@
       forest: { label: 'Forest', accent: '#256c54', background: '#f6f5f0' },
       ocean: { label: 'Ocean', accent: '#246b8f', background: '#f1f6f8' },
       sunset: { label: 'Sunset', accent: '#b85636', background: '#faf4ee' },
-      violet: { label: 'Violet', accent: '#7051a3', background: '#f5f2f9' }
+      violet: { label: 'Violet', accent: '#7051a3', background: '#f5f2f9' },
+      slate: { label: 'Slate', accent: '#4c6378', background: '#f1f4f6' },
+      marigold: { label: 'Marigold', accent: '#835b10', background: '#faf6e9' }
     };
+    function contrastRatio(hexA, hexB) {
+      const luminance = hex => {
+        const channels = [1, 3, 5].map(index => parseInt(hex.slice(index, index + 2), 16) / 255).map(value => value <= .04045 ? value / 12.92 : ((value + .055) / 1.055) ** 2.4);
+        return .2126 * channels[0] + .7152 * channels[1] + .0722 * channels[2];
+      };
+      const values = [luminance(hexA), luminance(hexB)].sort((a, b) => b - a);
+      return (values[0] + .05) / (values[1] + .05);
+    }
+    function updateContrastStatus() {
+      const ratio = contrastRatio('#ffffff', appearance.accent);
+      const status = document.getElementById('contrastStatus');
+      status.classList.toggle('low', ratio < 4.5);
+      status.textContent = ratio >= 4.5
+        ? `Good contrast: white button text has a ${ratio.toFixed(1)}:1 contrast ratio against this accent.`
+        : `Low contrast: white button text is ${ratio.toFixed(1)}:1 against this accent. Choose a darker accent for the recommended 4.5:1 ratio.`;
+    }
+    function updateModeButton() {
+      const button = document.getElementById('modeToggle');
+      button.textContent = appearance.mode === 'dark' ? 'Light mode' : 'Dark mode';
+      button.setAttribute('aria-pressed', String(appearance.mode === 'dark'));
+    }
     function applyAppearance(nextAppearance) {
       const validColor = value => typeof value === 'string' && /^#[0-9a-f]{6}$/i.test(value);
       appearance = {
         theme: themePalettes[nextAppearance.theme] ? nextAppearance.theme : 'custom',
         accent: validColor(nextAppearance.accent) ? nextAppearance.accent : defaultAppearance.accent,
-        background: validColor(nextAppearance.background) ? nextAppearance.background : defaultAppearance.background
+        background: validColor(nextAppearance.background) ? nextAppearance.background : defaultAppearance.background,
+        mode: nextAppearance.mode === 'dark' ? 'dark' : nextAppearance.mode === 'light' ? 'light' : appearance.mode
       };
       const root = document.documentElement;
+      root.dataset.mode = appearance.mode;
       root.style.setProperty('--green', appearance.accent);
       root.style.setProperty('--green-dark', `color-mix(in srgb, ${appearance.accent} 76%, #17231d)`);
-      root.style.setProperty('--mint', `color-mix(in srgb, ${appearance.accent} 13%, white)`);
+      root.style.setProperty('--mint', appearance.mode === 'dark' ? `color-mix(in srgb, ${appearance.accent} 28%, #18211d)` : `color-mix(in srgb, ${appearance.accent} 13%, white)`);
       root.style.setProperty('--wash', appearance.background);
+      document.querySelector('meta[name="theme-color"]').content = appearance.mode === 'dark' ? '#151d19' : appearance.background;
       document.getElementById('accentColorInput').value = appearance.accent;
       document.getElementById('backgroundColorInput').value = appearance.background;
       document.querySelectorAll('[data-theme]').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.theme === appearance.theme)));
+      updateModeButton();
+      updateContrastStatus();
       try { localStorage.setItem('classroomShuffle.appearance', JSON.stringify(appearance)); } catch { /* Theme stays active for this page. */ }
     }
     function renderThemeOptions() {
@@ -579,6 +639,28 @@
     }
     renderThemeOptions();
     applyAppearance(appearance);
+    document.getElementById('modeToggle').addEventListener('click', () => {
+      applyAppearance({ ...appearance, mode: appearance.mode === 'dark' ? 'light' : 'dark' });
+      scheduleCloudSave();
+    });
+
+    let toastTimer = null;
+    function showToast(message, isError = false) {
+      const toast = document.getElementById('successToast');
+      toast.textContent = message;
+      toast.classList.toggle('error', isError);
+      toast.classList.add('visible');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => toast.classList.remove('visible'), 3200);
+    }
+    function updateFavicon() {
+      const favicon = document.getElementById('appFavicon');
+      favicon.href = schoolLogo || favicon.dataset.defaultIcon;
+    }
+    document.getElementById('appFavicon').dataset.defaultIcon = document.getElementById('appFavicon').href;
+    function dismissStartup() {
+      document.getElementById('startupScreen').classList.add('done');
+    }
 
     function setConnectionStatus(text, mode = '') {
       const pill = document.getElementById('connectionPill');
@@ -692,9 +774,9 @@
     });
     document.getElementById('logoutButton').addEventListener('click', () => signOut());
     async function initializeBackend() {
-      if (location.protocol === 'file:') return;
+      if (location.protocol === 'file:') { dismissStartup(); return; }
       try {
-        const health = await fetch('/api/health', { cache: 'no-store' });
+        const health = await fetch('/api/health', { cache: 'no-store', signal: AbortSignal.timeout(6000) });
         if (!health.ok) throw new Error('API unavailable');
         cloudApiMode = true;
         setConnectionStatus('Sign in to sync', 'cloud');
@@ -707,6 +789,8 @@
         cloudApiMode = false;
         cloudReady = false;
         setConnectionStatus('Local mode · not synced', 'offline');
+      } finally {
+        setTimeout(dismissStartup, 220);
       }
     }
     const classIdeaSets = {
@@ -764,6 +848,7 @@
         brandMark.textContent = '↗';
         removeLogoButton.classList.add('hide');
       }
+      updateFavicon();
       if (currentGroups.length) render(currentGroups);
       scheduleCloudSave();
     }
@@ -1029,10 +1114,13 @@
       try {
         localStorage.setItem('classroomShuffle.savedRosters', JSON.stringify(savedRosters));
         refreshSavedRosterOptions(record.id);
+        scheduleCloudSave();
+        showToast(cloudReady ? `Roster “${name}” saved; cloud sync is queued.` : `Roster “${name}” saved in this browser.`);
         notice.textContent = `Saved “${name}” in this browser.`;
       } catch {
         savedRosters.pop();
         notice.textContent = 'Could not save this roster. Browser storage may be full; delete older saved rosters and try again.';
+        showToast('Could not save the roster. Browser storage may be full.', true);
       }
     }
     document.getElementById('saveRosterBtn').addEventListener('click', saveCurrentRoster);
@@ -1050,6 +1138,7 @@
       renderClasses();
       updateDuplicateReview();
       if (currentGroups.length) render(currentGroups); else clearResults();
+      showToast('Saved roster loaded.');
       document.getElementById('rosterSaveName').value = record.name;
       notice.textContent = `Loaded “${record.name}”.`;
     });
@@ -1060,6 +1149,8 @@
       savedRosters = savedRosters.filter(item => item.id !== selectedId);
       localStorage.setItem('classroomShuffle.savedRosters', JSON.stringify(savedRosters));
       refreshSavedRosterOptions();
+      scheduleCloudSave();
+      showToast('Saved roster deleted.');
       notice.textContent = record ? `Deleted “${record.name}”.` : 'Saved roster deleted.';
     });
     refreshSavedRosterOptions();
@@ -1135,6 +1226,7 @@
       const groups = makeGroups(students);
       if (!groups.length) return;
       render(groups, skipped.length);
+      showToast('Your student roster has been shuffled.');
       notice.textContent = duplicateRows.length ? `Included ${duplicateRows.length} repeated name entr${duplicateRows.length === 1 ? 'y' : 'ies'} as requested.` : skipped.length ? `Skipped ${skipped.length} empty row${skipped.length === 1 ? '' : 's'}.` : '';
     });
 
@@ -1217,6 +1309,7 @@
         rosterInput.value = cleaned;
         updateDuplicateReview();
         notice.textContent = `Read text from ${file.name}. Review the names below, then shuffle.`;
+        showToast('File read. Review the student names before shuffling.');
       } catch (error) {
         notice.textContent = error.message || 'Could not read that file. Try another file.';
       } finally {
@@ -1236,6 +1329,7 @@
       const link = document.createElement('a');
       link.href = url; link.download = `${exportBaseName()}-roster.csv`; link.click();
       URL.revokeObjectURL(url);
+      showToast('CSV roster downloaded.');
     }
 
     function exportBaseName() {
@@ -1264,6 +1358,7 @@
         window.XLSX.utils.book_append_sheet(workbook, summarySheet, 'Class summary');
         window.XLSX.writeFile(workbook, `${exportBaseName()}-roster.xlsx`);
         notice.textContent = 'Excel roster downloaded.';
+        showToast('Excel roster downloaded.');
       } catch (error) {
         notice.textContent = error.message || 'Could not prepare the Excel file. Check your internet connection and try again.';
       } finally {
