@@ -13,7 +13,7 @@
     :root {
       color-scheme: light;
       --ink: #202b28;
-      --muted: #66716c;
+      --muted: #53625b;
       --line: #e4e8e1;
       --paper: #fffefa;
       --wash: #f6f5f0;
@@ -24,7 +24,7 @@
       --red: #a84438;
       --shadow: 0 16px 44px rgba(39, 54, 45, .08);
     }
-    :root[data-mode="dark"] { color-scheme: dark; --ink:#edf2ef; --muted:#a9b6af; --line:#3b4942; --paper:#202a25; --wash:#151d19; --mint:#2d4438; --shadow:0 16px 44px rgba(0,0,0,.22); }
+    :root[data-mode="dark"] { color-scheme: dark; --ink:#edf2ef; --muted:#bfcbc4; --line:#3b4942; --paper:#202a25; --wash:#151d19; --mint:#2d4438; --shadow:0 16px 44px rgba(0,0,0,.22); }
     :root[data-mode="dark"] body { background:radial-gradient(ellipse at 82% 4%, color-mix(in srgb,var(--green) 17%,transparent),transparent 26rem),#151d19; }
     :root[data-mode="dark"] .profile-field input, :root[data-mode="dark"] .login-card input, :root[data-mode="dark"] textarea, :root[data-mode="dark"] .class-add-row input, :root[data-mode="dark"] .ideas-top select, :root[data-mode="dark"] .saved-row input, :root[data-mode="dark"] .saved-row select, :root[data-mode="dark"] .class-size, :root[data-mode="dark"] .move-select, :root[data-mode="dark"] .results-toolbar input, :root[data-mode="dark"] .add-student-row input { color:var(--ink); background:#18211d; border-color:var(--line); }
     :root[data-mode="dark"] .class-manager, :root[data-mode="dark"] .saved-rosters, :root[data-mode="dark"] .file-drop, :root[data-mode="dark"] .format-note, :root[data-mode="dark"] .school-banner, :root[data-mode="dark"] .class-title, :root[data-mode="dark"] .summary span { color:var(--ink); background:#26332c; }
@@ -43,7 +43,10 @@
       background:
         radial-gradient(ellipse at 82% 4%, rgba(244,162,97,.14), transparent 26rem),
         var(--wash);
-      font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-family: Arial, "Segoe UI", sans-serif;
+      font-size: 16px;
+      line-height: 1.5;
+      font-weight: 500;
       transition: background-color .25s ease, color .25s ease;
     }
     button, textarea, input { font: inherit; }
@@ -325,6 +328,21 @@
     @media (prefers-reduced-motion: reduce) {
       *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
     }
+    /* Keep helper copy readable while preserving compact controls and layout. */
+    label { font-size: 14px; }
+    input, select, textarea { font-size: 14px; }
+    .button { font-size: 14px; }
+    .class-chip, .count { font-size: 12px; }
+    .class-size { font-size: 13px; }
+    .student-list li { font-size: 14px; }
+    .student-name-input { font-size: 14px; }
+    .move-select, .results-toolbar .meta-field, .privacy-toggle { font-size: 12px; }
+    .profile-hint, .school-banner-copy span, .card-head p, .format-note, .class-help,
+    .idea-description, .saved-hint, .file-drop p, .tab-copy small, .panel-heading p,
+    .appearance-card > p, .balance-controls p, .contrast-status, .appearance-preview span,
+    .startup-screen p, .login-card p { font-size: 12px; line-height: 1.55; font-weight: 500; }
+    .constraint-controls label, .balance-controls label, .roster-settings label,
+    .local-pill, .section-tab, .summary span, .class-chip { font-weight: 700; }
     @media print {
       @page { margin: 14mm; }
       body { background: white; color: #111; }
