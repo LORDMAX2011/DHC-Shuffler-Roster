@@ -180,7 +180,9 @@
     @keyframes appear { from { opacity: .65; transform: translateY(3px); } to { opacity: 1; transform: translateY(0); } }
     .panel-card { border: 1px solid rgba(218,225,216,.9); border-radius: 20px; background: var(--paper); box-shadow: var(--shadow); overflow: hidden; }
     .panel-heading { padding: 22px 25px 18px; border-bottom: 1px solid var(--line); }
+    .panel-heading-top { display: flex; align-items: center; gap: 12px; }
     .panel-heading h2 { margin: 0; font-size: 19px; letter-spacing: -.025em; }
+    .panel-reset { flex: 0 0 auto; margin-left: auto; padding: 7px 10px; font-size: 12px; }
     .panel-heading p { margin: 5px 0 0; color: var(--muted); font-size: 13px; line-height: 1.45; }
     .panel-content { padding: 22px 25px; }
     .panel-content .profile-card { margin: 0; box-shadow: none; }
@@ -382,9 +384,9 @@
       const progressBar = progress.firstElementChild;
       const panelRoot = document.createElement('div'); panelRoot.className = 'section-panels';
       const steps = [
-        { id: 'school', label: 'School', hint: 'Name and logo', title: 'School profile', description: 'Set the school identity that appears on rosters.' },
-        { id: 'classes', label: 'Classes', hint: 'Groups and sizes', title: 'Set up classes', description: 'Choose class names, set preferred sizes, and save reusable rosters.' },
-        { id: 'students', label: 'Students', hint: 'Import and review', title: 'Add student names', description: 'Paste a list or import a document, then review it before shuffling.' },
+        { id: 'school', label: 'School', hint: 'Name and logo', title: 'School profile', description: 'Set the school identity that appears on rosters.', reset: true, resetLabel: 'Reset school info' },
+        { id: 'classes', label: 'Classes', hint: 'Groups and sizes', title: 'Set up classes', description: 'Choose class names, set preferred sizes, and save reusable rosters.', reset: true, resetLabel: 'Reset classes' },
+        { id: 'students', label: 'Students', hint: 'Import and review', title: 'Add student names', description: 'Paste a list or import a document, then review it before shuffling.', reset: true, resetLabel: 'Reset student names' },
         { id: 'results', label: 'Results', hint: 'Edit and export', title: 'Your class roster', description: 'Edit student groups, search, rebalance, and print or export.' }
       ];
       const panels = new Map();
@@ -397,7 +399,8 @@
           section.appendChild(resultCard);
         } else {
           const card = document.createElement('div'); card.className = 'panel-card';
-          card.innerHTML = `<div class="panel-heading"><h2>${step.title}</h2><p>${step.description}</p></div>`;
+          const resetButton = step.reset ? `<button class="button quiet panel-reset" type="button" data-reset-section="${step.id}">${step.resetLabel}</button>` : '';
+          card.innerHTML = `<div class="panel-heading"><div class="panel-heading-top"><h2>${step.title}</h2>${resetButton}</div><p>${step.description}</p></div>`;
           const content = document.createElement('div'); content.className = 'panel-content';
           children.forEach(child => content.appendChild(child));
           card.appendChild(content); section.appendChild(card);
@@ -1186,6 +1189,34 @@
       scheduleCloudSave();
       notice.textContent = 'Student list cleared. Your school details and class names are still here.';
     });
+    document.querySelectorAll('[data-reset-section]').forEach(button => button.addEventListener('click', () => {
+      const section = button.dataset.resetSection;
+      const prompts = {
+        school: 'Clear the school name, motto, address, contact, and logo?',
+        classes: 'Clear all class names, preferred sizes, and current grouped results? Student names and saved rosters will remain.',
+        students: 'Clear the current student list and grouped results? Saved rosters will remain.'
+      };
+      if (!window.confirm(prompts[section])) return;
+      if (section === 'school') {
+        Object.values(schoolProfile).forEach(input => { input.value = ''; });
+        schoolLogo = '';
+        logoInput.value = '';
+        saveSchoolProfile();
+      } else if (section === 'classes') {
+        classNames = [];
+        classTargets = {};
+        renderClasses();
+        clearResults();
+        scheduleCloudSave();
+      } else if (section === 'students') {
+        rosterInput.value = '';
+        document.getElementById('allowDuplicates').checked = false;
+        updateDuplicateReview();
+        clearResults();
+        scheduleCloudSave();
+      }
+      notice.textContent = `${button.textContent} completed.`;
+    }));
     initializeBackend();
   </script>
 </body>
