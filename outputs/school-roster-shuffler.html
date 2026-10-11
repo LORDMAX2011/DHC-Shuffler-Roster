@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#f1f4f6">
+  <meta name="theme-color" content="#e2eaf1">
   <link rel="manifest" href="/manifest.webmanifest">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -16,7 +16,7 @@
       --muted: #53625b;
       --line: #e4e8e1;
       --paper: #fffefa;
-      --wash: #f1f4f6;
+      --wash: #e2eaf1;
       --green: #4c6378;
       --green-dark: #3a4e62;
       --mint: #e6edf3;
@@ -25,7 +25,7 @@
       --shadow: 0 16px 44px rgba(39, 54, 45, .08);
     }
     :root[data-mode="dark"] { color-scheme: dark; --ink:#edf2ef; --muted:#bfcbc4; --line:#3b4942; --paper:#202a25; --wash:#151d19; --mint:#2d4438; --shadow:0 16px 44px rgba(0,0,0,.22); }
-    :root[data-mode="dark"] body { background:radial-gradient(ellipse at 82% 4%, color-mix(in srgb,var(--green) 17%,transparent),transparent 26rem),#151d19; }
+    :root[data-mode="dark"] body { background:var(--wash); }
     :root[data-mode="dark"] .profile-field input, :root[data-mode="dark"] .login-card input, :root[data-mode="dark"] textarea, :root[data-mode="dark"] .class-add-row input, :root[data-mode="dark"] .ideas-top select, :root[data-mode="dark"] .saved-row input, :root[data-mode="dark"] .saved-row select, :root[data-mode="dark"] .class-size, :root[data-mode="dark"] .move-select, :root[data-mode="dark"] .results-toolbar input, :root[data-mode="dark"] .add-student-row input { color:var(--ink); background:#18211d; border-color:var(--line); }
     :root[data-mode="dark"] .class-manager, :root[data-mode="dark"] .saved-rosters, :root[data-mode="dark"] .file-drop, :root[data-mode="dark"] .format-note, :root[data-mode="dark"] .school-banner, :root[data-mode="dark"] .class-title, :root[data-mode="dark"] .summary span { color:var(--ink); background:#26332c; }
     :root[data-mode="dark"] .section-tab { background:#202a25; border-color:var(--line); color:var(--muted); }
@@ -42,9 +42,7 @@
       margin: 0;
       min-height: 100vh;
       color: var(--ink);
-      background:
-        radial-gradient(ellipse at 82% 4%, rgba(244,162,97,.14), transparent 26rem),
-        var(--wash);
+      background: var(--wash);
       font-family: Arial, "Segoe UI", sans-serif;
       font-size: 16px;
       line-height: 1.5;
@@ -457,7 +455,7 @@
       <div class="theme-options" id="themeOptions" aria-label="Color themes"></div>
       <div class="color-controls">
         <label class="color-control">Main accent <input id="accentColorInput" type="color" value="#4c6378" aria-label="Main accent color"></label>
-        <label class="color-control">Page background <input id="backgroundColorInput" type="color" value="#f1f4f6" aria-label="Page background color"></label>
+        <label class="color-control">Page background <input id="backgroundColorInput" type="color" value="#e2eaf1" aria-label="Page background color"></label>
       </div>
       <div class="appearance-preview"><span>Preview: buttons and highlights use your accent color.</span><strong>Example button</strong></div>
       <p id="contrastStatus" class="contrast-status" role="status"></p>
@@ -677,7 +675,7 @@
     let studentAttributes = {};
     let balanceByAttribute = false;
     let rosterHistory = [];
-    const defaultAppearance = { theme: 'slate', accent: '#4c6378', background: '#f1f4f6', mode: 'light', textSize: 'large', highContrast: true };
+    const defaultAppearance = { theme: 'slate', accent: '#4c6378', background: '#e2eaf1', mode: 'light', textSize: 'large', highContrast: true };
     let appearance = { ...defaultAppearance };
     try {
       const localAppearance = JSON.parse(localStorage.getItem('classroomShuffle.appearance') || '{}');
@@ -718,12 +716,12 @@
     document.getElementById('balanceFieldToggle').addEventListener('change', event => { captureRosterHistory(); balanceByAttribute = event.target.checked; scheduleCloudSave(); });
 
     const themePalettes = {
-      forest: { label: 'Forest', accent: '#256c54', background: '#f6f5f0' },
-      ocean: { label: 'Ocean', accent: '#246b8f', background: '#f1f6f8' },
-      sunset: { label: 'Sunset', accent: '#b85636', background: '#faf4ee' },
-      violet: { label: 'Violet', accent: '#7051a3', background: '#f5f2f9' },
-      slate: { label: 'Slate', accent: '#4c6378', background: '#f1f4f6' },
-      marigold: { label: 'Marigold', accent: '#835b10', background: '#faf6e9' }
+      forest: { label: 'Forest', accent: '#256c54', background: '#e6f1e9' },
+      ocean: { label: 'Ocean', accent: '#246b8f', background: '#e1f0f8' },
+      sunset: { label: 'Sunset', accent: '#b85636', background: '#fff0e6' },
+      violet: { label: 'Violet', accent: '#7051a3', background: '#efe8fa' },
+      slate: { label: 'Slate', accent: '#4c6378', background: '#e2eaf1' },
+      marigold: { label: 'Marigold', accent: '#835b10', background: '#fff3d6' }
     };
     function contrastRatio(hexA, hexB) {
       const luminance = hex => {
@@ -768,10 +766,22 @@
       root.dataset.contrast = appearance.highContrast ? 'high' : 'normal';
       document.getElementById('textSizeSelect').value = appearance.textSize;
       document.getElementById('highContrastToggle').checked = appearance.highContrast;
+      const backgroundIsDark = contrastRatio('#111111', appearance.background) < 4.5;
+      const pageBackground = appearance.mode === 'dark'
+        ? `color-mix(in srgb, ${appearance.background} 22%, #080b10)`
+        : appearance.background;
+      const lightInk = backgroundIsDark ? '#ffffff' : '#111111';
       const contrastPalette = appearance.highContrast
-        ? (appearance.mode === 'dark'
-          ? { ink:'#fff', muted:'#f0f4f1', line:'#fff', paper:'#000', wash:'#000', mint:'#161b18', green:contrastRatio('#fff', appearance.accent) >= 4.5 ? appearance.accent : '#33485d', greenDark:'#dcecff' }
-          : { ink:'#111', muted:'#26332c', line:'#37433b', paper:contrastRatio('#111', appearance.background) >= 7 ? appearance.background : '#fff', wash:contrastRatio('#111', appearance.background) >= 7 ? appearance.background : '#fff', mint:`color-mix(in srgb, ${appearance.accent} 13%, white)`, green:contrastRatio('#fff', appearance.accent) >= 4.5 ? appearance.accent : '#33485d', greenDark:'#28394b' })
+        ? {
+            ink: appearance.mode === 'dark' ? '#ffffff' : lightInk,
+            muted: appearance.mode === 'dark' || backgroundIsDark ? '#f0f4f1' : '#26332c',
+            line: appearance.mode === 'dark' || backgroundIsDark ? '#ffffff' : '#37433b',
+            paper: appearance.mode === 'dark' || backgroundIsDark ? '#000000' : '#ffffff',
+            wash: pageBackground,
+            mint: appearance.mode === 'dark' ? '#161b18' : backgroundIsDark ? '#171717' : `color-mix(in srgb, ${appearance.accent} 13%, white)`,
+            green: contrastRatio('#ffffff', appearance.accent) >= 4.5 ? appearance.accent : '#33485d',
+            greenDark: appearance.mode === 'dark' ? '#dcecff' : '#28394b'
+          }
         : null;
       for (const [variable, key] of [['--ink','ink'],['--muted','muted'],['--line','line'],['--paper','paper'],['--wash','wash'],['--mint','mint'],['--green','green'],['--green-dark','greenDark']]) {
         if (contrastPalette) root.style.setProperty(variable, contrastPalette[key]);
@@ -781,9 +791,9 @@
         root.style.setProperty('--green', appearance.accent);
         root.style.setProperty('--green-dark', `color-mix(in srgb, ${appearance.accent} 76%, #17231d)`);
         root.style.setProperty('--mint', appearance.mode === 'dark' ? `color-mix(in srgb, ${appearance.accent} 28%, #18211d)` : `color-mix(in srgb, ${appearance.accent} 13%, white)`);
-        root.style.setProperty('--wash', appearance.background);
+        root.style.setProperty('--wash', pageBackground);
       }
-      document.querySelector('meta[name="theme-color"]').content = appearance.mode === 'dark' ? (appearance.highContrast ? '#000000' : '#151d19') : (appearance.highContrast && contrastRatio('#111111', appearance.background) < 7 ? '#ffffff' : appearance.background);
+      document.querySelector('meta[name="theme-color"]').content = pageBackground;
       document.getElementById('accentColorInput').value = appearance.accent;
       document.getElementById('backgroundColorInput').value = appearance.background;
       document.querySelectorAll('[data-theme]').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.theme === appearance.theme)));
