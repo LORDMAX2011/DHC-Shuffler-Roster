@@ -431,17 +431,6 @@
       <h3 id="adminToolsTitle">School administration</h3>
       <div class="admin-grid">
         <div class="admin-box">
-          <strong>Teacher accounts</strong>
-          <form id="accountForm">
-            <input id="accountName" placeholder="Teacher name" maxlength="100" required aria-label="Teacher name">
-            <input id="accountEmail" type="email" placeholder="Teacher email" required aria-label="Teacher email">
-            <input id="accountPassword" type="password" minlength="12" placeholder="Temporary password (12+ characters)" required aria-label="Temporary password">
-            <select id="accountRole" aria-label="Account role"><option value="teacher">Teacher</option><option value="admin">Administrator</option></select>
-            <button class="button secondary" type="submit">Create account</button>
-          </form>
-          <ul id="accountList" class="admin-list" aria-label="School accounts"></ul>
-        </div>
-        <div class="admin-box">
           <strong>Backups and activity</strong>
           <button id="manualBackupButton" class="button quiet" type="button">Create cloud backup now</button>
           <button id="exportAllButton" class="button secondary" type="button">Export all school data</button>
@@ -923,29 +912,13 @@
       const panel = document.getElementById('adminToolsCard');
       panel.classList.remove('hide');
       try {
-        const [usersResult, backupsResult, auditResult] = await Promise.all([
-          apiRequest('/api/users'), apiRequest('/api/backups'), apiRequest('/api/audit')
+        const [backupsResult, auditResult] = await Promise.all([
+          apiRequest('/api/backups'), apiRequest('/api/audit')
         ]);
-        document.getElementById('accountList').innerHTML = usersResult.users.map(user => `<li><span>${escapeHtml(user.displayName)} · ${escapeHtml(user.role)}${user.active ? '' : ' · inactive'}</span>${user.role === 'teacher' && user.active ? `<button class="button quiet" type="button" data-deactivate-user="${escapeHtml(user._id)}">Deactivate</button>` : ''}</li>`).join('') || '<li>No accounts yet.</li>';
         document.getElementById('backupList').innerHTML = backupsResult.backups.map(backup => `<li><span>${new Date(backup.createdAt).toLocaleString(dateLocale)} · ${escapeHtml(backup.reason)}</span><button class="button quiet" type="button" data-restore-backup="${escapeHtml(backup._id)}">Restore</button></li>`).join('') || '<li>No backups yet.</li>';
         document.getElementById('auditList').innerHTML = auditResult.entries.map(entry => `<li><span>${new Date(entry.createdAt).toLocaleString(dateLocale)} · ${escapeHtml(entry.actor)} · ${escapeHtml(entry.action)}</span></li>`).join('') || '<li>No recorded activity yet.</li>';
       } catch (error) { showToast(`Admin data could not load: ${error.message}`, true); }
     }
-    document.getElementById('accountForm').addEventListener('submit', async event => {
-      event.preventDefault();
-      try {
-        await apiRequest('/api/users', { method: 'POST', body: JSON.stringify({ displayName: document.getElementById('accountName').value, email: document.getElementById('accountEmail').value, password: document.getElementById('accountPassword').value, role: document.getElementById('accountRole').value }) });
-        event.target.reset();
-        await loadAdminTools();
-        showToast('School account created.');
-      } catch (error) { showToast(error.message, true); }
-    });
-    document.getElementById('accountList').addEventListener('click', async event => {
-      const button = event.target.closest('[data-deactivate-user]');
-      if (!button || !confirm('Deactivate this teacher account? They will no longer be able to sign in.')) return;
-      try { await apiRequest(`/api/users/${encodeURIComponent(button.dataset.deactivateUser)}`, { method: 'DELETE' }); await loadAdminTools(); showToast('Teacher account deactivated.'); }
-      catch (error) { showToast(error.message, true); }
-    });
     document.getElementById('backupList').addEventListener('click', async event => {
       const button = event.target.closest('[data-restore-backup]');
       if (!button || !confirm('Restore this backup? Current school data will be replaced.')) return;
