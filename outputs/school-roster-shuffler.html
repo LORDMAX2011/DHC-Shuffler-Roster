@@ -3,11 +3,11 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#f6f5f0">
+  <meta name="theme-color" content="#f1f4f6">
   <link rel="manifest" href="/manifest.webmanifest">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
-  <link id="appFavicon" rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='18' fill='%23256c54'/%3E%3Cpath d='M18 34 28 44 47 21' fill='none' stroke='white' stroke-width='6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+  <link id="appFavicon" rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='18' fill='%234c6378'/%3E%3Cpath d='M18 34 28 44 47 21' fill='none' stroke='white' stroke-width='6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
   <title>Classroom Shuffle — Student Roster</title>
   <style>
     :root {
@@ -16,10 +16,10 @@
       --muted: #53625b;
       --line: #e4e8e1;
       --paper: #fffefa;
-      --wash: #f6f5f0;
-      --green: #256c54;
-      --green-dark: #1c5541;
-      --mint: #e7f1e8;
+      --wash: #f1f4f6;
+      --green: #4c6378;
+      --green-dark: #3a4e62;
+      --mint: #e6edf3;
       --orange: #f4a261;
       --red: #a84438;
       --shadow: 0 16px 44px rgba(39, 54, 45, .08);
@@ -122,6 +122,11 @@
     .class-add-row .button { padding: 9px 12px; }
     .class-chips { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 10px; }
     .class-chip { display: inline-flex; align-items: center; gap: 7px; background: var(--mint); color: var(--green-dark); border-radius: 99px; padding: 6px 8px 6px 10px; font-size: 11px; font-weight: 750; }
+    .class-entry-box { margin:12px 0; padding:14px; border:1px solid var(--line); border-radius:12px; background:var(--paper); }
+    .class-entry-box h3 { margin:0 0 10px; font-size:16px; }
+    .class-entry-box select { width:100%; margin:0 0 12px; padding:10px; border:1px solid var(--line); border-radius:9px; background:var(--paper); color:var(--ink); }
+    .class-entry-box textarea { width:100%; min-height:110px; margin:0 0 10px; padding:10px; border:1px solid var(--line); border-radius:9px; background:var(--paper); color:var(--ink); resize:vertical; }
+    .class-entry-box p { margin:8px 0 0; color:var(--muted); font-size:12px; line-height:1.5; }
     .class-size { width: 42px; border: 1px solid #cddbcf; border-radius: 7px; padding: 3px 4px; color: var(--ink); background: white; font-size: 10px; font-weight: 600; }
     .class-chip button { border: 0; border-radius: 50%; width: 17px; height: 17px; padding: 0; background: rgba(37,108,84,.12); color: var(--green-dark); cursor: pointer; line-height: 17px; }
     .class-help { color: var(--muted); font-size: 11px; line-height: 1.45; margin: 8px 0 0; }
@@ -266,10 +271,10 @@
     :root[data-mode="dark"] :focus-visible { outline-color:#8dc5ff !important; }
     :root[data-text-size="large"] body { font-size:18px; }
     :root[data-text-size="large"] label, :root[data-text-size="large"] input, :root[data-text-size="large"] select, :root[data-text-size="large"] textarea, :root[data-text-size="large"] .button, :root[data-text-size="large"] .student-list li { font-size:16px !important; }
-    :root[data-text-size="large"] .profile-hint, :root[data-text-size="large"] .school-banner-copy span, :root[data-text-size="large"] .card-head p, :root[data-text-size="large"] .format-note, :root[data-text-size="large"] .class-help, :root[data-text-size="large"] .idea-description, :root[data-text-size="large"] .saved-hint, :root[data-text-size="large"] .file-drop p, :root[data-text-size="large"] .tab-copy small, :root[data-text-size="large"] .panel-heading p, :root[data-text-size="large"] .appearance-card > p, :root[data-text-size="large"] .balance-controls p, :root[data-text-size="large"] .contrast-status { font-size:14px !important; }
+    :root[data-text-size="large"] .profile-hint, :root[data-text-size="large"] .school-banner-copy span, :root[data-text-size="large"] .card-head p, :root[data-text-size="large"] .format-note, :root[data-text-size="large"] .class-help, :root[data-text-size="large"] .idea-description, :root[data-text-size="large"] .saved-hint, :root[data-text-size="large"] .file-drop p, :root[data-text-size="large"] .tab-copy small, :root[data-text-size="large"] .panel-heading p, :root[data-text-size="large"] .appearance-card > p, :root[data-text-size="large"] .balance-controls p, :root[data-text-size="large"] .class-entry-box p, :root[data-text-size="large"] .contrast-status { font-size:14px !important; }
     :root[data-text-size="extra"] body { font-size:20px; }
     :root[data-text-size="extra"] label, :root[data-text-size="extra"] input, :root[data-text-size="extra"] select, :root[data-text-size="extra"] textarea, :root[data-text-size="extra"] .button, :root[data-text-size="extra"] .student-list li { font-size:18px !important; }
-    :root[data-text-size="extra"] .profile-hint, :root[data-text-size="extra"] .school-banner-copy span, :root[data-text-size="extra"] .card-head p, :root[data-text-size="extra"] .format-note, :root[data-text-size="extra"] .class-help, :root[data-text-size="extra"] .idea-description, :root[data-text-size="extra"] .saved-hint, :root[data-text-size="extra"] .file-drop p, :root[data-text-size="extra"] .tab-copy small, :root[data-text-size="extra"] .panel-heading p, :root[data-text-size="extra"] .appearance-card > p, :root[data-text-size="extra"] .balance-controls p, :root[data-text-size="extra"] .contrast-status { font-size:16px !important; }
+    :root[data-text-size="extra"] .profile-hint, :root[data-text-size="extra"] .school-banner-copy span, :root[data-text-size="extra"] .card-head p, :root[data-text-size="extra"] .format-note, :root[data-text-size="extra"] .class-help, :root[data-text-size="extra"] .idea-description, :root[data-text-size="extra"] .saved-hint, :root[data-text-size="extra"] .file-drop p, :root[data-text-size="extra"] .tab-copy small, :root[data-text-size="extra"] .panel-heading p, :root[data-text-size="extra"] .appearance-card > p, :root[data-text-size="extra"] .balance-controls p, :root[data-text-size="extra"] .class-entry-box p, :root[data-text-size="extra"] .contrast-status { font-size:16px !important; }
     .toast { position:fixed; z-index:80; right:20px; bottom:20px; max-width:min(420px,calc(100% - 40px)); padding:12px 16px; border:1px solid var(--line); border-radius:13px; background:var(--paper); color:var(--ink); box-shadow:var(--shadow); font-size:13px; opacity:0; transform:translateY(12px); pointer-events:none; transition:opacity .2s,transform .2s; }
     .toast.visible { opacity:1; transform:translateY(0); }
     .toast.error { border-color:#d99883; }
@@ -451,8 +456,8 @@
       </div>
       <div class="theme-options" id="themeOptions" aria-label="Color themes"></div>
       <div class="color-controls">
-        <label class="color-control">Main accent <input id="accentColorInput" type="color" value="#256c54" aria-label="Main accent color"></label>
-        <label class="color-control">Page background <input id="backgroundColorInput" type="color" value="#f6f5f0" aria-label="Page background color"></label>
+        <label class="color-control">Main accent <input id="accentColorInput" type="color" value="#4c6378" aria-label="Main accent color"></label>
+        <label class="color-control">Page background <input id="backgroundColorInput" type="color" value="#f1f4f6" aria-label="Page background color"></label>
       </div>
       <div class="appearance-preview"><span>Preview: buttons and highlights use your accent color.</span><strong>Example button</strong></div>
       <p id="contrastStatus" class="contrast-status" role="status"></p>
@@ -480,11 +485,20 @@
             <label for="classNameInput">Classes to group students into</label>
             <div class="class-add-row"><input id="classNameInput" type="text" placeholder="e.g. JSS 1A" maxlength="60"><button id="addClassBtn" class="button secondary" type="button">Add class</button></div>
             <div id="classChips" class="class-chips" aria-live="polite"></div>
+            <div class="class-entry-box">
+              <h3>Add students to a class</h3>
+              <label for="classEntrySelect">Choose a class</label>
+              <select id="classEntrySelect" aria-label="Class for the student names"><option>JSS 1</option><option>JSS 2</option><option>JSS 3</option><option>SS 1</option><option>SS 2</option><option>SS 3</option></select>
+              <label for="classEntryNames">Enter student names, one per line</label>
+              <textarea id="classEntryNames" rows="5" placeholder="Ada Okafor&#10;Tunde Bello&#10;Mina Yusuf"></textarea>
+              <button id="addClassEntryNames" class="button secondary" type="button">Add names to this class</button>
+              <p>Names will be assigned to the selected class. Review them in Students before shuffling.</p>
+            </div>
             <div class="constraint-controls">
               <label>Keep together (one pair per line)<textarea id="togetherRules" placeholder="Ada Okafor, Tunde Bello" aria-label="Student pairs to keep together"></textarea></label>
               <label>Keep apart (one pair per line)<textarea id="apartRules" placeholder="Mina Yusuf, Leo James" aria-label="Student pairs to keep apart"></textarea></label>
             </div>
-            <p class="class-help">When you enter names only, students will be shuffled and shared as evenly as possible across these classes. You can also provide a class beside each name.</p>
+            <p class="class-help">Add names to a selected class above, or import a two-column list. Students with a class beside their name stay in that class when shuffled.</p>
             <p class="class-help">Set a preferred size on each class chip; students are assigned to meet those targets first, then remaining students are balanced.</p>
             <div class="ideas-box">
               <div class="ideas-top"><label for="ideaCategory">Class name ideas</label><select id="ideaCategory" aria-label="Choose a class name theme"></select></div>
@@ -500,9 +514,9 @@
             <p class="saved-hint">Saved rosters sync to your school account when signed in; local mode keeps them in this browser. Use Delete to remove a saved list.</p>
           </section>
           <div class="file-drop">
-            <p><strong>Import a list or a picture</strong>CSV, text, Word (.docx), PDF, or a clear image of a class list.</p>
+            <p><strong>Import a class list</strong>Excel (.xlsx, .xls), Word (.docx), CSV, PDF, or a clear image. Put student names and classes in separate columns; Excel reads the first worksheet.</p>
             <label class="file-label" for="csvFile" style="padding:0;white-space:nowrap">↑ Choose file</label>
-            <input id="csvFile" type="file" accept=".csv,.tsv,.txt,.docx,.pdf,image/*">
+            <input id="csvFile" type="file" accept=".csv,.tsv,.txt,.docx,.xlsx,.xls,.xlsm,.pdf,image/*">
           </div>
           <div class="format-note"><span aria-hidden="true">✳</span><span><strong>Format:</strong> one student per line, or student name then class separated by a comma or tab. A header row is okay.</span></div>
           <label for="roster">Student roster</label>
@@ -663,7 +677,7 @@
     let studentAttributes = {};
     let balanceByAttribute = false;
     let rosterHistory = [];
-    const defaultAppearance = { theme: 'forest', accent: '#256c54', background: '#f6f5f0', mode: 'light', textSize: 'large', highContrast: true };
+    const defaultAppearance = { theme: 'slate', accent: '#4c6378', background: '#f1f4f6', mode: 'light', textSize: 'large', highContrast: true };
     let appearance = { ...defaultAppearance };
     try {
       const localAppearance = JSON.parse(localStorage.getItem('classroomShuffle.appearance') || '{}');
@@ -756,8 +770,8 @@
       document.getElementById('highContrastToggle').checked = appearance.highContrast;
       const contrastPalette = appearance.highContrast
         ? (appearance.mode === 'dark'
-          ? { ink:'#fff', muted:'#f0f4f1', line:'#fff', paper:'#000', wash:'#000', mint:'#161b18', green:'#005239', greenDark:'#b8ffda' }
-          : { ink:'#111', muted:'#26332c', line:'#37433b', paper:'#fff', wash:'#fff', mint:'#e2f1e6', green:'#004b35', greenDark:'#003b2a' })
+          ? { ink:'#fff', muted:'#f0f4f1', line:'#fff', paper:'#000', wash:'#000', mint:'#161b18', green:contrastRatio('#fff', appearance.accent) >= 4.5 ? appearance.accent : '#33485d', greenDark:'#dcecff' }
+          : { ink:'#111', muted:'#26332c', line:'#37433b', paper:contrastRatio('#111', appearance.background) >= 7 ? appearance.background : '#fff', wash:contrastRatio('#111', appearance.background) >= 7 ? appearance.background : '#fff', mint:`color-mix(in srgb, ${appearance.accent} 13%, white)`, green:contrastRatio('#fff', appearance.accent) >= 4.5 ? appearance.accent : '#33485d', greenDark:'#28394b' })
         : null;
       for (const [variable, key] of [['--ink','ink'],['--muted','muted'],['--line','line'],['--paper','paper'],['--wash','wash'],['--mint','mint'],['--green','green'],['--green-dark','greenDark']]) {
         if (contrastPalette) root.style.setProperty(variable, contrastPalette[key]);
@@ -769,7 +783,7 @@
         root.style.setProperty('--mint', appearance.mode === 'dark' ? `color-mix(in srgb, ${appearance.accent} 28%, #18211d)` : `color-mix(in srgb, ${appearance.accent} 13%, white)`);
         root.style.setProperty('--wash', appearance.background);
       }
-      document.querySelector('meta[name="theme-color"]').content = appearance.mode === 'dark' ? '#151d19' : appearance.background;
+      document.querySelector('meta[name="theme-color"]').content = appearance.mode === 'dark' ? (appearance.highContrast ? '#000000' : '#151d19') : (appearance.highContrast && contrastRatio('#111111', appearance.background) < 7 ? '#ffffff' : appearance.background);
       document.getElementById('accentColorInput').value = appearance.accent;
       document.getElementById('backgroundColorInput').value = appearance.background;
       document.querySelectorAll('[data-theme]').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.theme === appearance.theme)));
@@ -1169,6 +1183,12 @@
     saveSchoolProfile();
 
     function renderClasses() {
+      const classEntrySelect = document.getElementById('classEntrySelect');
+      const selectedClass = classEntrySelect.value;
+      const classChoices = [...new Set(['JSS 1', 'JSS 2', 'JSS 3', 'SS 1', 'SS 2', 'SS 3', ...classNames])]
+        .sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
+      classEntrySelect.innerHTML = classChoices.map(name => `<option value="${escapeHtml(name)}">${escapeHtml(name)}</option>`).join('');
+      classEntrySelect.value = classChoices.includes(selectedClass) ? selectedClass : 'JSS 1';
       classChips.innerHTML = classNames.map((name, index) => `<span class="class-chip"><span>${escapeHtml(name)}</span><input class="class-size" type="number" min="1" max="500" placeholder="auto" title="Preferred class size" aria-label="Preferred size for ${escapeHtml(name)}" data-class-target="${index}" value="${classTargets[name] || ''}"><button type="button" aria-label="Remove ${escapeHtml(name)}" data-class-index="${index}">×</button></span>`).join('');
       classChips.querySelectorAll('[data-class-index]').forEach(button => button.addEventListener('click', () => {
         captureRosterHistory();
@@ -1205,6 +1225,25 @@
     }
     document.getElementById('addClassBtn').addEventListener('click', () => addClass(classInput.value));
     classInput.addEventListener('keydown', event => { if (event.key === 'Enter') { event.preventDefault(); addClass(classInput.value); } });
+    document.getElementById('addClassEntryNames').addEventListener('click', () => {
+      const names = document.getElementById('classEntryNames').value.split(/\r?\n/).map(name => name.trim()).filter(Boolean);
+      const className = document.getElementById('classEntrySelect').value;
+      if (!names.length) { notice.textContent = 'Enter at least one student name for the selected class.'; document.getElementById('classEntryNames').focus(); return; }
+      captureRosterHistory();
+      if (!classNames.some(name => name.toLocaleLowerCase() === className.toLocaleLowerCase())) {
+        classNames.push(className);
+        classTargets[className] = 0;
+        classNames.sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
+      }
+      const addedRows = names.map(name => `${name}\t${className}`).join('\n');
+      rosterInput.value = [rosterInput.value.trimEnd(), addedRows].filter(Boolean).join('\n');
+      document.getElementById('classEntryNames').value = '';
+      renderClasses();
+      updateDuplicateReview();
+      scheduleCloudSave();
+      notice.textContent = `Added ${names.length} student name${names.length === 1 ? '' : 's'} to ${className}. Review the list in Students before shuffling.`;
+      showToast(`Names added to ${className}.`);
+    });
     function addIdeaNames(names) {
       const before = classNames.length;
       names.forEach(name => addClass(name, false));
@@ -1631,10 +1670,42 @@
     function cleanExtractedText(text) {
       return text.split(/\r?\n/).map(line => line.replace(/[|•·]+/g, ' ').replace(/^\s*(?:\d{1,3}[.)]|[-*])\s*/, '').trim()).filter(Boolean).join('\n');
     }
+    function tabularRowsToRosterText(rows) {
+      const cleanedRows = rows.map(row => Array.from(row || [], cell => String(cell ?? '').replace(/[\t\r\n]+/g, ' ').trim()));
+      const findColumn = (row, type) => row.findIndex(cell => {
+        const header = cell.toLocaleLowerCase().replace(/[_-]+/g, ' ').trim();
+        if (type === 'name') return /^(?:student|pupil|learner)?\s*(?:full\s*)?name$|^(?:student|pupil|learner)\s+name$/.test(header);
+        if (type === 'class') return /class|grade|form|section/.test(header);
+        return false;
+      });
+      let headerIndex = -1;
+      let nameColumn = 0;
+      let classColumn = 1;
+      for (let index = 0; index < Math.min(cleanedRows.length, 8); index++) {
+        const nameIndex = findColumn(cleanedRows[index], 'name');
+        const classIndex = findColumn(cleanedRows[index], 'class');
+        if (nameIndex >= 0 && classIndex >= 0) { headerIndex = index; nameColumn = nameIndex; classColumn = classIndex; break; }
+      }
+      const dataRows = cleanedRows.slice(headerIndex >= 0 ? headerIndex + 1 : 0);
+      return dataRows.filter(row => row.some(Boolean)).map(row => [row[nameColumn] || '', row[classColumn] || '', ''].join('\t')).join('\n');
+    }
     async function textFromDocx(file) {
       await loadScript('https://cdn.jsdelivr.net/npm/mammoth@1.9.1/mammoth.browser.min.js');
-      const result = await window.mammoth.extractRawText({ arrayBuffer: await file.arrayBuffer() });
+      const arrayBuffer = await file.arrayBuffer();
+      const htmlResult = await window.mammoth.convertToHtml({ arrayBuffer });
+      const doc = new DOMParser().parseFromString(htmlResult.value, 'text/html');
+      const tableRows = [...doc.querySelectorAll('tr')].map(row => [...row.querySelectorAll('th,td')].map(cell => cell.textContent.trim()));
+      if (tableRows.length) return tabularRowsToRosterText(tableRows);
+      const result = await window.mammoth.extractRawText({ arrayBuffer });
       return result.value;
+    }
+    async function textFromWorkbook(file) {
+      await loadScript('https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js');
+      const workbook = window.XLSX.read(await file.arrayBuffer(), { type: 'array' });
+      const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+      if (!firstSheet) throw new Error('No worksheet was found in this file.');
+      const rows = window.XLSX.utils.sheet_to_json(firstSheet, { header: 1, raw: false, defval: '' });
+      return tabularRowsToRosterText(rows);
     }
     async function textFromPdf(file) {
       await loadScript('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js');
@@ -1689,14 +1760,25 @@
         let text;
         if (['csv', 'tsv', 'txt'].includes(ext)) text = await file.text();
         else if (ext === 'docx') text = await textFromDocx(file);
+        else if (['xlsx', 'xls', 'xlsm'].includes(ext)) text = await textFromWorkbook(file);
         else if (ext === 'pdf') text = await textFromPdf(file);
         else if (file.type.startsWith('image/')) text = await textFromImage(file);
-        else throw new Error('This file type is not supported. Use a CSV, TXT, DOCX, PDF, or image file.');
+        else throw new Error('This file type is not supported. Use an Excel, CSV, TXT, DOCX, PDF, or image file.');
         const cleaned = cleanExtractedText(text);
         if (!cleaned) throw new Error('No readable text was found in this file. Try a clearer image or a text-based document.');
         captureRosterHistory();
         rosterInput.value = cleaned;
+        const importedClasses = [...new Set(parseRows(cleaned).students.map(student => student.className.trim()).filter(Boolean))];
+        for (const name of importedClasses) if (!classNames.some(existing => existing.toLocaleLowerCase() === name.toLocaleLowerCase())) {
+          classNames.push(name);
+          if (!Object.hasOwn(classTargets, name)) classTargets[name] = 0;
+        }
+        if (importedClasses.length) {
+          classNames.sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
+          renderClasses();
+        }
         updateDuplicateReview();
+        scheduleCloudSave();
         notice.textContent = `Read text from ${file.name}. Review the names below, then shuffle.`;
         showToast('File read. Review the student names before shuffling.');
       } catch (error) {
