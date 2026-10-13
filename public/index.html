@@ -389,8 +389,8 @@
   <div id="authGate" class="auth-gate" role="dialog" aria-modal="true" aria-labelledby="loginTitle">
     <form id="loginForm" class="login-card">
       <h2 id="loginTitle">Sign in to your school roster</h2>
-      <p>This app is connected to a private school database. Sign in with the admin email and password configured for your deployment.</p>
-      <label for="loginEmail">Admin email</label><input id="loginEmail" type="email" autocomplete="username" required>
+      <p>This app is connected to a private school database. Sign in with the admin name and password configured for your deployment.</p>
+      <label for="loginUsername">Admin name</label><input id="loginUsername" type="text" autocomplete="username" maxlength="100" required>
       <label for="loginPassword">Password</label><input id="loginPassword" type="password" autocomplete="current-password" required>
       <button id="loginButton" class="button primary" type="submit">Sign in</button>
       <div id="loginError" class="login-error" role="alert"></div>
@@ -1034,7 +1034,7 @@
       cloudReady = false;
       document.getElementById('authGate').classList.add('visible');
       document.getElementById('loginError').textContent = message;
-      document.getElementById('loginEmail').focus();
+      document.getElementById('loginUsername').focus();
     }
     function signOut(showGate = false) {
       cloudReady = false;
@@ -1068,7 +1068,7 @@
       const errorBox = document.getElementById('loginError');
       button.disabled = true; button.textContent = 'Signing in…'; errorBox.textContent = '';
       try {
-        const result = await apiRequest('/api/auth/login', { method: 'POST', body: JSON.stringify({ email: document.getElementById('loginEmail').value, password: document.getElementById('loginPassword').value }) });
+        const result = await apiRequest('/api/auth/login', { method: 'POST', body: JSON.stringify({ username: document.getElementById('loginUsername').value, password: document.getElementById('loginPassword').value }) });
         await completeSignIn(result.token, true, result.user);
         document.getElementById('loginPassword').value = '';
       } catch (error) { errorBox.textContent = error.message; }

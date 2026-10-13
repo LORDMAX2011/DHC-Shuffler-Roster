@@ -6,10 +6,10 @@ A responsive school roster app with a password-protected Express API and MongoDB
 
 Requirements: Node.js 20 or newer and a MongoDB Atlas connection string.
 
-1. Copy `.env.example` to `.env` and fill in `MONGODB_URI`, `ADMIN_EMAIL`, `ADMIN_PASSWORD`, and `JWT_SECRET`.
+1. Copy `.env.example` to `.env` and fill in `MONGODB_URI`, `ADMIN_NAME`, `ADMIN_PASSWORD`, and `JWT_SECRET`. The administrator login can be any name. Existing deployments can keep using `ADMIN_EMAIL`; `ADMIN_USERNAME` is also accepted and takes precedence if set.
 2. Use an admin password with at least 12 characters. Use a random JWT secret at least 48 characters long.
 3. In PowerShell, run `npm install`, then `npm start`.
-4. Open `http://localhost:3000` and sign in with the configured admin email and password. The bootstrap administrator is created from the environment settings the first time the server starts against an empty account collection; later password changes remain in effect across restarts.
+4. Open `http://localhost:3000` and sign in with the configured admin name and password. The bootstrap administrator is created from the environment settings the first time the server starts against an empty account collection; later password changes remain in effect across restarts.
 
 Never commit `.env`. `.gitignore` excludes it. `.env.example` contains placeholders only.
 
@@ -58,7 +58,7 @@ Atlas requires network access to be allowed by its IP access list. Avoid `0.0.0.
    - Health check path: `/api/health`
 3. Add these environment variables under the service's Environment settings:
    - `MONGODB_URI`: the Atlas URI from above
-   - `ADMIN_EMAIL`: the school administrator's sign-in email
+   - `ADMIN_NAME`: the school administrator's sign-in name (an email or normal name). Existing `ADMIN_EMAIL` and `ADMIN_USERNAME` settings are also supported.
    - `ADMIN_PASSWORD`: a unique password of at least 12 characters
    - `JWT_SECRET`: a newly generated random secret, at least 48 characters
    - `NODE_ENV`: `production`

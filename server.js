@@ -14,10 +14,15 @@ const PUBLIC_DIR = path.join(__dirname, 'public');
 const TOKEN_ISSUER = 'school-classroom-shuffle';
 const DATA_KEY = 'school-default';
 
-const requiredEnv = ['MONGODB_URI', 'ADMIN_EMAIL', 'ADMIN_PASSWORD', 'JWT_SECRET'];
+const requiredEnv = ['MONGODB_URI', 'ADMIN_PASSWORD', 'JWT_SECRET'];
 const missingEnv = requiredEnv.filter(name => !process.env[name]);
 if (missingEnv.length) {
   console.error(`Missing required environment variables: ${missingEnv.join(', ')}`);
+  process.exit(1);
+}
+const configuredAdminName = String(process.env.ADMIN_USERNAME || process.env.ADMIN_NAME || process.env.ADMIN_EMAIL || '').trim();
+if (!configuredAdminName || configuredAdminName.length > 100) {
+  console.error('Set ADMIN_NAME, ADMIN_USERNAME, or ADMIN_EMAIL to the administrator login name (up to 100 characters).');
   process.exit(1);
 }
 if (process.env.JWT_SECRET.length < 48) {
@@ -116,12 +121,12 @@ async function createSnapshot(reason) {
 }
 
 async function ensureAdminAccount() {
-  const email = process.env.ADMIN_EMAIL.trim().toLowerCase();
-  const existing = await Account.findOne({ email }).select('_id').lean();
+  const adminLoginName = configuredAdminName.toLowerCase();
+  const existing = await Account.findOne({ email: adminLoginName }).select('_id').lean();
   if (existing) return;
   const salt = crypto.randomBytes(16).toString('hex');
   const passwordHash = passwordDigest(process.env.ADMIN_PASSWORD, salt);
-  await Account.create({ email, displayName: email.split('@')[0], role: 'admin', salt, passwordHash, active: true });
+  await Account.create({ email: adminLoginName, displayName: configuredAdminName, role: 'admin', salt, passwordHash, active: true });
 }
 
 function validateState(state) {
@@ -172,13 +177,15 @@ app.get('/api/health', (_req, res) => {
 
 app.post('/api/auth/login', loginLimiter, async (req, res, next) => {
   res.set('Cache-Control', 'no-store');
-  const email = typeof req.body?.email === 'string' ? req.body.email.trim().toLowerCase() : '';
+  const loginNameValue = typeof req.body?.username === 'string' ? req.body.username : typeof req.body?.email === 'string' ? req.body.email : '';
+  const email = loginNameValue.trim().toLowerCase();
   const password = typeof req.body?.password === 'string' ? req.body.password : '';
+  if (!email || email.length > 100 || password.length > 256) return res.status(400).json({ error: 'Enter your admin name and password.' });
   try {
     const account = await Account.findOne({ email, active: true }).lean();
     const salt = account?.salt || 'invalid-account-salt';
     const validPassword = constantTimeEqual(passwordDigest(password, salt), account?.passwordHash || '0'.repeat(128));
-    if (!account || !validPassword) return res.status(401).json({ error: 'Email or password is incorrect.' });
+    if (!account || !validPassword) return res.status(401).json({ error: 'Admin name or password is incorrect.' });
     const token = jwt.sign({ sub: String(account._id), email: account.email, name: account.displayName, role: account.role }, process.env.JWT_SECRET, { expiresIn: '12h', issuer: TOKEN_ISSUER });
     await recordAudit(account.email, 'login');
     return res.json({ token, expiresIn: 43200, user: { email: account.email, name: account.displayName, role: account.role } });
