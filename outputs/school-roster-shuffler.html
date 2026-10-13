@@ -1390,30 +1390,40 @@
     });
     async function initializeBackend() {
       dismissStartup();
-      if (location.protocol === 'file:') { setSaveStatus('Saved in this browser', 'saved'); dismissStartup(); return; }
-      setConnectionStatus('Connecting…');
-      setSaveStatus('Checking cloud connection…', 'pending');
-      try {
-        const health = await fetch('/api/health', { cache: 'no-store', signal: AbortSignal.timeout(6000) });
-        if (!health.ok) throw new Error('API unavailable');
-        cloudApiMode = true;
-        setConnectionStatus('Sign in to sync', 'cloud');
-        setSaveStatus('Waiting for sign in', 'waiting');
-        if (cloudToken) {
-          try { const me = await apiRequest('/api/auth/me'); await completeSignIn(cloudToken, false, me.user); return; }
-          catch { cloudToken = ''; try { sessionStorage.removeItem('classroomShuffle.authToken'); } catch { /* Ignore. */ } }
-        }
-        showLogin();
-      } catch {
-        cloudApiMode = false;
-        cloudReady = false;
-        setConnectionStatus('Local mode · not synced', 'offline');
-        setSaveStatus('Saved in this browser', 'saved');
-      } finally {
-        setTimeout(dismissStartup, 220);
+      if (location.protocol === 'file:') { setSaveStatus('Saved in this browser', 'saved'); return; }
+      cloudApiMode = false;
+      cloudReady = false;
+      setConnectionStatus('Connecting to cloud…');
+      setSaveStatus('Saved in this browser · cloud connecting', 'pending');
+      let attempt = 0;
+      while (true) {
+        try {
+          const health = await fetch('/api/health', { cache: 'no-store', signal: AbortSignal.timeout(4000) });
+          if (health.ok) {
+            const status = await health.json();
+            if (status.database === 'connected') break;
+          }
+        } catch { /* Keep the local app usable while the hosted service starts. */ }
+        setConnectionStatus('Cloud database starting…', 'offline');
+        setSaveStatus('Your changes are saved in this browser while cloud connects', 'pending');
+        await new Promise(resolve => setTimeout(resolve, Math.min(1000 + attempt * 500, 5000)));
+        attempt += 1;
       }
-    }
-    const classIdeaSets = {
+      cloudApiMode = true;
+      setConnectionStatus('Sign in to sync', 'cloud');
+      setSaveStatus('Waiting for sign in', 'waiting');
+      if (cloudToken) {
+        try {
+          const me = await apiRequest('/api/auth/me');
+          await completeSignIn(cloudToken, false, me.user);
+          return;
+        } catch {
+          cloudToken = '';
+          try { sessionStorage.removeItem('classroomShuffle.authToken'); } catch { /* Ignore. */ }
+        }
+      }
+      showLogin();
+    }    const classIdeaSets = {
       christian: { label: 'Christian church traditions', description: 'Church tradition names for classes.', names: ['Anglican', 'Baptist', 'Catholic', 'Lutheran', 'Methodist', 'Orthodox', 'Pentecostal', 'Presbyterian', 'Reformed', 'Seventh-day Adventist'] },
       continents: { label: 'Continents', description: 'Use the seven continent names as house or class groups.', names: ['Africa', 'Antarctica', 'Asia', 'Europe', 'North America', 'Oceania', 'South America'] },
       lagos: { label: 'Lagos places', description: 'Lagos divisions, local areas, and familiar neighbourhoods.', names: ['Agege', 'Ajah', 'Alimosho', 'Alausa', 'Anthony', 'Apapa', 'Badagry', 'Bariga', 'Ebute Metta', 'Epe', 'Festac', 'Gbagada', 'Ikeja', 'Ikorodu', 'Ikoyi', 'Ketu', 'Lagos Island', 'Lagos Mainland', 'Lekki', 'Maryland', 'Mushin', 'Ojo', 'Ojota', 'Oshodi', 'Surulere', 'Victoria Island', 'Yaba'] },
