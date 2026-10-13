@@ -190,6 +190,9 @@
     .result-tools { display: flex; gap: 7px; }
     .result-tools .button { padding: 9px 11px; }
     .results-body { padding: 18px 20px 22px; }
+    .results-clear-row { display:flex; justify-content:flex-end; padding: 0 20px; }
+    .results-clear-button { border:1px solid color-mix(in srgb, var(--red) 42%, var(--line)); color:var(--red); background:var(--paper); }
+    .results-clear-button:hover { background:color-mix(in srgb, var(--red) 10%, var(--paper)); }
     .empty { min-height: 365px; display: grid; place-content: center; justify-items: center; text-align: center; padding: 24px; color: var(--muted); }
     .empty-icon { display: grid; place-items: center; width: 64px; height: 64px; background: #f1f4ed; border-radius: 20px; font-size: 29px; margin-bottom: 15px; }
     .empty strong { color: var(--ink); font-size: 15px; }
@@ -396,6 +399,7 @@
       .card-head { padding-left: 17px; padding-right: 17px; }
       .card-body { padding: 17px; }
       .results-body { padding: 15px; }
+      .results-clear-row { padding: 0 15px; }
       .local-pill { font-size: 0; padding: 9px; }
       .result-tools .button { font-size: 11px; padding: 9px; }
       .profile-form { grid-template-columns: 1fr; }
@@ -653,6 +657,7 @@
           <div class="result-tools hide" id="resultTools"></div>
           <div class="step" aria-label="Step 2">2</div>
         </div>
+        <div id="resultsClearRow" class="results-clear-row hide"><button id="deleteAllResultsBtn" class="button results-clear-button" type="button">Delete all students and results</button></div>
         <div id="results" class="results-body">
           <div class="empty"><div class="empty-icon" aria-hidden="true">▤</div><strong>Ready when you are</strong><p>Add your student names and classes, then shuffle to see the new order.</p></div>
         </div>
@@ -1934,8 +1939,9 @@
       const profile = profileData();
       const schoolBanner = profile.name || profile.motto || profile.address || profile.contact || teacherName || rosterDate ? `<div class="school-banner"><div class="school-banner-logo">${schoolLogo ? `<img src="${schoolLogo}" alt="School logo">` : escapeHtml((profile.name || 'School').slice(0, 1).toUpperCase())}</div><div class="school-banner-copy"><strong>${escapeHtml(profile.name || 'Class roster')}</strong><span>${[profile.motto, profile.address, profile.contact, teacherName ? `Teacher: ${teacherName}` : '', rosterDate ? `Date: ${rosterDate}` : '', `School year: ${schoolYear}`, termName].filter(Boolean).map(escapeHtml).join(' · ')}</span></div></div>` : '';
       const destinations = [...new Set([...groups.map(group => group.className), ...classNames])].sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
-      document.getElementById('resultTools').innerHTML = '<button id="reshuffleBtn" class="button secondary" type="button">↻ Shuffle order</button><button id="rebalanceBtn" class="button secondary" type="button">⇄ Rebalance</button><button id="printBtn" class="button secondary" type="button">Print / Save PDF</button><button id="xlsxBtn" class="button secondary" type="button">Export Excel</button><button id="downloadBtn" class="button secondary" type="button">Export CSV</button><button id="deleteAllResultsBtn" class="button quiet" type="button">Delete all results</button>';
+      document.getElementById('resultTools').innerHTML = '<button id="reshuffleBtn" class="button secondary" type="button">↻ Shuffle order</button><button id="rebalanceBtn" class="button secondary" type="button">⇄ Rebalance</button><button id="printBtn" class="button secondary" type="button">Print / Save PDF</button><button id="xlsxBtn" class="button secondary" type="button">Export Excel</button><button id="downloadBtn" class="button secondary" type="button">Export CSV</button>';
       document.getElementById('resultTools').classList.remove('hide');
+      document.getElementById('resultsClearRow').classList.remove('hide');
       const rows = groups.map((group, groupIndex) => {
         const targetLabel = classTargets[group.className] ? ` · target ${classTargets[group.className]}` : '';
         const studentsHtml = group.students.map((name, studentIndex) => {
@@ -1978,7 +1984,6 @@
       });
       document.getElementById('downloadBtn').addEventListener('click', downloadCsv);
       document.getElementById('xlsxBtn').addEventListener('click', downloadExcel);
-      document.getElementById('deleteAllResultsBtn').addEventListener('click', deleteAllResults);
       document.getElementById('studentSearch').addEventListener('input', event => {
         searchTerm = event.target.value;
         results.querySelectorAll('.student-row').forEach(row => {
@@ -2055,6 +2060,7 @@
       updateDashboard();
       subtitle.textContent = 'Your grouped roster will appear here.';
       document.getElementById('resultTools').classList.add('hide');
+      document.getElementById('resultsClearRow').classList.add('hide');
       results.innerHTML = '<div class="empty"><div class="empty-icon" aria-hidden="true">▤</div><strong>No students in this roster</strong><p>Add names above and shuffle to create groups.</p></div>';
     }
     function deleteAllResults() {
@@ -2073,6 +2079,7 @@
       notice.textContent = 'All student names and results were deleted. Class names were kept.';
       showToast('All results deleted. You can undo this change in Students.');
     }
+    document.getElementById('deleteAllResultsBtn').addEventListener('click', deleteAllResults);
 
     const savedRosterSelect = document.getElementById('savedRosterSelect');
     function refreshSavedRosterOptions(selectedId = '') {
