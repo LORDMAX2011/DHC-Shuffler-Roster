@@ -157,6 +157,7 @@ function validateState(state) {
   if (typeof state.teacherName !== 'string' || state.teacherName.length > 100) return 'Teacher name is invalid.';
   if (typeof state.rosterDate !== 'string' || (state.rosterDate && !/^\d{4}-\d{2}-\d{2}$/.test(state.rosterDate))) return 'Roster date is invalid.';
   if (state.schoolYear !== undefined && (typeof state.schoolYear !== 'string' || !/^\d{4}\/\d{4}$/.test(state.schoolYear))) return 'School year is invalid.';
+  if (state.termName !== undefined && (typeof state.termName !== 'string' || !state.termName.trim() || state.termName.length > 40)) return 'Term name is invalid.';
   if (state.retentionDays !== undefined && ![0, 90, 180, 365].includes(state.retentionDays)) return 'Roster retention period is invalid.';
   if (state.dateLocale !== undefined && !['en-NG', 'en-GB', 'en-US'].includes(state.dateLocale)) return 'Date format is invalid.';
   if (state.togetherRules !== undefined && (typeof state.togetherRules !== 'string' || state.togetherRules.length > 10000)) return 'Keep-together rules are invalid.';
@@ -175,7 +176,21 @@ function validateState(state) {
   if (!Array.isArray(state.savedRosters) || state.savedRosters.length > 100) return 'Saved roster list is invalid.';
   for (const record of state.savedRosters) {
     if (!record || typeof record.id !== 'string' || record.id.length > 100 || typeof record.name !== 'string' || record.name.length > 120) return 'A saved roster is invalid.';
+    if (record.termName !== undefined && (typeof record.termName !== 'string' || record.termName.length > 40)) return 'A saved roster term is invalid.';
     if (!Array.isArray(record.classes) || record.classes.length > 100 || !Array.isArray(record.groups) || record.groups.length > 100) return 'A saved roster contains invalid classes.';
+  }
+  if (state.rosterVersions !== undefined && (!Array.isArray(state.rosterVersions) || state.rosterVersions.length > 5)) return 'Roster version history is invalid.';
+  for (const version of state.rosterVersions || []) {
+    if (!version || typeof version.id !== 'string' || version.id.length > 100 || typeof version.savedAt !== 'string' || typeof version.reason !== 'string' || version.reason.length > 40) return 'A roster version is invalid.';
+    if (typeof version.schoolYear !== 'string' || !/^\d{4}\/\d{4}$/.test(version.schoolYear) || typeof version.termName !== 'string' || version.termName.length > 40) return 'Roster version archive information is invalid.';
+    if (typeof version.rosterText !== 'string' || version.rosterText.length > 300_000 || !Array.isArray(version.classes) || version.classes.length > 100 || version.classes.some(name => typeof name !== 'string' || !name.trim() || name.length > 60) || !version.targets || typeof version.targets !== 'object' || Array.isArray(version.targets) || !Array.isArray(version.groups) || version.groups.length > 100) return 'A roster version contains invalid data.';
+    if (Object.values(version.targets).some(size => !Number.isInteger(size) || size < 0 || size > 500)) return 'Roster version class sizes are invalid.';
+    let versionStudentCount = 0;
+    for (const group of version.groups) {
+      if (!group || typeof group.className !== 'string' || group.className.length > 60 || !Array.isArray(group.students) || group.students.some(name => typeof name !== 'string' || name.length > 120)) return 'A roster version contains an invalid class.';
+      versionStudentCount += group.students.length;
+    }
+    if (versionStudentCount > 5000) return 'A roster version can contain at most 5,000 students.';
   }
   return null;
 }

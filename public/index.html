@@ -146,6 +146,22 @@
     .saved-row input, .saved-row select { min-width: 0; flex: 1; border: 1px solid #dce2da; border-radius: 9px; padding: 8px 9px; background: white; font-size: 11px; }
     .saved-row .button { padding: 8px 9px; font-size: 11px; }
     .saved-hint { margin: 8px 0 0; color: var(--muted); font-size: 10px; line-height: 1.4; }
+    .archive-tools { display:grid; grid-template-columns:1fr 1fr 1fr auto; align-items:end; gap:8px; margin-top:12px; }
+    .archive-tools label { min-width:0; color:var(--muted); font-size:11px; }
+    .archive-tools select { display:block; width:100%; margin-top:5px; padding:8px; border:1px solid var(--line); border-radius:8px; color:var(--ink); background:var(--paper); }
+    .class-size-warning, .import-warning { padding:11px 13px; border:1px solid #d89b3c; border-radius:10px; margin:0 0 12px; background:#fff6df; color:#583e10; font-size:13px; line-height:1.5; }
+    .import-dialog { width:min(760px, calc(100% - 24px)); max-height:86vh; padding:0; border:1px solid var(--line); border-radius:16px; background:var(--paper); color:var(--ink); box-shadow:0 24px 80px rgba(0,0,0,.28); }
+    .import-dialog::backdrop { background:rgba(16,24,20,.58); backdrop-filter:blur(3px); }
+    .import-dialog-head, .import-dialog-foot { position:sticky; z-index:1; display:flex; align-items:center; justify-content:space-between; gap:12px; padding:15px 18px; background:var(--paper); }
+    .import-dialog-head { top:0; border-bottom:1px solid var(--line); }
+    .import-dialog-foot { bottom:0; border-top:1px solid var(--line); }
+    .import-dialog-body { padding:16px 18px; }
+    .import-dialog-body p { margin:0 0 10px; color:var(--muted); }
+    .import-preview-table-wrap { max-height:43vh; overflow:auto; border:1px solid var(--line); border-radius:10px; }
+    .import-preview-table { width:100%; border-collapse:collapse; font-size:13px; }
+    .import-preview-table th, .import-preview-table td { padding:8px 10px; border-bottom:1px solid var(--line); text-align:left; vertical-align:top; }
+    .import-preview-table th { position:sticky; top:0; background:var(--mint); }
+    .import-preview-table tr:last-child td { border-bottom:0; }
     .file-drop { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px; border: 1px dashed #bfd0c2; border-radius: 12px; margin-bottom: 13px; background: #fcfdf9; }
     .file-drop p { margin: 0; color: var(--muted); font-size: 11px; line-height: 1.45; }
     .file-drop p strong { display: block; color: var(--ink); font-size: 12px; margin-bottom: 2px; }
@@ -234,7 +250,7 @@
     .admin-list button { margin:0; padding:5px 8px; }
     .roster-settings { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; margin:12px 0; }
     .roster-settings label { min-width:0; margin:0; color:var(--muted); font-size:10px; }
-    .roster-settings select { display:block; width:100%; margin-top:5px; padding:8px; border:1px solid var(--line); border-radius:8px; color:var(--ink); background:var(--paper); font-size:11px; }
+    .roster-settings select, .roster-settings input { display:block; width:100%; margin-top:5px; padding:8px; border:1px solid var(--line); border-radius:8px; color:var(--ink); background:var(--paper); font-size:11px; }
     .constraint-controls { display:grid; grid-template-columns:1fr 1fr; gap:9px; margin:10px 0 13px; }
     .constraint-controls label { margin:0; color:var(--muted); font-size:11px; }
     .constraint-controls textarea { min-height:62px; margin-top:5px; padding:8px; font-size:11px; }
@@ -296,6 +312,7 @@
       .header-actions { flex: 0 0 auto; gap: 4px; }
       .mode-toggle { padding: 7px 8px; font-size: 10px; }
       .roster-settings { grid-template-columns:1fr; }
+      .archive-tools { grid-template-columns:1fr; }
       .constraint-controls, .admin-grid { grid-template-columns:1fr; }
       .intro { margin-bottom: 20px; }
       .intro p { font-size: 14px; }
@@ -382,6 +399,11 @@
 <body>
   <div id="startupScreen" class="startup-screen" aria-live="polite"><div class="startup-mark" id="startupMark">↗</div><p>Preparing your school roster…</p></div>
   <div id="successToast" class="toast" role="status" aria-live="polite"></div>
+  <dialog id="importPreviewDialog" class="import-dialog" aria-labelledby="importPreviewTitle">
+    <div class="import-dialog-head"><h2 id="importPreviewTitle">Review imported student list</h2><button id="cancelImportTop" class="button quiet" type="button" aria-label="Cancel import">Close</button></div>
+    <div class="import-dialog-body"><p id="importPreviewSummary"></p><div id="importPreviewWarnings"></div><div class="import-preview-table-wrap"><table class="import-preview-table"><thead><tr><th>Row</th><th>Student name</th><th>Class</th><th>Review</th></tr></thead><tbody id="importPreviewRows"></tbody></table></div></div>
+    <div class="import-dialog-foot"><button id="cancelImportButton" class="button secondary" type="button">Cancel</button><button id="confirmImportButton" class="button primary" type="button">Import reviewed rows</button></div>
+  </dialog>
   <div id="authGate" class="auth-gate" role="dialog" aria-modal="true" aria-labelledby="loginTitle">
     <form id="loginForm" class="login-card">
       <h2 id="loginTitle">Sign in to your school roster</h2>
@@ -444,6 +466,7 @@
         <div class="admin-box">
           <strong>Backups and activity</strong>
           <button id="manualBackupButton" class="button quiet" type="button">Create cloud backup now</button>
+          <p id="backupReminder" class="saved-hint" role="status"></p>
           <button id="exportAllButton" class="button secondary" type="button">Export all school data</button>
           <ul id="backupList" class="admin-list" aria-label="Available backups"></ul>
           <details><summary>Recent audit activity</summary><ul id="auditList" class="admin-list" aria-label="Recent audit activity"></ul></details>
@@ -485,6 +508,7 @@
           <div class="class-manager">
             <div class="roster-settings">
               <label>School year<select id="schoolYearSelect" aria-label="School year"></select></label>
+              <label>Term<input id="termNameInput" type="text" maxlength="40" value="First term" aria-label="Term or semester"></label>
               <label>Keep saved rosters<select id="retentionSelect" aria-label="Saved roster retention"><option value="0">Never delete</option><option value="90">90 days</option><option value="180">180 days</option><option value="365">1 year</option></select></label>
               <label>Date format<select id="dateLocaleSelect" aria-label="Date format"><option value="en-NG">Day / month / year</option><option value="en-GB">Day / month / year (UK)</option><option value="en-US">Month / day / year</option></select></label>
             </div>
@@ -517,6 +541,7 @@
             <h3>Save and reuse a roster</h3>
             <div class="saved-row"><input id="rosterSaveName" type="text" placeholder="e.g. JSS 1 · Term 1" aria-label="Roster name"><button id="saveRosterBtn" class="button secondary" type="button">Save current</button></div>
             <div class="saved-row"><select id="savedRosterSelect" aria-label="Saved rosters"><option value="">No saved rosters yet</option></select><button id="loadRosterBtn" class="button secondary" type="button">Load</button><button id="deleteRosterBtn" class="button quiet" type="button">Delete</button></div>
+            <div class="archive-tools"><label>Archive year<select id="archiveYearSelect" aria-label="Filter saved rosters by school year"><option value="all">All years</option></select></label><label>Archive term<select id="archiveTermSelect" aria-label="Filter saved rosters by term"><option value="all">All terms</option></select></label><label>Earlier versions<select id="rosterVersionSelect" aria-label="Earlier shuffled roster versions"><option value="">No earlier versions</option></select></label><button id="restoreVersionBtn" class="button secondary" type="button">Restore version</button></div>
             <p class="saved-hint">Saved rosters sync to your school account when signed in; local mode keeps them in this browser. Use Delete to remove a saved list.</p>
           </section>
           <div class="file-drop">
@@ -663,10 +688,13 @@
     let searchTerm = '';
     let privacyMode = false;
     let savedRosters = [];
+    let rosterVersions = [];
+    let pendingImport = null;
     let currentUser = null;
     const todayYear = new Date().getFullYear();
     const academicStartYear = new Date().getMonth() >= 7 ? todayYear : todayYear - 1;
     let schoolYear = `${academicStartYear}/${academicStartYear + 1}`;
+    let termName = 'First term';
     let retentionDays = 0;
     let dateLocale = 'en-NG';
     let togetherRules = '';
@@ -707,7 +735,8 @@
       select.value = schoolYear;
     }
     setupSchoolYearOptions();
-    document.getElementById('schoolYearSelect').addEventListener('change', event => { schoolYear = event.target.value; scheduleCloudSave(); });
+    document.getElementById('schoolYearSelect').addEventListener('change', event => { schoolYear = event.target.value; if (currentGroups.length) render(currentGroups); scheduleCloudSave(); });
+    document.getElementById('termNameInput').addEventListener('change', event => { termName = event.target.value.trim().slice(0, 40) || 'Term'; event.target.value = termName; if (currentGroups.length) render(currentGroups); scheduleCloudSave(); });
     document.getElementById('retentionSelect').addEventListener('change', event => { retentionDays = Number(event.target.value) || 0; pruneSavedRosters(); scheduleCloudSave(); });
     document.getElementById('dateLocaleSelect').addEventListener('change', event => { dateLocale = event.target.value; if (currentGroups.length) render(currentGroups); scheduleCloudSave(); });
     document.getElementById('togetherRules').addEventListener('change', event => { captureRosterHistory(); togetherRules = event.target.value; scheduleCloudSave(); });
@@ -863,11 +892,13 @@
         classNames: [...classNames],
         classTargets: { ...classTargets },
         savedRosters: savedRosters.map(record => ({ ...record, classes: [...(record.classes || [])], targets: { ...(record.targets || {}) }, groups: (record.groups || []).map(group => ({ className: group.className, students: [...group.students] })) })),
+        rosterVersions: rosterVersions.map(record => ({ ...record, classes: [...(record.classes || [])], targets: { ...(record.targets || {}) }, groups: (record.groups || []).map(group => ({ className: group.className, students: [...group.students] })) })),
         rosterDraft: rosterInput.value,
         groups: currentGroups.map(group => ({ className: group.className, students: [...group.students] })),
         teacherName,
         rosterDate,
         schoolYear,
+        termName,
         retentionDays,
         dateLocale,
         togetherRules,
@@ -884,7 +915,7 @@
     function captureRosterHistory() {
       rosterHistory.push(JSON.parse(JSON.stringify({
         classNames, classTargets, rosterDraft: rosterInput.value, groups: currentGroups,
-        teacherName, rosterDate, schoolYear, togetherRules, apartRules, studentAttributes, balanceByAttribute, savedRosters
+        teacherName, rosterDate, schoolYear, termName, togetherRules, apartRules, studentAttributes, balanceByAttribute, savedRosters, rosterVersions
       })));
       if (rosterHistory.length > 20) rosterHistory.shift();
       updateUndoButtons();
@@ -899,12 +930,15 @@
       teacherName = previous.teacherName;
       rosterDate = previous.rosterDate;
       schoolYear = previous.schoolYear;
+      termName = previous.termName || 'First term';
       togetherRules = previous.togetherRules;
       apartRules = previous.apartRules;
       studentAttributes = previous.studentAttributes;
       balanceByAttribute = previous.balanceByAttribute;
       savedRosters = previous.savedRosters;
+      rosterVersions = previous.rosterVersions || rosterVersions;
       document.getElementById('schoolYearSelect').value = schoolYear;
+      document.getElementById('termNameInput').value = termName;
       document.getElementById('togetherRules').value = togetherRules;
       document.getElementById('apartRules').value = apartRules;
       document.getElementById('balanceFieldToggle').checked = balanceByAttribute;
@@ -938,7 +972,12 @@
         const [backupsResult, auditResult] = await Promise.all([
           apiRequest('/api/backups'), apiRequest('/api/audit')
         ]);
-        document.getElementById('backupList').innerHTML = backupsResult.backups.map(backup => `<li><span>${new Date(backup.createdAt).toLocaleString(dateLocale)} · ${escapeHtml(backup.reason)}</span><button class="button quiet" type="button" data-restore-backup="${escapeHtml(backup._id)}">Restore</button></li>`).join('') || '<li>No backups yet.</li>';
+        const backups = backupsResult.backups || [];
+        document.getElementById('backupList').innerHTML = backups.map(backup => `<li><span>${new Date(backup.createdAt).toLocaleString(dateLocale)} · ${escapeHtml(backup.reason)}</span><button class="button quiet" type="button" data-restore-backup="${escapeHtml(backup._id)}">Restore</button></li>`).join('') || '<li>No backups yet.</li>';
+        const reminder = document.getElementById('backupReminder');
+        const latestBackup = backups[0];
+        const backupAgeDays = latestBackup ? Math.floor((Date.now() - Date.parse(latestBackup.createdAt)) / 86400000) : null;
+        reminder.textContent = !latestBackup ? 'No cloud backup yet. Create one before major roster changes.' : backupAgeDays >= 30 ? `Your latest cloud backup is ${backupAgeDays} days old. Consider creating a fresh one.` : `Latest cloud backup: ${new Date(latestBackup.createdAt).toLocaleDateString(dateLocale)}.`;
         document.getElementById('auditList').innerHTML = auditResult.entries.map(entry => `<li><span>${new Date(entry.createdAt).toLocaleString(dateLocale)} · ${escapeHtml(entry.actor)} · ${escapeHtml(entry.action)}</span></li>`).join('') || '<li>No recorded activity yet.</li>';
       } catch (error) { showToast(`Admin data could not load: ${error.message}`, true); }
     }
@@ -991,6 +1030,7 @@
       if (!state) return false;
       if (state.appearance && typeof state.appearance === 'object') applyAppearance(state.appearance);
       schoolYear = typeof state.schoolYear === 'string' ? state.schoolYear : schoolYear;
+      termName = typeof state.termName === 'string' && state.termName.trim() ? state.termName.trim().slice(0, 40) : 'First term';
       retentionDays = [0, 90, 180, 365].includes(Number(state.retentionDays)) ? Number(state.retentionDays) : 0;
       dateLocale = ['en-NG', 'en-GB', 'en-US'].includes(state.dateLocale) ? state.dateLocale : 'en-NG';
       togetherRules = typeof state.togetherRules === 'string' ? state.togetherRules : '';
@@ -1006,9 +1046,11 @@
       classNames = Array.isArray(state.classNames) ? [...state.classNames] : [];
       classTargets = state.classTargets && typeof state.classTargets === 'object' ? { ...state.classTargets } : {};
       savedRosters = Array.isArray(state.savedRosters) ? state.savedRosters : [];
+      rosterVersions = Array.isArray(state.rosterVersions) ? state.rosterVersions.slice(0, 5) : [];
       const yearSelect = document.getElementById('schoolYearSelect');
       if (![...yearSelect.options].some(option => option.value === schoolYear)) { const option = document.createElement('option'); option.value = schoolYear; option.textContent = schoolYear; yearSelect.appendChild(option); }
       yearSelect.value = schoolYear;
+      document.getElementById('termNameInput').value = termName;
       document.getElementById('retentionSelect').value = String(retentionDays);
       document.getElementById('dateLocaleSelect').value = dateLocale;
       document.getElementById('togetherRules').value = togetherRules;
@@ -1024,6 +1066,7 @@
       saveSchoolProfile();
       renderClasses();
       refreshSavedRosterOptions();
+      refreshRosterVersions();
       updateDuplicateReview();
       document.getElementById('brandName').textContent = profile.name || 'Classroom Shuffle';
       if (currentGroups.length) render(currentGroups); else clearResults();
@@ -1218,6 +1261,7 @@
         const [removed] = classNames.splice(Number(button.dataset.classIndex), 1);
         delete classTargets[removed];
         renderClasses();
+        if (currentGroups.length) render(currentGroups);
         scheduleCloudSave();
       }));
       classChips.querySelectorAll('[data-class-target]').forEach(input => input.addEventListener('change', () => {
@@ -1226,6 +1270,7 @@
         const value = Number(input.value);
         if (value > 0) classTargets[name] = Math.min(value, 500); else delete classTargets[name];
         input.value = classTargets[name] || '';
+        if (currentGroups.length) render(currentGroups);
         scheduleCloudSave();
       }));
     }
@@ -1244,6 +1289,7 @@
       notice.textContent = '';
       renderClasses();
       scheduleCloudSave();
+      if (currentGroups.length) render(currentGroups);
       if (shouldFocus) classInput.focus();
     }
     document.getElementById('addClassBtn').addEventListener('click', () => addClass(classInput.value));
@@ -1282,23 +1328,147 @@
     });
     document.getElementById('addAllIdeasBtn').addEventListener('click', () => addIdeaNames(classIdeaSets[ideaCategory.value].names));
 
-    function parseRows(text) {
-      const lines = text.replace(/^\uFEFF/, '').split(/\r?\n/).filter(line => line.trim());
+    function parseRows(text, includeBlankNames = false) {
+      const lines = text.replace(/^\uFEFF/, '').split(/\r?\n/);
       const students = [];
       const skipped = [];
+      let nameColumn = 0, classColumn = 1, attributeColumn = 2;
       for (let i = 0; i < lines.length; i++) {
         const line = lines[i].trim();
+        if (!line) continue;
         const delimiter = line.includes('\t') ? '\t' : ',';
         // Supports CSV quoted fields, including commas inside quoted names.
         const fields = (delimiter === '\t' ? line.split('\t') : line.split(/,(?=(?:[^"]*"[^"]*")*[^"]*$)/)).map(value => value.trim().replace(/^"|"$/g, '').replace(/""/g, '"'));
-        if (i === 0 && /^(name|student|student name)$/i.test(fields[0] || '') && (!fields[1] || /class|grade|form|section/i.test(fields[1]))) continue;
-        const name = fields[0] || '';
-        const className = fields[1] || '';
-        if (!name) { skipped.push(i + 1); continue; }
-        students.push({ name, className, groupAttribute: fields[2] || '' });
+        const headerNameColumn = fields.findIndex(field => /^(name|student|student name|pupil name|full name)$/i.test(field));
+        const headerClassColumn = fields.findIndex(field => /class|grade|form|section/i.test(field));
+        if (i === 0 && headerNameColumn >= 0 && (headerClassColumn >= 0 || fields.length === 1)) {
+          nameColumn = headerNameColumn;
+          classColumn = headerClassColumn;
+          attributeColumn = fields.findIndex(field => /group|attribute|house|gender/i.test(field));
+          continue;
+        }
+        const name = fields[nameColumn] || '';
+        const className = classColumn >= 0 ? fields[classColumn] || '' : '';
+        if (!name) {
+          skipped.push(i + 1);
+          if (includeBlankNames) students.push({ name: '', className, groupAttribute: attributeColumn >= 0 ? fields[attributeColumn] || '' : '', rowNumber: i + 1, extraColumns: fields.length > 3 });
+          continue;
+        }
+        students.push({ name, className, groupAttribute: attributeColumn >= 0 ? fields[attributeColumn] || '' : '', rowNumber: i + 1, extraColumns: fields.length > 3 });
       }
       return { students, skipped };
     }
+
+    function renderImportPreview(filename, text) {
+      const parsed = parseRows(text, true);
+      pendingImport = { filename, text, students: parsed.students };
+      const duplicateCounts = new Map();
+      for (const student of parsed.students) {
+        if (!student.name) continue;
+        const key = `${student.name.trim().replace(/\s+/g, ' ').toLocaleLowerCase()}\u0000${student.className.trim().replace(/\s+/g, ' ').toLocaleLowerCase()}`;
+        duplicateCounts.set(key, (duplicateCounts.get(key) || 0) + 1);
+      }
+      const missingClassCount = parsed.students.filter(student => student.name && !student.className).length;
+      const duplicateCount = [...duplicateCounts.values()].filter(count => count > 1).reduce((sum, count) => sum + count, 0);
+      const invalidCount = parsed.students.filter(student => student.name.length > 120 || student.className.length > 60).length;
+      const rows = parsed.students.slice(0, 150).map(student => {
+        const key = `${student.name.trim().replace(/\s+/g, ' ').toLocaleLowerCase()}\u0000${student.className.trim().replace(/\s+/g, ' ').toLocaleLowerCase()}`;
+        const problems = [];
+        if (duplicateCounts.get(key) > 1) problems.push('Possible duplicate');
+        if (!student.name) problems.push('Blank name; skipped');
+        else if (!student.className) problems.push('No class; assigned when shuffled');
+        if (student.name && (student.name.length > 120 || student.className.length > 60)) problems.push('Too long');
+        if (student.extraColumns) problems.push('Extra columns ignored');
+        return `<tr><td>${student.rowNumber}</td><td><input type="text" data-import-name="${student.rowNumber}" value="${escapeHtml(student.name)}" aria-label="Student name on row ${student.rowNumber}"></td><td><input type="text" data-import-class="${student.rowNumber}" value="${escapeHtml(student.className)}" aria-label="Class on row ${student.rowNumber}"></td><td data-import-issue="${student.rowNumber}">${escapeHtml(problems.join(' · ') || 'Looks okay')}</td></tr>`;
+      }).join('');
+      document.getElementById('importPreviewSummary').textContent = `${filename}: ${parsed.students.length} student row${parsed.students.length === 1 ? '' : 's'} detected${parsed.students.length > 150 ? ' (showing first 150)' : ''}. Review or edit names and classes before importing.`;
+      const warnings = [];
+      if (parsed.skipped.length) warnings.push(`${parsed.skipped.length} row${parsed.skipped.length === 1 ? '' : 's'} without a student name will be skipped.`);
+      if (missingClassCount) warnings.push(`${missingClassCount} student${missingClassCount === 1 ? '' : 's'} have no class and will be assigned when you shuffle.`);
+      if (duplicateCount) warnings.push(`${duplicateCount} rows are part of possible duplicate pairs. Review spelling before importing.`);
+      if (invalidCount) warnings.push(`${invalidCount} row${invalidCount === 1 ? '' : 's'} exceed the allowed name or class length. Correct those rows to continue.`);
+      if (parsed.students.length > 5000) warnings.push('A roster can contain at most 5,000 students. Reduce the file before importing.');
+      document.getElementById('importPreviewWarnings').innerHTML = warnings.map(message => `<p class="import-warning">${escapeHtml(message)}</p>`).join('');
+      document.getElementById('importPreviewRows').innerHTML = rows || '<tr><td colspan="4">No usable student rows were found.</td></tr>';
+      document.getElementById('confirmImportButton').disabled = !parsed.students.length || parsed.students.length > 5000;
+      document.getElementById('confirmImportButton').textContent = `Import ${parsed.students.length} rows`;
+      document.getElementById('importPreviewDialog').showModal();
+    }
+    function getReviewedImportStudents() {
+      if (!pendingImport) return [];
+      return pendingImport.students.map(student => ({
+        ...student,
+        name: document.querySelector(`[data-import-name="${student.rowNumber}"]`)?.value.trim() ?? student.name,
+        className: document.querySelector(`[data-import-class="${student.rowNumber}"]`)?.value.trim() ?? student.className
+      })).filter(student => student.name);
+    }
+    function validateImportPreviewEdits() {
+      if (!pendingImport) return;
+      const students = getReviewedImportStudents();
+      const invalid = students.filter(student => student.name.length > 120 || student.className.length > 60);
+      const countByKey = new Map();
+      for (const student of students) {
+        if (!student.name) continue;
+        const key = `${student.name.replace(/\s+/g, ' ').toLocaleLowerCase()}\u0000${student.className.replace(/\s+/g, ' ').toLocaleLowerCase()}`;
+        countByKey.set(key, (countByKey.get(key) || 0) + 1);
+      }
+      const duplicateRows = [...countByKey.values()].filter(count => count > 1).reduce((sum, count) => sum + count, 0);
+      const noClass = students.filter(student => !student.className).length;
+      const warnings = [];
+      if (invalid.length) warnings.push(`${invalid.length} rows exceed the allowed name or class length.`);
+      if (duplicateRows) warnings.push(`${duplicateRows} rows are part of possible duplicate pairs. Check spelling.`);
+      if (noClass) warnings.push(`${noClass} students have no class and will be assigned when shuffled.`);
+      const skipped = pendingImport.students.length - students.length;
+      if (skipped) warnings.push(`${skipped} blank-name row${skipped === 1 ? '' : 's'} will be skipped.`);
+      if (students.length > 5000) warnings.push('A roster can contain at most 5,000 students.');
+      document.getElementById('importPreviewWarnings').innerHTML = warnings.map(message => `<p class="import-warning">${escapeHtml(message)}</p>`).join('');
+      const button = document.getElementById('confirmImportButton');
+      button.disabled = !students.length || students.length > 5000;
+      button.textContent = `Import ${students.length} row${students.length === 1 ? '' : 's'}`;
+      for (const student of pendingImport.students.slice(0, 150)) {
+        const reviewed = students.find(item => item.rowNumber === student.rowNumber);
+        const issueCell = document.querySelector(`[data-import-issue="${student.rowNumber}"]`);
+        if (!issueCell) continue;
+        const key = reviewed && `${reviewed.name.replace(/\s+/g, ' ').toLocaleLowerCase()}\u0000${reviewed.className.replace(/\s+/g, ' ').toLocaleLowerCase()}`;
+        const issues = [];
+        if (!reviewed) issues.push('Blank name; skipped');
+        if (reviewed && (reviewed.name.length > 120 || reviewed.className.length > 60)) issues.push('Too long');
+        if (reviewed && countByKey.get(key) > 1) issues.push('Possible duplicate');
+        if (reviewed && !reviewed.className) issues.push('No class; assigned when shuffled');
+        if (student.extraColumns) issues.push('Extra columns ignored');
+        issueCell.textContent = issues.join(' · ') || 'Looks okay';
+      }
+    }
+    document.getElementById('importPreviewDialog').addEventListener('input', validateImportPreviewEdits);
+    function commitPendingImport() {
+      if (!pendingImport) return;
+      const students = getReviewedImportStudents();
+      const usableStudents = students.filter(student => student.name.length <= 120 && student.className.length <= 60);
+      const invalidCount = students.length - usableStudents.length;
+      if (students.length > 5000) { showToast('Reduce the import to 5,000 students or fewer.', true); return; }
+      if (!usableStudents.length) { showToast('Correct at least one student name before importing.', true); return; }
+      captureRosterHistory();
+      rosterInput.value = usableStudents.map(student => [student.name, student.className, student.groupAttribute].join('\t')).join('\n');
+      const importedClasses = [...new Set(usableStudents.map(student => student.className).filter(Boolean))];
+      for (const name of importedClasses) if (!classNames.some(existing => existing.toLocaleLowerCase() === name.toLocaleLowerCase())) {
+        classNames.push(name);
+        if (!Object.hasOwn(classTargets, name)) classTargets[name] = 0;
+      }
+      if (importedClasses.length) {
+        classNames.sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
+        renderClasses();
+      }
+      updateDuplicateReview();
+      scheduleCloudSave();
+      notice.textContent = `Imported ${usableStudents.length} reviewed rows from ${pendingImport.filename}.${invalidCount ? ` Skipped ${invalidCount} overlong row${invalidCount === 1 ? '' : 's'}.` : ''} Review the list before shuffling.`;
+      document.getElementById('importPreviewDialog').close();
+      showToast('Reviewed student list imported.');
+      pendingImport = null;
+    }
+    document.getElementById('confirmImportButton').addEventListener('click', commitPendingImport);
+    document.getElementById('cancelImportButton').addEventListener('click', () => { pendingImport = null; document.getElementById('importPreviewDialog').close(); });
+    document.getElementById('cancelImportTop').addEventListener('click', () => { pendingImport = null; document.getElementById('importPreviewDialog').close(); });
+    document.getElementById('importPreviewDialog').addEventListener('cancel', () => { pendingImport = null; });
 
     function findDuplicates(students) {
       const counts = new Map();
@@ -1352,7 +1522,7 @@
       const classWord = groups.length === 1 ? 'class' : 'classes';
       subtitle.textContent = `${students} student${students === 1 ? '' : 's'} across ${groups.length} ${classWord}`;
       const profile = profileData();
-      const schoolBanner = profile.name || profile.motto || profile.address || profile.contact || teacherName || rosterDate ? `<div class="school-banner"><div class="school-banner-logo">${schoolLogo ? `<img src="${schoolLogo}" alt="School logo">` : escapeHtml((profile.name || 'School').slice(0, 1).toUpperCase())}</div><div class="school-banner-copy"><strong>${escapeHtml(profile.name || 'Class roster')}</strong><span>${[profile.motto, profile.address, profile.contact, teacherName ? `Teacher: ${teacherName}` : '', rosterDate ? `Date: ${rosterDate}` : ''].filter(Boolean).map(escapeHtml).join(' · ')}</span></div></div>` : '';
+      const schoolBanner = profile.name || profile.motto || profile.address || profile.contact || teacherName || rosterDate ? `<div class="school-banner"><div class="school-banner-logo">${schoolLogo ? `<img src="${schoolLogo}" alt="School logo">` : escapeHtml((profile.name || 'School').slice(0, 1).toUpperCase())}</div><div class="school-banner-copy"><strong>${escapeHtml(profile.name || 'Class roster')}</strong><span>${[profile.motto, profile.address, profile.contact, teacherName ? `Teacher: ${teacherName}` : '', rosterDate ? `Date: ${rosterDate}` : '', `School year: ${schoolYear}`, termName].filter(Boolean).map(escapeHtml).join(' · ')}</span></div></div>` : '';
       const destinations = [...new Set([...groups.map(group => group.className), ...classNames])].sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
       document.getElementById('resultTools').innerHTML = '<button id="reshuffleBtn" class="button secondary" type="button">↻ Shuffle order</button><button id="rebalanceBtn" class="button secondary" type="button">⇄ Rebalance</button><button id="printBtn" class="button secondary" type="button">Print / Save PDF</button><button id="xlsxBtn" class="button secondary" type="button">Export Excel</button><button id="downloadBtn" class="button secondary" type="button">Export CSV</button>';
       document.getElementById('resultTools').classList.remove('hide');
@@ -1369,7 +1539,12 @@
         }).join('');
         return `<section class="class-group" style="--group-index:${groupIndex}"><div class="class-title"><span>${escapeHtml(group.className)}</span><span class="count">${group.students.length} student${group.students.length === 1 ? '' : 's'}${targetLabel}</span></div><ol class="student-list">${studentsHtml}</ol><div class="add-student-row"><input type="text" placeholder="Add a student to ${escapeHtml(group.className)}" aria-label="New student name" data-new-student="${groupIndex}"><button type="button" data-add-student="${groupIndex}">Add</button></div></section>`;
       }).join('');
-      results.innerHTML = schoolBanner + `<div class="results-toolbar"><input id="studentSearch" type="search" placeholder="Search students or classes" aria-label="Search roster" value="${escapeHtml(searchTerm)}"><label class="meta-field">Teacher <input id="teacherNameInput" type="text" placeholder="Teacher name" value="${escapeHtml(teacherName)}"></label><label class="meta-field">Date <input id="rosterDateInput" type="date" value="${escapeHtml(rosterDate)}"></label><label class="privacy-toggle"><input id="privacyToggle" type="checkbox" ${privacyMode ? 'checked' : ''}> Hide names on screen</label></div><div class="summary"><span>✦ Randomized roster</span><span>${students} students</span><span>${groups.length} ${classWord}</span>${skippedCount ? `<span>${skippedCount} row${skippedCount === 1 ? '' : 's'} skipped</span>` : ''}</div>${rows}`;
+      const sizeWarnings = groups.filter(group => classTargets[group.className] > 0 && group.students.length !== classTargets[group.className]).map(group => {
+        const difference = group.students.length - classTargets[group.className];
+        return `${group.className}: target ${classTargets[group.className]}, currently ${group.students.length} (${Math.abs(difference)} ${difference > 0 ? 'over' : 'under'}).`;
+      });
+      const sizeWarningHtml = sizeWarnings.length ? `<div class="class-size-warning" role="status"><strong>Class size check</strong><br>${sizeWarnings.map(escapeHtml).join('<br>')}<br>Adjust class targets or rebalance the roster if needed.</div>` : '';
+      results.innerHTML = schoolBanner + `<div class="results-toolbar"><input id="studentSearch" type="search" placeholder="Search students or classes" aria-label="Search roster" value="${escapeHtml(searchTerm)}"><label class="meta-field">Teacher <input id="teacherNameInput" type="text" placeholder="Teacher name" value="${escapeHtml(teacherName)}"></label><label class="meta-field">Date <input id="rosterDateInput" type="date" value="${escapeHtml(rosterDate)}"></label><label class="privacy-toggle"><input id="privacyToggle" type="checkbox" ${privacyMode ? 'checked' : ''}> Hide names on screen</label></div><div class="summary"><span>✦ Randomized roster</span><span>${students} students</span><span>${groups.length} ${classWord}</span><span>${escapeHtml(schoolYear)} · ${escapeHtml(termName)}</span>${skippedCount ? `<span>${skippedCount} row${skippedCount === 1 ? '' : 's'} skipped</span>` : ''}</div>${sizeWarningHtml}${rows}`;
       const printSelect = document.createElement('select');
       printSelect.id = 'printLayout'; printSelect.setAttribute('aria-label', 'Print layout');
       printSelect.innerHTML = '<option value="standard">Standard print</option><option value="compact">Compact print</option><option value="signoff">Signature lines</option>';
@@ -1384,7 +1559,7 @@
       updateUndoButtons();
       results.insertAdjacentHTML('beforeend', '<div class="print-signatures"><span>Teacher signature</span><span>School approval</span></div>');
       const bannerMeta = results.querySelector('.school-banner-copy span');
-      if (bannerMeta) bannerMeta.textContent = [profile.motto, profile.address, profile.contact, teacherName ? `Teacher: ${teacherName}` : '', rosterDate ? `Date: ${formatRosterDate(rosterDate)}` : '', `School year: ${schoolYear}`].filter(Boolean).join(' · ');
+      if (bannerMeta) bannerMeta.textContent = [profile.motto, profile.address, profile.contact, teacherName ? `Teacher: ${teacherName}` : '', rosterDate ? `Date: ${formatRosterDate(rosterDate)}` : '', `School year: ${schoolYear}`, termName].filter(Boolean).join(' · ');
       document.getElementById('reshuffleBtn').addEventListener('click', reshuffle);
       document.getElementById('rebalanceBtn').addEventListener('click', rebalance);
       document.getElementById('printBtn').addEventListener('click', () => {
@@ -1409,6 +1584,7 @@
         rosterDate = document.getElementById('rosterDateInput').value;
         try { localStorage.setItem('classroomShuffle.rosterMeta', JSON.stringify({ teacherName, rosterDate })); } catch { /* Metadata can still be used for this roster. */ }
         render(currentGroups);
+        if (currentGroups.length) archiveRosterVersion('Roster details updated');
       };
       document.getElementById('teacherNameInput').addEventListener('change', saveRosterMeta);
       document.getElementById('rosterDateInput').addEventListener('change', saveRosterMeta);
@@ -1419,6 +1595,7 @@
         captureRosterHistory();
         currentGroups[gi].students[si] = value;
         render(currentGroups);
+        archiveRosterVersion('Student name edited');
       }));
       results.querySelectorAll('[data-move-student]').forEach(select => select.addEventListener('change', () => {
         const [gi, si] = select.dataset.moveStudent.split(':').map(Number);
@@ -1429,13 +1606,14 @@
         target.students.push(student);
         currentGroups = currentGroups.filter(group => group.students.length || classNames.includes(group.className)).sort((a, b) => a.className.localeCompare(b.className, undefined, { numeric: true, sensitivity: 'base' }));
         render(currentGroups);
+        archiveRosterVersion('Student moved');
       }));
       results.querySelectorAll('[data-remove-student]').forEach(button => button.addEventListener('click', () => {
         const [gi, si] = button.dataset.removeStudent.split(':').map(Number);
         captureRosterHistory();
         currentGroups[gi].students.splice(si, 1);
         currentGroups = currentGroups.filter(group => group.students.length || classNames.includes(group.className));
-        if (currentGroups.length) render(currentGroups); else clearResults();
+        if (currentGroups.length) { render(currentGroups); archiveRosterVersion('Student removed'); } else clearResults();
       }));
       results.querySelectorAll('[data-add-student]').forEach(button => button.addEventListener('click', () => {
         const index = Number(button.dataset.addStudent);
@@ -1445,6 +1623,7 @@
         captureRosterHistory();
         currentGroups[index].students.push(name);
         render(currentGroups);
+        archiveRosterVersion('Student added');
       }));
       results.querySelectorAll('[data-new-student]').forEach(input => input.addEventListener('keydown', event => {
         if (event.key === 'Enter') { event.preventDefault(); results.querySelector(`[data-add-student="${input.dataset.newStudent}"]`).click(); }
@@ -1465,10 +1644,68 @@
         try { savedRosters = JSON.parse(localStorage.getItem('classroomShuffle.savedRosters') || '[]'); }
         catch { savedRosters = []; }
       }
-      savedRosterSelect.innerHTML = savedRosters.length
-        ? '<option value="">Choose a saved roster</option>' + savedRosters.map(record => `<option value="${escapeHtml(record.id)}" ${record.id === selectedId ? 'selected' : ''}>${escapeHtml(record.schoolYear || 'School year not set')} · ${escapeHtml(record.name)}</option>`).join('')
+      const yearFilter = document.getElementById('archiveYearSelect');
+      const selectedYear = yearFilter.value || 'all';
+      const years = [...new Set(savedRosters.map(record => record.schoolYear).filter(Boolean))].sort((a, b) => b.localeCompare(a, undefined, { numeric: true }));
+      yearFilter.innerHTML = '<option value="all">All years</option>' + years.map(year => `<option value="${escapeHtml(year)}">${escapeHtml(year)}</option>`).join('');
+      yearFilter.value = years.includes(selectedYear) ? selectedYear : 'all';
+      const termFilter = document.getElementById('archiveTermSelect');
+      const selectedTerm = termFilter.value || 'all';
+      const terms = [...new Set(savedRosters.map(record => record.termName).filter(Boolean))].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
+      termFilter.innerHTML = '<option value="all">All terms</option>' + terms.map(term => `<option value="${escapeHtml(term)}">${escapeHtml(term)}</option>`).join('');
+      termFilter.value = terms.includes(selectedTerm) ? selectedTerm : 'all';
+      const visibleRosters = savedRosters.filter(record => (yearFilter.value === 'all' || record.schoolYear === yearFilter.value) && (termFilter.value === 'all' || record.termName === termFilter.value));
+      savedRosterSelect.innerHTML = visibleRosters.length
+        ? '<option value="">Choose a saved roster</option>' + visibleRosters.map(record => `<option value="${escapeHtml(record.id)}" ${record.id === selectedId ? 'selected' : ''}>${escapeHtml(record.schoolYear || 'School year not set')} · ${escapeHtml(record.termName || 'Term not set')} · ${escapeHtml(record.name)}</option>`).join('')
         : '<option value="">No saved rosters yet</option>';
     }
+    function refreshRosterVersions(selectedId = '') {
+      const select = document.getElementById('rosterVersionSelect');
+      select.innerHTML = rosterVersions.length
+        ? '<option value="">Choose an earlier version</option>' + rosterVersions.map(record => `<option value="${escapeHtml(record.id)}" ${record.id === selectedId ? 'selected' : ''}>${escapeHtml(record.schoolYear)} · ${escapeHtml(record.termName)} · ${new Date(record.savedAt).toLocaleString(dateLocale)} · ${escapeHtml(record.reason)}</option>`).join('')
+        : '<option value="">No earlier versions</option>';
+      document.getElementById('restoreVersionBtn').disabled = !rosterVersions.length;
+    }
+    function archiveRosterVersion(reason) {
+      if (!currentGroups.length) return;
+      rosterVersions.unshift({
+        id: `version-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+        savedAt: new Date().toISOString(), reason, schoolYear, termName, teacherName, rosterDate,
+        rosterText: rosterInput.value,
+        classes: [...classNames], targets: { ...classTargets },
+        groups: currentGroups.map(group => ({ className: group.className, students: [...group.students] }))
+      });
+      rosterVersions = rosterVersions.slice(0, 5);
+      while (rosterVersions.length && JSON.stringify(rosterVersions).length > 350_000) rosterVersions.pop();
+      if (!rosterVersions.length) showToast('This roster is too large for automatic version history. Save it manually instead.', true);
+      refreshRosterVersions(rosterVersions[0]?.id || '');
+      scheduleCloudSave();
+    }
+    document.getElementById('archiveYearSelect').addEventListener('change', () => refreshSavedRosterOptions());
+    document.getElementById('archiveTermSelect').addEventListener('change', () => refreshSavedRosterOptions());
+    document.getElementById('restoreVersionBtn').addEventListener('click', () => {
+      const version = rosterVersions.find(record => record.id === document.getElementById('rosterVersionSelect').value);
+      if (!version) { notice.textContent = 'Choose an earlier roster version to restore.'; return; }
+      if (!confirm(`Restore the roster from ${new Date(version.savedAt).toLocaleString(dateLocale)}?`)) return;
+      captureRosterHistory();
+      schoolYear = version.schoolYear || schoolYear;
+      termName = version.termName || termName;
+      teacherName = version.teacherName || '';
+      rosterDate = version.rosterDate || localToday();
+      classNames = [...version.classes];
+      classTargets = { ...version.targets };
+      rosterInput.value = version.rosterText || '';
+      currentGroups = version.groups.map(group => ({ className: group.className, students: [...group.students] }));
+      document.getElementById('schoolYearSelect').value = schoolYear;
+      document.getElementById('termNameInput').value = termName;
+      try { localStorage.setItem('classroomShuffle.rosterMeta', JSON.stringify({ teacherName, rosterDate })); } catch { /* The restored version remains available for this session. */ }
+      renderClasses();
+      refreshSavedRosterOptions();
+      updateDuplicateReview();
+      render(currentGroups);
+      scheduleCloudSave();
+      showToast('Earlier roster version restored.');
+    });
     function pruneSavedRosters() {
       if (!retentionDays) return false;
       const cutoff = Date.now() - retentionDays * 86400000;
@@ -1490,6 +1727,7 @@
         name,
         savedAt: new Date().toISOString(),
         schoolYear,
+        termName,
         retentionDays,
         dateLocale,
         togetherRules,
@@ -1528,11 +1766,13 @@
       teacherName = record.teacherName || '';
       rosterDate = record.rosterDate || localToday();
       schoolYear = record.schoolYear || schoolYear;
+      termName = record.termName || 'First term';
       togetherRules = record.togetherRules || '';
       apartRules = record.apartRules || '';
       studentAttributes = record.studentAttributes || {};
       balanceByAttribute = record.balanceByAttribute === true;
       document.getElementById('schoolYearSelect').value = schoolYear;
+      document.getElementById('termNameInput').value = termName;
       document.getElementById('togetherRules').value = togetherRules;
       document.getElementById('apartRules').value = apartRules;
       document.getElementById('balanceFieldToggle').checked = balanceByAttribute;
@@ -1645,7 +1885,7 @@
         : parseRows(rosterInput.value).students;
       if (students.length) {
         const groups = makeGroups(students);
-        if (groups.length) { captureRosterHistory(); render(groups); }
+      if (groups.length) { captureRosterHistory(); render(groups); archiveRosterVersion('Reshuffle'); }
       }
     }
     function rebalance() {
@@ -1656,7 +1896,7 @@
       renderClasses();
       const students = currentGroups.flatMap(group => group.students.map(name => ({ name, className: '' })));
       const groups = makeGroups(students);
-      if (groups.length) render(groups);
+      if (groups.length) { render(groups); archiveRosterVersion('Rebalance'); }
     }
 
     shuffleButton.addEventListener('click', () => {
@@ -1676,6 +1916,7 @@
       captureRosterHistory();
       students.forEach(student => { if (student.groupAttribute) studentAttributes[student.name.trim().toLocaleLowerCase()] = student.groupAttribute.trim(); });
       render(groups, skipped.length);
+      archiveRosterVersion('Shuffle');
       showToast('Your student roster has been shuffled.');
       notice.textContent = duplicateRows.length ? `Included ${duplicateRows.length} repeated name entr${duplicateRows.length === 1 ? 'y' : 'ies'} as requested.` : skipped.length ? `Skipped ${skipped.length} empty row${skipped.length === 1 ? '' : 's'}.` : '';
     });
@@ -1789,21 +2030,7 @@
         else throw new Error('This file type is not supported. Use an Excel, CSV, TXT, DOCX, PDF, or image file.');
         const cleaned = cleanExtractedText(text);
         if (!cleaned) throw new Error('No readable text was found in this file. Try a clearer image or a text-based document.');
-        captureRosterHistory();
-        rosterInput.value = cleaned;
-        const importedClasses = [...new Set(parseRows(cleaned).students.map(student => student.className.trim()).filter(Boolean))];
-        for (const name of importedClasses) if (!classNames.some(existing => existing.toLocaleLowerCase() === name.toLocaleLowerCase())) {
-          classNames.push(name);
-          if (!Object.hasOwn(classTargets, name)) classTargets[name] = 0;
-        }
-        if (importedClasses.length) {
-          classNames.sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
-          renderClasses();
-        }
-        updateDuplicateReview();
-        scheduleCloudSave();
-        notice.textContent = `Read text from ${file.name}. Review the names below, then shuffle.`;
-        showToast('File read. Review the student names before shuffling.');
+        renderImportPreview(file.name, cleaned);
       } catch (error) {
         notice.textContent = error.message || 'Could not read that file. Try another file.';
       } finally {
@@ -1816,8 +2043,8 @@
     function downloadCsv() {
       if (!currentGroups.length) return;
       const profile = profileData();
-      const rows = [['School', 'School year', 'Teacher', 'Date', 'Class', 'Student name']];
-      for (const group of currentGroups) for (const name of group.students) rows.push([profile.name, schoolYear, teacherName, formatRosterDate(rosterDate), group.className, name]);
+      const rows = [['School', 'School year', 'Term', 'Teacher', 'Date', 'Class', 'Student name']];
+      for (const group of currentGroups) for (const name of group.students) rows.push([profile.name, schoolYear, termName, teacherName, formatRosterDate(rosterDate), group.className, name]);
       const blob = new Blob(['\uFEFF' + rows.map(row => row.map(csvCell).join(',')).join('\r\n')], { type: 'text/csv;charset=utf-8' });
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
@@ -1838,7 +2065,7 @@
       try {
         await loadScript('https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js');
         const profile = profileData();
-        const rosterRows = [['School', profile.name], ['School year', schoolYear], ['Motto', profile.motto], ['Address', profile.address], ['Contact', profile.contact], ['Teacher', teacherName], ['Date', formatRosterDate(rosterDate)], [], ['Class', 'Student name']];
+        const rosterRows = [['School', profile.name], ['School year', schoolYear], ['Term', termName], ['Motto', profile.motto], ['Address', profile.address], ['Contact', profile.contact], ['Teacher', teacherName], ['Date', formatRosterDate(rosterDate)], [], ['Class', 'Student name']];
         const summaryRows = [['Class', 'Students', 'Preferred size']];
         for (const group of currentGroups) {
           summaryRows.push([group.className, group.students.length, classTargets[group.className] || '']);
