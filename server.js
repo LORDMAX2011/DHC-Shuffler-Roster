@@ -195,11 +195,16 @@ function validateState(state) {
   return null;
 }
 
+let databaseReady = false;
 app.get('/api/health', (_req, res) => {
   res.set('Cache-Control', 'no-store');
-  res.json({ ok: true, database: mongoose.connection.readyState === 1 ? 'connected' : 'connecting' });
+  res.json({ ok: true, database: databaseReady && mongoose.connection.readyState === 1 ? 'connected' : 'connecting' });
 });
 
+app.use('/api', (req, res, next) => {
+  if (req.path === '/health' || (databaseReady && mongoose.connection.readyState === 1)) return next();
+  return res.status(503).json({ error: 'The school database is connecting. Please try again shortly.' });
+});
 app.post('/api/auth/login', loginLimiter, async (req, res, next) => {
   res.set('Cache-Control', 'no-store');
   const loginNameValue = typeof req.body?.username === 'string' ? req.body.username : typeof req.body?.email === 'string' ? req.body.email : '';
@@ -362,16 +367,30 @@ app.use((error, _req, res, _next) => {
   return res.status(500).json({ error: 'The server could not complete that request.' });
 });
 
-async function start() {
-  await mongoose.connect(process.env.MONGODB_URI, { serverSelectionTimeoutMS: 15000 });
-  await ensureAdminAccount();
-  createSnapshot('scheduled').catch(error => console.error('Backup failed:', error.message));
-  setInterval(() => createSnapshot('scheduled').catch(error => console.error('Backup failed:', error.message)), 24 * 60 * 60 * 1000).unref();
-  console.log('Connected to MongoDB.');
-  app.listen(PORT, '0.0.0.0', () => console.log(`School roster app listening on port ${PORT}.`));
+let databaseInitializationStarted = false;
+async function connectDatabase() {
+  if (databaseInitializationStarted) return;
+  databaseInitializationStarted = true;
+  try {
+    if (mongoose.connection.readyState !== 1) {
+      await mongoose.connect(process.env.MONGODB_URI, { serverSelectionTimeoutMS: 15000 });
+    }
+    await ensureAdminAccount();
+    databaseReady = true;
+    createSnapshot('scheduled').catch(error => console.error('Backup failed:', error.message));
+    setInterval(() => createSnapshot('scheduled').catch(error => console.error('Backup failed:', error.message)), 24 * 60 * 60 * 1000).unref();
+    console.log('Connected to MongoDB.');
+  } catch (error) {
+    databaseReady = false;
+    console.error('MongoDB connection failed; retrying in 5 seconds:', error.message);
+    setTimeout(() => {
+      databaseInitializationStarted = false;
+      connectDatabase();
+    }, 5000).unref();
+  }
 }
 
-start().catch(error => {
-  console.error('Startup failed:', error.message);
-  process.exit(1);
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`School roster app listening on port ${PORT}.`);
+  connectDatabase();
 });

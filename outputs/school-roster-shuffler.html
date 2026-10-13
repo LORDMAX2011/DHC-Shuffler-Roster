@@ -1343,7 +1343,7 @@
       if (currentUser?.role === 'admin') {
         backupsTab.hidden = false;
         securityTab.hidden = false;
-        await loadAdminTools();
+        loadAdminTools().catch(() => {});
       } else {
         backupsTab.hidden = true;
         securityTab.hidden = true;
@@ -1389,26 +1389,44 @@
       } catch (error) { showToast(error.message, true); }
     });
     async function initializeBackend() {
-      if (location.protocol === 'file:') { setSaveStatus('Saved in this browser', 'saved'); dismissStartup(); return; }
-      try {
-        const health = await fetch('/api/health', { cache: 'no-store', signal: AbortSignal.timeout(6000) });
-        if (!health.ok) throw new Error('API unavailable');
-        cloudApiMode = true;
-        setConnectionStatus('Sign in to sync', 'cloud');
-        setSaveStatus('Waiting for sign in', 'waiting');
-        if (cloudToken) {
-          try { const me = await apiRequest('/api/auth/me'); await completeSignIn(cloudToken, false, me.user); return; }
-          catch { cloudToken = ''; try { sessionStorage.removeItem('classroomShuffle.authToken'); } catch { /* Ignore. */ } }
-        }
-        showLogin();
-      } catch {
-        cloudApiMode = false;
-        cloudReady = false;
+      dismissStartup();
+      if (location.protocol === 'file:') {
         setConnectionStatus('Local mode · not synced', 'offline');
         setSaveStatus('Saved in this browser', 'saved');
-      } finally {
-        setTimeout(dismissStartup, 220);
+        return;
       }
+      cloudApiMode = false;
+      cloudReady = false;
+      setConnectionStatus('Connecting to cloud…', 'offline');
+      setSaveStatus('Saved in this browser · cloud connecting', 'pending');
+      let attempt = 0;
+      while (true) {
+        try {
+          const response = await fetch('/api/health', { cache: 'no-store', signal: AbortSignal.timeout(4000) });
+          if (response.ok) {
+            const health = await response.json();
+            if (health.database === 'connected') break;
+          }
+        } catch { /* Keep local work available if the cloud is waking or offline. */ }
+        setConnectionStatus('Cloud starting · saved locally', 'offline');
+        setSaveStatus('Your changes are saved in this browser while cloud connects', 'pending');
+        await new Promise(resolve => setTimeout(resolve, Math.min(1000 + attempt * 500, 5000)));
+        attempt += 1;
+      }
+      cloudApiMode = true;
+      setConnectionStatus('Sign in to sync', 'cloud');
+      setSaveStatus('Waiting for sign in', 'waiting');
+      if (cloudToken) {
+        try {
+          const me = await apiRequest('/api/auth/me');
+          await completeSignIn(cloudToken, false, me.user);
+          return;
+        } catch {
+          cloudToken = '';
+          try { sessionStorage.removeItem('classroomShuffle.authToken'); } catch { /* Ignore. */ }
+        }
+      }
+      showLogin();
     }
     const classIdeaSets = {
       christian: { label: 'Christian church traditions', description: 'Church tradition names for classes.', names: ['Anglican', 'Baptist', 'Catholic', 'Lutheran', 'Methodist', 'Orthodox', 'Pentecostal', 'Presbyterian', 'Reformed', 'Seventh-day Adventist'] },
