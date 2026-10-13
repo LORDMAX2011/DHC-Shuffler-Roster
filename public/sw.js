@@ -1,8 +1,11 @@
-const CACHE_NAME = 'school-classroom-shuffle-v11';
+const CACHE_NAME = 'school-classroom-shuffle-v12';
 const APP_SHELL = ['/', '/manifest.webmanifest', '/icon.svg'];
 
 self.addEventListener('install', event => {
-  event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(APP_SHELL)));
+  event.waitUntil(caches.open(CACHE_NAME).then(cache => Promise.allSettled(APP_SHELL.map(async path => {
+    const response = await fetch(path, { cache: 'no-store' });
+    if (response.ok) await cache.put(path, response);
+  }))));
   self.skipWaiting();
 });
 

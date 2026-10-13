@@ -680,6 +680,8 @@
   </main>
 
   <script>
+    let startupFailsafe = window.setTimeout(() => dismissStartup(), 10000);
+    window.addEventListener('error', () => dismissStartup(), { once: true });
     function assembleAppSections() {
       const shell = document.querySelector('.shell');
       const intro = document.querySelector('.intro');
@@ -737,6 +739,12 @@
         });
         return details;
       }
+      function wrapElementInCollapsible(element, label, key) {
+        const details = createCollapsible(label, key);
+        element.replaceWith(details);
+        details.querySelector('.subsection-content').appendChild(element);
+        return details;
+      }
       function createPanel(step, children, useResultCard = false) {
         const section = document.createElement('section');
         section.className = `section-panel${step.id === 'home' ? ' active' : ''}`;
@@ -775,13 +783,13 @@
       dashboard.innerHTML = '<div class="dashboard-welcome"><p class="eyebrow">School roster overview</p><h2 id="dashboardWelcomeTitle">Welcome back</h2><p id="dashboardStatus" role="status" aria-live="polite">Your workspace is ready.</p></div><div class="dashboard-content"><div class="dashboard-metrics" aria-label="Roster summary"><div class="dashboard-metric"><strong id="dashboardStudentCount">0</strong><span>Students in current list</span></div><div class="dashboard-metric"><strong id="dashboardClassCount">0</strong><span>Classes set up</span></div><div class="dashboard-metric"><strong id="dashboardSavedCount">0</strong><span>Saved rosters</span></div></div><h3>Quick actions</h3><div class="dashboard-actions"><button class="dashboard-action" type="button" data-go-section="students"><span>Add or import students</span><span aria-hidden="true">→</span></button><button class="dashboard-action" type="button" data-go-section="classes"><span>Set up classes</span><span aria-hidden="true">→</span></button><button class="dashboard-action" type="button" data-go-section="results"><span>View class results</span><span aria-hidden="true">→</span></button><button class="dashboard-action" type="button" data-shuffle-current><span>Shuffle current list</span><span aria-hidden="true">↻</span></button></div><p class="dashboard-tip" id="dashboardTip">Start by adding students and choosing the classes they should be grouped into.</p></div>';
       const dashboardContent = dashboard.querySelector('.dashboard-content');
       const metricBlock = dashboard.querySelector('.dashboard-metrics');
-      metricBlock.replaceWith(createCollapsible('Roster overview', 'dashboard-metrics', [metricBlock]));
+      wrapElementInCollapsible(metricBlock, 'Roster overview', 'dashboard-metrics');
       const quickHeading = dashboardContent.querySelector('h3');
       const quickActions = dashboard.querySelector('.dashboard-actions');
       const quickBlock = createCollapsible('Quick actions', 'dashboard-actions', [quickHeading, quickActions]);
       dashboardContent.insertBefore(quickBlock, dashboard.querySelector('#dashboardTip'));
       const tip = dashboard.querySelector('#dashboardTip');
-      tip.replaceWith(createCollapsible('Getting started tip', 'dashboard-tip', [tip]));
+      wrapElementInCollapsible(tip, 'Getting started tip', 'dashboard-tip');
       const checklist = document.createElement('section');
       checklist.className = 'setup-checklist';
       checklist.innerHTML = '<div class="setup-progress"><span>Getting started</span><span id="setupProgressText">0 of 4 complete</span></div><progress id="setupProgressBar" max="4" value="0" aria-label="School roster setup progress"></progress><ol id="setupSteps" class="setup-steps"></ol>';
@@ -814,7 +822,10 @@
       layout.remove();
       setActive('home');
     }
-    assembleAppSections();
+    try { assembleAppSections(); } catch (error) {
+      console.error('Section layout could not be assembled; keeping the original page layout.', error);
+      dismissStartup();
+    }
 
     const rosterInput = document.getElementById('roster');
     const shuffleButton = document.getElementById('shuffleBtn');
@@ -1095,7 +1106,8 @@
     }
     document.getElementById('appFavicon').dataset.defaultIcon = document.getElementById('appFavicon').href;
     function dismissStartup() {
-      document.getElementById('startupScreen').classList.add('done');
+      clearTimeout(startupFailsafe);
+      document.getElementById('startupScreen')?.classList.add('done');
     }
 
     function setConnectionStatus(text, mode = '') {
@@ -2815,14 +2827,6 @@
       if (localState) applyCloudState(localState);
     } catch { /* Ignore unavailable or malformed offline state. */ }
     initializeBackend();
-    setTimeout(() => {
-      const startup = document.getElementById('startupScreen');
-      if (startup && !startup.classList.contains('done')) {
-        setConnectionStatus('Connection delayed', 'offline');
-        if (cloudApiMode) showLogin('The server is taking longer than usual. Please try signing in again.');
-        dismissStartup();
-      }
-    }, 15000);
   </script>
 </body>
 </html>
