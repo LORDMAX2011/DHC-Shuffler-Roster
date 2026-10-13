@@ -255,6 +255,33 @@
     .dashboard-action:hover { transform: translateY(-2px); border-color: var(--green); background: var(--mint); }
     .dashboard-action span:last-child { color: var(--green); font-size: 20px; }
     .dashboard-tip { margin: 19px 0 0; padding: 12px 14px; border-left: 4px solid var(--green); border-radius: 7px; color: var(--muted); background: var(--wash); }
+    .setup-checklist { margin-top:20px; padding-top:17px; border-top:1px solid var(--line); }
+    .setup-progress { display:flex; justify-content:space-between; gap:10px; margin:0 0 8px; font-size:14px; font-weight:800; }
+    .setup-progress progress { width:100%; height:12px; accent-color:var(--green); }
+    .setup-steps { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; margin:12px 0 0; padding:0; list-style:none; }
+    .setup-step { display:flex; align-items:center; gap:10px; min-width:0; padding:10px 12px; border:1px solid var(--line); border-radius:10px; color:var(--muted); background:var(--paper); }
+    .setup-step.complete { color:var(--ink); border-color:color-mix(in srgb,var(--green) 45%,var(--line)); background:var(--mint); }
+    .setup-step button { margin-left:auto; border:0; padding:5px 8px; border-radius:7px; color:var(--green-dark); background:transparent; font-weight:800; cursor:pointer; }
+    .save-status { color:var(--muted); font-size:12px; font-weight:700; white-space:nowrap; }
+    .save-status[data-state="pending"] { color:var(--green-dark); }
+    .save-status[data-state="error"] { color:var(--red); }
+    .student-editor { margin:18px 0; padding:16px; border:1px solid var(--line); border-radius:14px; background:var(--paper); }
+    .student-editor-head { display:flex; align-items:flex-start; justify-content:space-between; flex-wrap:wrap; gap:10px; }
+    .student-editor-head h3 { margin:0; font-size:17px; }
+    .student-editor-head p { margin:4px 0 0; color:var(--muted); font-size:13px; }
+    .student-editor-tools, .student-editor-add { display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin:12px 0; }
+    .student-editor-tools input, .student-editor-add input { flex:1 1 170px; min-width:0; padding:10px 12px; border:2px solid var(--line); border-radius:9px; color:var(--ink); background:var(--paper); }
+    .student-table-wrap { max-width:100%; overflow:auto; border:1px solid var(--line); border-radius:10px; }
+    .student-editor-table { width:100%; min-width:640px; border-collapse:collapse; }
+    .student-editor-table th, .student-editor-table td { padding:8px; border-bottom:1px solid var(--line); text-align:left; }
+    .student-editor-table th { background:var(--wash); }
+    .student-editor-table td input { width:100%; min-width:100px; padding:8px; border:1px solid var(--line); border-radius:7px; color:var(--ink); background:var(--paper); }
+    .student-editor-table button { min-height:40px; padding:6px 10px; }
+    .student-editor-footer { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:9px; padding-top:10px; color:var(--muted); }
+    .student-editor-footer button { min-height:42px; }
+    .roster-paste-details { margin:14px 0; padding:12px 14px; border:1px solid var(--line); border-radius:11px; background:var(--wash); }
+    .roster-paste-details summary { cursor:pointer; font-weight:800; }
+    .roster-paste-details[open] summary { margin-bottom:10px; }
     .panel-content .profile-card { margin: 0; box-shadow: none; }
     .panel-content .class-manager { margin-bottom: 14px; }
     .appearance-card { border: 1px solid var(--line); border-radius: 15px; background: var(--paper); padding: 18px; box-shadow: var(--shadow); }
@@ -307,6 +334,11 @@
     :root[data-text-size="extra"] body { font-size:20px; }
     :root[data-text-size="extra"] label, :root[data-text-size="extra"] input, :root[data-text-size="extra"] select, :root[data-text-size="extra"] textarea, :root[data-text-size="extra"] .button, :root[data-text-size="extra"] .student-list li { font-size:18px !important; }
     :root[data-text-size="extra"] .profile-hint, :root[data-text-size="extra"] .school-banner-copy span, :root[data-text-size="extra"] .card-head p, :root[data-text-size="extra"] .format-note, :root[data-text-size="extra"] .class-help, :root[data-text-size="extra"] .idea-description, :root[data-text-size="extra"] .saved-hint, :root[data-text-size="extra"] .file-drop p, :root[data-text-size="extra"] .tab-copy small, :root[data-text-size="extra"] .panel-heading p, :root[data-text-size="extra"] .appearance-card > p, :root[data-text-size="extra"] .balance-controls p, :root[data-text-size="extra"] .class-entry-box p, :root[data-text-size="extra"] .contrast-status { font-size:16px !important; }
+    :root[data-large-print="true"] body { font-size:20px; line-height:1.7; }
+    :root[data-large-print="true"] h1 { font-size:clamp(38px, 5.5vw, 58px); }
+    :root[data-large-print="true"] h2, :root[data-large-print="true"] .panel-heading h2 { font-size:24px; }
+    :root[data-large-print="true"] label, :root[data-large-print="true"] input, :root[data-large-print="true"] select, :root[data-large-print="true"] textarea, :root[data-large-print="true"] .button, :root[data-large-print="true"] .student-list li, :root[data-large-print="true"] .tab-copy strong { font-size:18px !important; }
+    :root[data-large-print="true"] .profile-hint, :root[data-large-print="true"] .card-head p, :root[data-large-print="true"] .format-note, :root[data-large-print="true"] .class-help, :root[data-large-print="true"] .saved-hint, :root[data-large-print="true"] .file-drop p, :root[data-large-print="true"] .tab-copy small, :root[data-large-print="true"] .panel-heading p, :root[data-large-print="true"] .appearance-card > p, :root[data-large-print="true"] .dashboard-metric span, :root[data-large-print="true"] .dashboard-tip { font-size:16px !important; }
     .toast { position:fixed; z-index:80; right:20px; bottom:20px; max-width:min(420px,calc(100% - 40px)); padding:12px 16px; border:1px solid var(--line); border-radius:13px; background:var(--paper); color:var(--ink); box-shadow:var(--shadow); font-size:13px; opacity:0; transform:translateY(12px); pointer-events:none; transition:opacity .2s,transform .2s; }
     .toast.visible { opacity:1; transform:translateY(0); }
     .toast.error { border-color:#d99883; }
@@ -330,6 +362,8 @@
       .brand span { max-width: 115px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
       .brand-mark { width: 36px; height: 36px; }
       .header-actions { flex: 0 0 auto; gap: 4px; }
+      .header-actions { flex-wrap:wrap; justify-content:flex-end; }
+      .save-status { flex-basis:100%; text-align:right; font-size:11px; }
       .mode-toggle { padding: 7px 8px; font-size: 10px; }
       .roster-settings { grid-template-columns:1fr; }
       .archive-tools { grid-template-columns:1fr; }
@@ -350,6 +384,9 @@
       .dashboard-metric span { font-size: 12px; }
       .dashboard-actions { grid-template-columns: 1fr; }
       .dashboard-action { min-height: 52px; }
+      .setup-steps { grid-template-columns:1fr; }
+      .student-editor { padding:11px; }
+      .student-editor-tools > button { flex:1 1 120px; }
       .tab-copy strong { font-size: 12px; }
       .panel-heading { padding: 17px 16px 14px; }
       .panel-heading h2 { font-size: 17px; }
@@ -426,6 +463,11 @@
   <a class="skip-link" href="#appWorkspace">Skip to app sections</a>
   <div id="startupScreen" class="startup-screen" aria-live="polite"><div class="startup-mark" id="startupMark">↗</div><p>Preparing your school roster…</p></div>
   <div id="successToast" class="toast" role="status" aria-live="polite"></div>
+  <dialog id="shufflePreviewDialog" class="import-dialog" aria-labelledby="shufflePreviewTitle">
+    <div class="import-dialog-head"><h2 id="shufflePreviewTitle">Review class sizes before shuffling</h2><button id="cancelShuffleTop" class="button quiet" type="button">Close</button></div>
+    <div class="import-dialog-body"><p id="shufflePreviewSummary"></p><div id="shufflePreviewWarnings"></div><div class="student-table-wrap"><table class="student-editor-table"><thead><tr><th>Class</th><th>Students after shuffle</th><th>Preferred size</th><th>Check</th></tr></thead><tbody id="shufflePreviewRows"></tbody></table></div></div>
+    <div class="import-dialog-foot"><button id="cancelShuffleButton" class="button secondary" type="button">Go back</button><button id="confirmShuffleButton" class="button primary" type="button">Confirm and shuffle</button></div>
+  </dialog>
   <dialog id="importPreviewDialog" class="import-dialog" aria-labelledby="importPreviewTitle">
     <div class="import-dialog-head"><h2 id="importPreviewTitle">Review imported student list</h2><button id="cancelImportTop" class="button quiet" type="button" aria-label="Cancel import">Close</button></div>
     <div class="import-dialog-body"><p id="importPreviewSummary"></p><div id="importPreviewWarnings"></div><div class="import-preview-table-wrap"><table class="import-preview-table"><thead><tr><th>Row</th><th>Student name</th><th>Class</th><th>Review</th></tr></thead><tbody id="importPreviewRows"></tbody></table></div></div>
@@ -444,7 +486,7 @@
   <main class="shell">
     <header>
       <div class="brand"><div class="brand-mark" id="brandMark" aria-hidden="true">↗</div><span id="brandName">Classroom Shuffle</span></div>
-      <div class="header-actions"><button id="installAppButton" class="mode-toggle hide" type="button">Install app</button><button id="modeToggle" class="mode-toggle" type="button" aria-pressed="false">Dark mode</button><div class="local-pill" id="connectionPill">Local storage only</div>
+      <div class="header-actions"><button id="installAppButton" class="mode-toggle hide" type="button">Install app</button><button id="modeToggle" class="mode-toggle" type="button" aria-pressed="false">Dark mode</button><div class="local-pill" id="connectionPill">Local storage only</div><span id="saveStatus" class="save-status" role="status" aria-live="polite">Checking save status…</span>
       <button id="logoutButton" class="button quiet hide" type="button" title="End this admin session">Log out</button></div>
     </header>
 
@@ -508,6 +550,8 @@
         <label for="textSizeSelect">Text size</label>
         <select id="textSizeSelect" aria-label="Text size"><option value="standard">Standard</option><option value="large">Large</option><option value="extra">Extra large</option></select>
         <label><input id="highContrastToggle" type="checkbox"> High contrast colors</label>
+        <label><input id="largePrintToggle" type="checkbox"> Large-print mode</label>
+        <label for="interfaceLanguage">Interface language</label><select id="interfaceLanguage" aria-label="Interface language"><option value="en">English</option><option value="pcm">Nigerian Pidgin</option></select>
         <p>Large text is the default. High contrast strengthens text and control outlines. Keyboard focus is highlighted clearly.</p>
       </div>
       <div class="theme-options" id="themeOptions" aria-label="Color themes"></div>
@@ -577,9 +621,18 @@
             <input id="csvFile" type="file" accept=".csv,.tsv,.txt,.docx,.xlsx,.xls,.xlsm,.pdf,image/*">
           </div>
           <div class="format-note"><span aria-hidden="true">✳</span><span><strong>Format:</strong> one student per line, or student name then class separated by a comma or tab. A header row is okay.</span></div>
-          <label for="roster">Student roster</label>
-          <textarea id="roster" spellcheck="false" aria-describedby="format-example" placeholder="Name, Class&#10;Ada Okafor, JSS 1A&#10;Tunde Bello, JSS 1B&#10;Mina Yusuf, JSS 1A"></textarea>
-          <div id="format-example" class="row" style="margin-top:7px;justify-content:flex-start;color:var(--muted);font-size:11px">CSV columns: student name, class (optional), balance group (optional). Check imported names and groups before shuffling.</div>
+          <section id="studentEditor" class="student-editor" aria-labelledby="studentEditorTitle">
+            <div class="student-editor-head"><div><h3 id="studentEditorTitle">Editable student list</h3><p>Your list stays here when you move between sections. Edit names or class assignments any time.</p></div><span id="studentEditorCount" aria-live="polite">0 students</span></div>
+            <div class="student-editor-add"><input id="newStudentName" type="text" maxlength="120" placeholder="Student name" aria-label="New student name"><input id="newStudentClass" type="text" maxlength="60" placeholder="Class (optional)" aria-label="New student class"><button id="addStudentRow" class="button secondary" type="button">Add student</button></div>
+            <div class="student-editor-tools"><input id="studentEditorSearch" type="search" placeholder="Find a student or class" aria-label="Search editable student list"><button id="sortStudentName" class="button secondary" type="button">Sort by name</button><button id="sortStudentClass" class="button secondary" type="button">Sort by class</button><button id="removeSelectedStudents" class="button quiet" type="button" disabled>Remove selected</button></div>
+            <div class="student-table-wrap"><table class="student-editor-table"><thead><tr><th><input id="selectAllStudents" type="checkbox" aria-label="Select all visible students"></th><th>#</th><th>Name</th><th>Class</th><th>Action</th></tr></thead><tbody id="studentEditorRows"></tbody></table></div>
+            <div class="student-editor-footer"><span id="studentEditorPageInfo">No student rows</span><div><button id="studentEditorPrevious" class="button quiet" type="button" disabled>Previous</button> <button id="studentEditorNext" class="button quiet" type="button" disabled>Next</button></div></div>
+          </section>
+          <details class="roster-paste-details"><summary>Paste a student list manually</summary>
+            <label for="roster">Student roster</label>
+            <textarea id="roster" spellcheck="false" aria-describedby="format-example" placeholder="Name, Class&#10;Ada Okafor, JSS 1A&#10;Tunde Bello, JSS 1B&#10;Mina Yusuf, JSS 1A"></textarea>
+            <div id="format-example" class="row" style="margin-top:7px;justify-content:flex-start;color:var(--muted);font-size:11px">CSV columns: student name, class (optional), balance group (optional). Check imported names and groups before shuffling.</div>
+          </details>
           <div class="balance-controls"><label><input id="balanceFieldToggle" type="checkbox"> Balance classes using the third CSV column</label><p>Use only school-approved grouping information. The value is used to spread matching groups evenly.</p></div>
           <div id="duplicateControls" class="hide"><div id="duplicateMessage" class="notice"></div><label class="privacy-toggle"><input id="allowDuplicates" type="checkbox"> I checked; keep repeated names</label></div>
           <div class="row">
@@ -621,8 +674,8 @@
       if (!shell || !intro || !layout || !profile || !accountSettingsCard || !adminToolsCard || !appearanceCard || !classManager || !savedRostersPanel || !resultCard) return;
 
       const studentNodes = [
-        layout.querySelector('.file-drop'), layout.querySelector('.format-note'), layout.querySelector('label[for="roster"]'),
-        layout.querySelector('#roster'), layout.querySelector('#format-example'), layout.querySelector('.balance-controls'), layout.querySelector('#duplicateControls'),
+        layout.querySelector('.file-drop'), layout.querySelector('.format-note'), layout.querySelector('#studentEditor'),
+        layout.querySelector('.roster-paste-details'), layout.querySelector('.balance-controls'), layout.querySelector('#duplicateControls'),
         layout.querySelector('#clearRosterBtn')?.closest('.row'), layout.querySelector('#notice'), layout.querySelector('#processing')
       ].filter(Boolean);
       const nav = document.createElement('nav');
@@ -672,6 +725,10 @@
       dashboard.className = 'dashboard-card';
       dashboard.setAttribute('aria-labelledby', 'dashboardWelcomeTitle');
       dashboard.innerHTML = '<div class="dashboard-welcome"><p class="eyebrow">School roster overview</p><h2 id="dashboardWelcomeTitle">Welcome back</h2><p id="dashboardStatus" role="status" aria-live="polite">Your workspace is ready.</p></div><div class="dashboard-content"><div class="dashboard-metrics" aria-label="Roster summary"><div class="dashboard-metric"><strong id="dashboardStudentCount">0</strong><span>Students in current list</span></div><div class="dashboard-metric"><strong id="dashboardClassCount">0</strong><span>Classes set up</span></div><div class="dashboard-metric"><strong id="dashboardSavedCount">0</strong><span>Saved rosters</span></div></div><h3>Quick actions</h3><div class="dashboard-actions"><button class="dashboard-action" type="button" data-go-section="students"><span>Add or import students</span><span aria-hidden="true">→</span></button><button class="dashboard-action" type="button" data-go-section="classes"><span>Set up classes</span><span aria-hidden="true">→</span></button><button class="dashboard-action" type="button" data-go-section="results"><span>View class results</span><span aria-hidden="true">→</span></button><button class="dashboard-action" type="button" data-shuffle-current><span>Shuffle current list</span><span aria-hidden="true">↻</span></button></div><p class="dashboard-tip" id="dashboardTip">Start by adding students and choosing the classes they should be grouped into.</p></div>';
+      const checklist = document.createElement('section');
+      checklist.className = 'setup-checklist';
+      checklist.innerHTML = '<div class="setup-progress"><span>Getting started</span><span id="setupProgressText">0 of 4 complete</span></div><progress id="setupProgressBar" max="4" value="0" aria-label="School roster setup progress"></progress><ol id="setupSteps" class="setup-steps"></ol>';
+      dashboard.querySelector('.dashboard-content').appendChild(checklist);
       createPanel(steps[0], [dashboard]);
       createPanel(steps[1], [profile]);
       createPanel(steps[2], [accountSettingsCard]);
@@ -690,6 +747,10 @@
       dashboard.querySelector('[data-shuffle-current]').addEventListener('click', () => {
         if (parseRows(rosterInput.value).students.length) shuffleButton.click();
         else { setActive('students'); rosterInput.focus(); }
+      });
+      dashboard.querySelector('#setupSteps').addEventListener('click', event => {
+        const button = event.target.closest('[data-setup-target]');
+        if (button) document.getElementById(`tab-${button.dataset.setupTarget}`).click();
       });
       workspace.append(nav, panelRoot);
       intro.after(workspace);
@@ -731,6 +792,7 @@
     let savedRosters = [];
     let rosterVersions = [];
     let pendingImport = null;
+    let pendingShuffle = null;
     let currentUser = null;
     const todayYear = new Date().getFullYear();
     const academicStartYear = new Date().getMonth() >= 7 ? todayYear : todayYear - 1;
@@ -743,7 +805,7 @@
     let studentAttributes = {};
     let balanceByAttribute = false;
     let rosterHistory = [];
-    const defaultAppearance = { theme: 'slate', accent: '#4c6378', background: '#e2eaf1', mode: 'light', textSize: 'large', highContrast: true };
+    const defaultAppearance = { theme: 'slate', accent: '#4c6378', background: '#e2eaf1', mode: 'light', textSize: 'large', highContrast: true, largePrint: false, language: 'en' };
     let appearance = { ...defaultAppearance };
     try {
       const localAppearance = JSON.parse(localStorage.getItem('classroomShuffle.appearance') || '{}');
@@ -819,6 +881,52 @@
       button.textContent = appearance.mode === 'dark' ? 'Light mode' : 'Dark mode';
       button.setAttribute('aria-pressed', String(appearance.mode === 'dark'));
     }
+    const interfaceCopy = {
+      en: {
+        nav: ['Dashboard','School','Security','Classes','Students','Appearance','Backups','Results'],
+        welcome: 'Welcome back', metrics: ['Students in current list','Classes set up','Saved rosters'], actions: ['Add or import students','Set up classes','View class results','Shuffle current list'],
+        dashboardHeading: 'Quick actions', setup: 'Getting started', setupSteps: ['Add school details','Set up classes','Add student names','Create a roster'], open: 'Open', done: 'Done',
+        studentTitle: 'Editable student list', studentHelp: 'Your list stays here when you move between sections. Edit names or class assignments any time.',
+        addStudent: 'Add student', findStudent: 'Find a student or class', sortName: 'Sort by name', sortClass: 'Sort by class', removeSelected: 'Remove selected', remove: 'Remove',
+        previewTitle: 'Review class sizes before shuffling', goBack: 'Go back', confirmShuffle: 'Confirm and shuffle', shuffle: 'Shuffle students', clear: 'Clear student list'
+      },
+      pcm: {
+        nav: ['Home','School setup','Account','Classes','Student list','Display','Backups','Roster results'],
+        welcome: 'You don come back', metrics: ['Students for this list','Classes wey don set','Saved rosters'], actions: ['Add student names','Choose classes','See class results','Shuffle this list'],
+        dashboardHeading: 'Quick actions', setup: 'How to start', setupSteps: ['Add school details','Set up classes','Add student names','Create one roster'], open: 'Open', done: 'Done',
+        studentTitle: 'Student list wey you fit edit', studentHelp: 'Your list go remain here even when you change section. You fit edit names and classes anytime.',
+        addStudent: 'Add student', findStudent: 'Find student or class', sortName: 'Sort by name', sortClass: 'Sort by class', removeSelected: 'Remove selected', remove: 'Remove',
+        previewTitle: 'Check class sizes before shuffle', goBack: 'Go back', confirmShuffle: 'Confirm and shuffle', shuffle: 'Shuffle students', clear: 'Clear student list'
+      }
+    };
+    function applyInterfaceLanguage(language = appearance.language) {
+      const copy = interfaceCopy[language] || interfaceCopy.en;
+      appearance.language = interfaceCopy[language] ? language : 'en';
+      document.documentElement.lang = appearance.language === 'pcm' ? 'pcm' : 'en-NG';
+      document.getElementById('interfaceLanguage').value = appearance.language;
+      document.querySelector('label[for="interfaceLanguage"]').textContent = 'Language for dashboard and student tools';
+      document.querySelectorAll('.section-tab').forEach((tab, index) => { const label = tab.querySelector('strong'); if (label) label.textContent = copy.nav[index] || interfaceCopy.en.nav[index]; });
+      document.getElementById('dashboardWelcomeTitle').textContent = profileData().name ? `Welcome to ${profileData().name}` : copy.welcome;
+      document.querySelectorAll('.dashboard-metric span').forEach((span, index) => { span.textContent = copy.metrics[index] || interfaceCopy.en.metrics[index]; });
+      document.querySelector('.dashboard-content > h3').textContent = copy.dashboardHeading;
+      document.querySelectorAll('.dashboard-action').forEach((button, index) => { const label = button.querySelector('span'); if (label) label.textContent = copy.actions[index] || interfaceCopy.en.actions[index]; });
+      document.querySelector('.setup-progress > span:first-child').textContent = copy.setup;
+      document.getElementById('studentEditorTitle').textContent = copy.studentTitle;
+      document.querySelector('.student-editor-head p').textContent = copy.studentHelp;
+      document.getElementById('newStudentName').placeholder = language === 'pcm' ? 'Student name' : 'Student name';
+      document.getElementById('studentEditorSearch').placeholder = copy.findStudent;
+      document.getElementById('addStudentRow').textContent = copy.addStudent;
+      document.getElementById('sortStudentName').textContent = copy.sortName;
+      document.getElementById('sortStudentClass').textContent = copy.sortClass;
+      document.getElementById('removeSelectedStudents').textContent = copy.removeSelected;
+      document.getElementById('shufflePreviewTitle').textContent = copy.previewTitle;
+      document.getElementById('cancelShuffleButton').textContent = copy.goBack;
+      document.getElementById('confirmShuffleButton').textContent = copy.confirmShuffle;
+      document.getElementById('shuffleBtn').textContent = `✦  ${copy.shuffle}`;
+      document.getElementById('clearRosterBtn').textContent = copy.clear;
+      renderSetupChecklist();
+      updateDashboard();
+    }
     function applyAppearance(nextAppearance) {
       const validColor = value => typeof value === 'string' && /^#[0-9a-f]{6}$/i.test(value);
       appearance = {
@@ -827,14 +935,18 @@
         background: validColor(nextAppearance.background) ? nextAppearance.background : defaultAppearance.background,
         mode: nextAppearance.mode === 'dark' ? 'dark' : nextAppearance.mode === 'light' ? 'light' : appearance.mode,
         textSize: ['standard', 'large', 'extra'].includes(nextAppearance.textSize) ? nextAppearance.textSize : appearance.textSize || defaultAppearance.textSize,
-        highContrast: typeof nextAppearance.highContrast === 'boolean' ? nextAppearance.highContrast : typeof appearance.highContrast === 'boolean' ? appearance.highContrast : defaultAppearance.highContrast
+        highContrast: typeof nextAppearance.highContrast === 'boolean' ? nextAppearance.highContrast : typeof appearance.highContrast === 'boolean' ? appearance.highContrast : defaultAppearance.highContrast,
+        largePrint: typeof nextAppearance.largePrint === 'boolean' ? nextAppearance.largePrint : appearance.largePrint === true,
+        language: ['en', 'pcm'].includes(nextAppearance.language) ? nextAppearance.language : ['en', 'pcm'].includes(appearance.language) ? appearance.language : 'en'
       };
       const root = document.documentElement;
       root.dataset.mode = appearance.mode;
       root.dataset.textSize = appearance.textSize;
       root.dataset.contrast = appearance.highContrast ? 'high' : 'normal';
+      root.dataset.largePrint = appearance.largePrint ? 'true' : 'false';
       document.getElementById('textSizeSelect').value = appearance.textSize;
       document.getElementById('highContrastToggle').checked = appearance.highContrast;
+      document.getElementById('largePrintToggle').checked = appearance.largePrint;
       const backgroundIsDark = contrastRatio('#111111', appearance.background) < 4.5;
       const pageBackground = appearance.mode === 'dark'
         ? `color-mix(in srgb, ${appearance.background} 22%, #080b10)`
@@ -868,6 +980,7 @@
       document.querySelectorAll('[data-theme]').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.theme === appearance.theme)));
       updateModeButton();
       updateContrastStatus();
+      applyInterfaceLanguage(appearance.language);
       try { localStorage.setItem('classroomShuffle.appearance', JSON.stringify(appearance)); } catch { /* Theme stays active for this page. */ }
     }
     function renderThemeOptions() {
@@ -901,6 +1014,14 @@
       applyAppearance({ ...appearance, highContrast: event.target.checked });
       scheduleCloudSave();
     });
+    document.getElementById('largePrintToggle').addEventListener('change', event => {
+      applyAppearance({ ...appearance, largePrint: event.target.checked });
+      scheduleCloudSave();
+    });
+    document.getElementById('interfaceLanguage').addEventListener('change', event => {
+      applyAppearance({ ...appearance, language: event.target.value });
+      scheduleCloudSave();
+    });
 
     let toastTimer = null;
     function showToast(message, isError = false) {
@@ -925,6 +1046,12 @@
       pill.textContent = text;
       pill.classList.toggle('cloud', mode === 'cloud');
       pill.classList.toggle('offline', mode === 'offline');
+    }
+    function setSaveStatus(text, state = '') {
+      const status = document.getElementById('saveStatus');
+      if (!status) return;
+      status.textContent = text;
+      status.dataset.state = state;
     }
     function currentAppState() {
       return {
@@ -967,6 +1094,7 @@
       classNames = previous.classNames;
       classTargets = previous.classTargets;
       rosterInput.value = previous.rosterDraft;
+      renderStudentEditor();
       currentGroups = previous.groups;
       teacherName = previous.teacherName;
       rosterDate = previous.rosterDate;
@@ -1047,21 +1175,25 @@
     });
     function scheduleCloudSave() {
       if (!cloudApiMode) {
+        setSaveStatus('Unsaved changes', 'pending');
         clearTimeout(cloudSaveTimer);
         cloudSaveTimer = setTimeout(() => {
-          try { localStorage.setItem('classroomShuffle.localState', JSON.stringify(currentAppState())); }
-          catch { showToast('Could not save a local copy. Browser storage may be full.', true); }
+          try { localStorage.setItem('classroomShuffle.localState', JSON.stringify(currentAppState())); setSaveStatus(`Saved in this browser · ${new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}`, 'saved'); }
+          catch { setSaveStatus('Could not save in this browser', 'error'); showToast('Could not save a local copy. Browser storage may be full.', true); }
         }, 500);
         return;
       }
-      if (!cloudReady) return;
+      if (!cloudReady) { setSaveStatus('Waiting to sign in', 'waiting'); return; }
+      setSaveStatus('Saving to cloud…', 'pending');
       clearTimeout(cloudSaveTimer);
       cloudSaveTimer = setTimeout(async () => {
         try {
           await apiRequest('/api/data', { method: 'PUT', body: JSON.stringify({ state: currentAppState() }) });
           setConnectionStatus('Connected · saved to cloud', 'cloud');
+          setSaveStatus(`Saved to cloud · ${new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}`, 'saved');
         } catch (error) {
           setConnectionStatus('Cloud save failed · retrying', 'offline');
+          setSaveStatus('Cloud save failed · retrying', 'error');
           if (error.status === 401) signOut(true);
           else notice.textContent = `Cloud sync issue: ${error.message}`;
         }
@@ -1098,6 +1230,7 @@
       document.getElementById('apartRules').value = apartRules;
       document.getElementById('balanceFieldToggle').checked = balanceByAttribute;
       rosterInput.value = state.rosterDraft || '';
+      renderStudentEditor();
       currentGroups = Array.isArray(state.groups) ? state.groups.map(group => ({ className: group.className, students: [...group.students] })) : [];
       teacherName = state.teacherName || '';
       rosterDate = state.rosterDate || localToday();
@@ -1132,6 +1265,7 @@
       document.getElementById('adminToolsCard').classList.add('hide');
       try { sessionStorage.removeItem('classroomShuffle.authToken'); } catch { /* Ignore unavailable session storage. */ }
       document.getElementById('logoutButton').classList.add('hide');
+      setSaveStatus('Waiting for sign in', 'waiting');
       if (showGate && cloudApiMode) showLogin('Your sign-in expired. Please sign in again.');
       else if (cloudApiMode) showLogin();
     }
@@ -1160,6 +1294,7 @@
         document.getElementById('adminToolsCard').classList.add('hide');
       }
       setConnectionStatus('Connected · saved to cloud', 'cloud');
+      setSaveStatus(`Saved to cloud · ${new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}`, 'saved');
       if (!result.state || cloudNeedsSync) { cloudNeedsSync = false; scheduleCloudSave(); }
     }
     document.getElementById('loginForm').addEventListener('submit', async event => {
@@ -1197,12 +1332,13 @@
       } catch (error) { showToast(error.message, true); }
     });
     async function initializeBackend() {
-      if (location.protocol === 'file:') { dismissStartup(); return; }
+      if (location.protocol === 'file:') { setSaveStatus('Saved in this browser', 'saved'); dismissStartup(); return; }
       try {
         const health = await fetch('/api/health', { cache: 'no-store', signal: AbortSignal.timeout(6000) });
         if (!health.ok) throw new Error('API unavailable');
         cloudApiMode = true;
         setConnectionStatus('Sign in to sync', 'cloud');
+        setSaveStatus('Waiting for sign in', 'waiting');
         if (cloudToken) {
           try { const me = await apiRequest('/api/auth/me'); await completeSignIn(cloudToken, false, me.user); return; }
           catch { cloudToken = ''; try { sessionStorage.removeItem('classroomShuffle.authToken'); } catch { /* Ignore. */ } }
@@ -1212,6 +1348,7 @@
         cloudApiMode = false;
         cloudReady = false;
         setConnectionStatus('Local mode · not synced', 'offline');
+        setSaveStatus('Saved in this browser', 'saved');
       } finally {
         setTimeout(dismissStartup, 220);
       }
@@ -1261,16 +1398,34 @@
       if (!studentCount) return;
       const students = parseRows(rosterInput.value).students.length;
       const name = profileData().name;
-      document.getElementById('dashboardWelcomeTitle').textContent = name ? `Welcome to ${name}` : 'Welcome back';
+      const copy = interfaceCopy[appearance.language] || interfaceCopy.en;
+      document.getElementById('dashboardWelcomeTitle').textContent = name ? `Welcome to ${name}` : copy.welcome;
       studentCount.textContent = String(students);
       document.getElementById('dashboardClassCount').textContent = String(classNames.length);
       document.getElementById('dashboardSavedCount').textContent = String(savedRosters.length);
       document.getElementById('dashboardStatus').textContent = currentGroups.length
-        ? `Your latest roster has ${currentGroups.reduce((total, group) => total + group.students.length, 0)} students in ${currentGroups.length} classes and is ready to review.`
-        : students ? 'Your student list is ready. Shuffle it to create class groups.' : 'Your workspace is ready. Add students and classes to get started.';
+        ? (appearance.language === 'pcm' ? `Your latest roster get ${currentGroups.reduce((total, group) => total + group.students.length, 0)} students for ${currentGroups.length} classes. You fit review am now.` : `Your latest roster has ${currentGroups.reduce((total, group) => total + group.students.length, 0)} students in ${currentGroups.length} classes and is ready to review.`)
+        : students ? (appearance.language === 'pcm' ? 'Your student list don ready. Shuffle am make e create class groups.' : 'Your student list is ready. Shuffle it to create class groups.') : (appearance.language === 'pcm' ? 'Your workspace dey ready. Add students and classes make you start.' : 'Your workspace is ready. Add students and classes to get started.');
       document.getElementById('dashboardTip').textContent = currentGroups.length
-        ? 'Need another arrangement? Open Results to reshuffle, rebalance, print, or export this roster.'
-        : students ? 'Choose or add classes, then open Students and select Shuffle students.' : 'Start by adding students and choosing the classes they should be grouped into.';
+        ? (appearance.language === 'pcm' ? 'You need another arrangement? Open Results to reshuffle, rebalance, print, or export this roster.' : 'Need another arrangement? Open Results to reshuffle, rebalance, print, or export this roster.')
+        : students ? (appearance.language === 'pcm' ? 'Choose or add classes, then open Students and press Shuffle students.' : 'Choose or add classes, then open Students and select Shuffle students.') : (appearance.language === 'pcm' ? 'Start by adding students and choosing the classes wey you wan group them into.' : 'Start by adding students and choosing the classes they should be grouped into.');
+      renderSetupChecklist();
+    }
+    function renderSetupChecklist() {
+      const list = document.getElementById('setupSteps');
+      if (!list) return;
+      const steps = [
+        { target: 'school', done: Boolean(profileData().name), label: interfaceCopy[appearance.language]?.setupSteps[0] || 'Add school details' },
+        { target: 'classes', done: classNames.length > 0, label: interfaceCopy[appearance.language]?.setupSteps[1] || 'Set up classes' },
+        { target: 'students', done: parseRows(rosterInput.value).students.length > 0, label: interfaceCopy[appearance.language]?.setupSteps[2] || 'Add student names' },
+        { target: 'results', done: currentGroups.length > 0, label: interfaceCopy[appearance.language]?.setupSteps[3] || 'Create a roster' }
+      ];
+      const complete = steps.filter(step => step.done).length;
+      document.getElementById('setupProgressBar').value = complete;
+      document.getElementById('setupProgressBar').setAttribute('aria-valuetext', `${complete} of ${steps.length} complete`);
+      document.getElementById('setupProgressText').textContent = appearance.language === 'pcm' ? `${complete} of ${steps.length} don complete` : `${complete} of ${steps.length} complete`;
+      const copy = interfaceCopy[appearance.language] || interfaceCopy.en;
+      list.innerHTML = steps.map(step => `<li class="setup-step ${step.done ? 'complete' : ''}"><span aria-hidden="true">${step.done ? '✓' : '○'}</span><span>${escapeHtml(step.label)}</span><button type="button" data-setup-target="${step.target}">${step.done ? copy.done : copy.open}</button></li>`).join('');
     }
     function saveSchoolProfile() {
       const profile = profileData();
@@ -1381,6 +1536,7 @@
       }
       const addedRows = names.map(name => `${name}\t${className}`).join('\n');
       rosterInput.value = [rosterInput.value.trimEnd(), addedRows].filter(Boolean).join('\n');
+      renderStudentEditor();
       document.getElementById('classEntryNames').value = '';
       renderClasses();
       updateDuplicateReview();
@@ -1433,6 +1589,124 @@
       }
       return { students, skipped };
     }
+
+    const studentEditorPageSize = 50;
+    let studentEditorPage = 0;
+    let studentEditorSort = 'row';
+    let studentEditorSortDirection = 1;
+    let studentEditorVisibleRows = [];
+    const selectedStudentRows = new Set();
+    function encodeStudentRows(rows) {
+      const clean = value => String(value || '').replace(/[\t\r\n]+/g, ' ').trim();
+      return rows.filter(row => clean(row.name)).map(row => [clean(row.name), clean(row.className), clean(row.groupAttribute)].join('\t')).join('\n');
+    }
+    function renderStudentEditor() {
+      const body = document.getElementById('studentEditorRows');
+      if (!body) return;
+      const all = parseRows(rosterInput.value, true).students.map((student, sourceIndex) => ({ ...student, sourceIndex }));
+      const term = document.getElementById('studentEditorSearch').value.trim().toLocaleLowerCase();
+      const filtered = all.filter(student => !term || `${student.name} ${student.className} ${student.groupAttribute}`.toLocaleLowerCase().includes(term));
+      if (studentEditorSort !== 'row') filtered.sort((a, b) => String(a[studentEditorSort] || '').localeCompare(String(b[studentEditorSort] || ''), undefined, { numeric: true, sensitivity: 'base' }) * studentEditorSortDirection || a.sourceIndex - b.sourceIndex);
+      const pages = Math.max(1, Math.ceil(filtered.length / studentEditorPageSize));
+      studentEditorPage = Math.min(studentEditorPage, pages - 1);
+      const start = studentEditorPage * studentEditorPageSize;
+      studentEditorVisibleRows = filtered.slice(start, start + studentEditorPageSize).map(student => student.sourceIndex);
+      body.innerHTML = studentEditorVisibleRows.map(sourceIndex => {
+        const student = all[sourceIndex];
+        return `<tr><td><input type="checkbox" data-student-select="${sourceIndex}" aria-label="Select ${escapeHtml(student.name)}" ${selectedStudentRows.has(sourceIndex) ? 'checked' : ''}></td><td>${sourceIndex + 1}</td><td><input type="text" maxlength="120" data-student-edit="${sourceIndex}:name" value="${escapeHtml(student.name)}" aria-label="Edit name for row ${sourceIndex + 1}"></td><td><input type="text" maxlength="60" data-student-edit="${sourceIndex}:className" value="${escapeHtml(student.className)}" aria-label="Edit class for row ${sourceIndex + 1}"></td><td><button class="button quiet" type="button" data-student-remove="${sourceIndex}" aria-label="Remove ${escapeHtml(student.name)}">${interfaceCopy[appearance.language]?.remove || 'Remove'}</button></td></tr>`;
+      }).join('') || '<tr><td colspan="5">No student rows found. Add a student above, import a file, or paste a list below.</td></tr>';
+      const shownFirst = filtered.length ? start + 1 : 0;
+      const shownLast = Math.min(start + studentEditorPageSize, filtered.length);
+      document.getElementById('studentEditorCount').textContent = `${all.length} student${all.length === 1 ? '' : 's'}`;
+      document.getElementById('studentEditorPageInfo').textContent = term ? `${shownFirst}–${shownLast} of ${filtered.length} matching · ${all.length} total` : `${shownFirst}–${shownLast} of ${all.length} students`;
+      document.getElementById('studentEditorPrevious').disabled = studentEditorPage <= 0;
+      document.getElementById('studentEditorNext').disabled = studentEditorPage >= pages - 1;
+      document.getElementById('selectAllStudents').checked = studentEditorVisibleRows.length > 0 && studentEditorVisibleRows.every(index => selectedStudentRows.has(index));
+      document.getElementById('removeSelectedStudents').disabled = selectedStudentRows.size === 0;
+    }
+    function commitStudentRows(rows, summary) {
+      if (rows.filter(row => row.name.trim()).length > 5000) { showToast('A roster can contain at most 5,000 students.', true); return false; }
+      captureRosterHistory();
+      rosterInput.value = encodeStudentRows(rows);
+      selectedStudentRows.clear();
+      studentEditorPage = 0;
+      for (const row of rows) {
+        const className = row.className.trim();
+        if (className && !classNames.some(name => name.toLocaleLowerCase() === className.toLocaleLowerCase())) { classNames.push(className); classTargets[className] = 0; }
+      }
+      classNames.sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
+      renderClasses();
+      updateDuplicateReview();
+      renderStudentEditor();
+      if (currentGroups.length) clearResults();
+      scheduleCloudSave();
+      notice.textContent = summary;
+      showToast(summary);
+      return true;
+    }
+    document.getElementById('studentEditorRows').addEventListener('change', event => {
+      if (event.target.matches('[data-student-select]')) {
+        const index = Number(event.target.dataset.studentSelect);
+        if (event.target.checked) selectedStudentRows.add(index); else selectedStudentRows.delete(index);
+        renderStudentEditor();
+        return;
+      }
+      const field = event.target.closest('[data-student-edit]');
+      if (!field) return;
+      const [indexText, key] = field.dataset.studentEdit.split(':');
+      const rows = parseRows(rosterInput.value, true).students;
+      const index = Number(indexText);
+      if (!rows[index] || !['name', 'className'].includes(key)) return;
+      if (key === 'name' && !field.value.trim()) { showToast('A student name cannot be blank. Use Remove to delete this row.', true); renderStudentEditor(); return; }
+      rows[index][key] = field.value.trim();
+      commitStudentRows(rows, 'Student list updated.');
+    });
+    document.getElementById('studentEditorRows').addEventListener('click', event => {
+      const button = event.target.closest('[data-student-remove]');
+      if (!button) return;
+      const index = Number(button.dataset.studentRemove);
+      const rows = parseRows(rosterInput.value, true).students;
+      const removed = rows[index]?.name;
+      if (!removed) return;
+      rows.splice(index, 1);
+      commitStudentRows(rows, `${removed} removed. Use Undo last change to restore the list.`);
+    });
+    document.getElementById('addStudentRow').addEventListener('click', () => {
+      const nameInput = document.getElementById('newStudentName');
+      const classInput = document.getElementById('newStudentClass');
+      const name = nameInput.value.trim();
+      if (!name) { notice.textContent = 'Enter a student name first.'; nameInput.focus(); return; }
+      if (name.length > 120 || classInput.value.trim().length > 60) { notice.textContent = 'Student names must be 120 characters or fewer, and classes 60 or fewer.'; return; }
+      const rows = parseRows(rosterInput.value, true).students;
+      if (rows.length >= 5000) { showToast('A roster can contain at most 5,000 students.', true); return; }
+      rows.push({ name, className: classInput.value.trim(), groupAttribute: '' });
+      if (commitStudentRows(rows, `${name} added to the student list.`)) { nameInput.value = ''; classInput.value = ''; nameInput.focus(); }
+    });
+    document.getElementById('newStudentName').addEventListener('keydown', event => { if (event.key === 'Enter') { event.preventDefault(); document.getElementById('addStudentRow').click(); } });
+    document.getElementById('newStudentClass').addEventListener('keydown', event => { if (event.key === 'Enter') { event.preventDefault(); document.getElementById('addStudentRow').click(); } });
+    document.getElementById('studentEditorSearch').addEventListener('input', () => { studentEditorPage = 0; renderStudentEditor(); });
+    document.getElementById('sortStudentName').addEventListener('click', () => { studentEditorSortDirection = studentEditorSort === 'name' ? -studentEditorSortDirection : 1; studentEditorSort = 'name'; renderStudentEditor(); });
+    document.getElementById('sortStudentClass').addEventListener('click', () => { studentEditorSortDirection = studentEditorSort === 'className' ? -studentEditorSortDirection : 1; studentEditorSort = 'className'; renderStudentEditor(); });
+    document.getElementById('studentEditorPrevious').addEventListener('click', () => { studentEditorPage--; renderStudentEditor(); });
+    document.getElementById('studentEditorNext').addEventListener('click', () => { studentEditorPage++; renderStudentEditor(); });
+    document.getElementById('selectAllStudents').addEventListener('change', event => {
+      studentEditorVisibleRows.forEach(index => event.target.checked ? selectedStudentRows.add(index) : selectedStudentRows.delete(index));
+      renderStudentEditor();
+    });
+    document.getElementById('removeSelectedStudents').addEventListener('click', () => {
+      if (!selectedStudentRows.size) return;
+      if (!confirm(`Remove ${selectedStudentRows.size} selected student${selectedStudentRows.size === 1 ? '' : 's'}? You can undo this change.`)) return;
+      const rows = parseRows(rosterInput.value, true).students.filter((_, index) => !selectedStudentRows.has(index));
+      commitStudentRows(rows, 'Selected students removed. Use Undo last change to restore the list.');
+    });
+    let studentEditorRefreshTimer = null;
+    rosterInput.addEventListener('input', () => {
+      clearTimeout(studentEditorRefreshTimer);
+      selectedStudentRows.clear();
+      studentEditorRefreshTimer = setTimeout(renderStudentEditor, 250);
+      if (currentGroups.length) clearResults();
+    });
+    renderStudentEditor();
 
     function renderImportPreview(filename, text) {
       const parsed = parseRows(text, true);
@@ -1524,6 +1798,7 @@
       if (!usableStudents.length) { showToast('Correct at least one student name before importing.', true); return; }
       captureRosterHistory();
       rosterInput.value = usableStudents.map(student => [student.name, student.className, student.groupAttribute].join('\t')).join('\n');
+      renderStudentEditor();
       const importedClasses = [...new Set(usableStudents.map(student => student.className).filter(Boolean))];
       for (const name of importedClasses) if (!classNames.some(existing => existing.toLocaleLowerCase() === name.toLocaleLowerCase())) {
         classNames.push(name);
@@ -1591,6 +1866,17 @@
       if (!value) return '';
       const [year, month, day] = value.split('-').map(Number);
       return new Intl.DateTimeFormat(dateLocale, { dateStyle: 'medium', timeZone: 'UTC' }).format(new Date(Date.UTC(year, month - 1, day)));
+    }
+    function syncRosterDraftFromGroups() {
+      for (const group of currentGroups) if (!classNames.some(name => name.toLocaleLowerCase() === group.className.toLocaleLowerCase())) {
+        classNames.push(group.className);
+        classTargets[group.className] = 0;
+      }
+      classNames.sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
+      rosterInput.value = encodeStudentRows(currentGroups.flatMap(group => group.students.map(name => ({ name, className: group.className, groupAttribute: studentAttributes[name.trim().toLocaleLowerCase()] || '' }))));
+      renderClasses();
+      renderStudentEditor();
+      updateDuplicateReview();
     }
     function render(groups, skippedCount = 0) {
       currentGroups = groups;
@@ -1670,7 +1956,12 @@
         const value = input.value.trim();
         if (!value) { notice.textContent = 'Student names cannot be empty.'; input.value = currentGroups[gi].students[si]; return; }
         captureRosterHistory();
+        const oldName = currentGroups[gi].students[si];
+        const oldKey = oldName.trim().toLocaleLowerCase();
+        const newKey = value.trim().toLocaleLowerCase();
+        if (studentAttributes[oldKey] && oldKey !== newKey) { studentAttributes[newKey] = studentAttributes[oldKey]; delete studentAttributes[oldKey]; }
         currentGroups[gi].students[si] = value;
+        syncRosterDraftFromGroups();
         render(currentGroups);
         archiveRosterVersion('Student name edited');
       }));
@@ -1682,6 +1973,7 @@
         if (!currentGroups.includes(target)) currentGroups.push(target);
         target.students.push(student);
         currentGroups = currentGroups.filter(group => group.students.length || classNames.includes(group.className)).sort((a, b) => a.className.localeCompare(b.className, undefined, { numeric: true, sensitivity: 'base' }));
+        syncRosterDraftFromGroups();
         render(currentGroups);
         archiveRosterVersion('Student moved');
       }));
@@ -1690,6 +1982,7 @@
         captureRosterHistory();
         currentGroups[gi].students.splice(si, 1);
         currentGroups = currentGroups.filter(group => group.students.length || classNames.includes(group.className));
+        syncRosterDraftFromGroups();
         if (currentGroups.length) { render(currentGroups); archiveRosterVersion('Student removed'); } else clearResults();
       }));
       results.querySelectorAll('[data-add-student]').forEach(button => button.addEventListener('click', () => {
@@ -1699,6 +1992,7 @@
         if (!name) return;
         captureRosterHistory();
         currentGroups[index].students.push(name);
+        syncRosterDraftFromGroups();
         render(currentGroups);
         archiveRosterVersion('Student added');
       }));
@@ -1774,6 +2068,7 @@
       classNames = [...version.classes];
       classTargets = { ...version.targets };
       rosterInput.value = version.rosterText || '';
+      renderStudentEditor();
       currentGroups = version.groups.map(group => ({ className: group.className, students: [...group.students] }));
       document.getElementById('schoolYearSelect').value = schoolYear;
       document.getElementById('termNameInput').value = termName;
@@ -1857,6 +2152,7 @@
       document.getElementById('balanceFieldToggle').checked = balanceByAttribute;
       try { localStorage.setItem('classroomShuffle.rosterMeta', JSON.stringify({ teacherName, rosterDate })); } catch { /* The saved record remains loadable. */ }
       rosterInput.value = record.rosterText || '';
+      renderStudentEditor();
       currentGroups = (record.groups || []).map(group => ({ className: group.className, students: [...group.students] }));
       renderClasses();
       updateDuplicateReview();
@@ -1869,6 +2165,7 @@
       const selectedId = savedRosterSelect.value;
       if (!selectedId) { notice.textContent = 'Choose a saved roster to delete.'; return; }
       const record = savedRosters.find(item => item.id === selectedId);
+      if (!confirm(`Delete the saved roster “${record?.name || 'this roster'}”? Use Undo last change in Students if you need to restore it.`)) return;
       captureRosterHistory();
       savedRosters = savedRosters.filter(item => item.id !== selectedId);
       localStorage.setItem('classroomShuffle.savedRosters', JSON.stringify(savedRosters));
@@ -1978,7 +2275,7 @@
       if (groups.length) { render(groups); archiveRosterVersion('Rebalance'); }
     }
 
-    shuffleButton.addEventListener('click', () => {
+    function openShufflePreview() {
       notice.textContent = '';
       const { students, skipped } = parseRows(rosterInput.value);
       const duplicateRows = updateDuplicateReview();
@@ -1992,13 +2289,38 @@
       }
       const groups = makeGroups(students);
       if (!groups.length) return;
+      pendingShuffle = { groups, students, skipped, duplicateRows };
+      const counts = groups.map(group => {
+        const target = Number(classTargets[group.className]) || 0;
+        const difference = target ? group.students.length - target : 0;
+        const check = !target ? 'No preferred size' : difference === 0 ? 'Meets target' : `${Math.abs(difference)} ${difference > 0 ? 'over' : 'under'} target`;
+        return `<tr><td>${escapeHtml(group.className)}</td><td>${group.students.length}</td><td>${target || 'Not set'}</td><td>${check}</td></tr>`;
+      }).join('');
+      const total = groups.reduce((sum, group) => sum + group.students.length, 0);
+      const warnings = groups.filter(group => classTargets[group.className] > 0 && group.students.length !== classTargets[group.className]);
+      document.getElementById('shufflePreviewSummary').textContent = `${total} student${total === 1 ? '' : 's'} will be grouped into ${groups.length} class${groups.length === 1 ? '' : 'es'}.${skipped.length ? ` ${skipped.length} blank row${skipped.length === 1 ? '' : 's'} will be skipped.` : ''} This exact randomized arrangement will be used if you confirm.`;
+      document.getElementById('shufflePreviewWarnings').innerHTML = warnings.length ? `<p class="import-warning">${warnings.length} class${warnings.length === 1 ? '' : 'es'} will not match preferred sizes. Review the counts below before continuing.</p>` : '';
+      document.getElementById('shufflePreviewRows').innerHTML = counts || '<tr><td colspan="4">No classes to show.</td></tr>';
+      document.getElementById('shufflePreviewDialog').showModal();
+    }
+    function confirmShufflePreview() {
+      if (!pendingShuffle) return;
+      const { groups, students, skipped, duplicateRows } = pendingShuffle;
+      pendingShuffle = null;
+      document.getElementById('shufflePreviewDialog').close();
       captureRosterHistory();
       students.forEach(student => { if (student.groupAttribute) studentAttributes[student.name.trim().toLocaleLowerCase()] = student.groupAttribute.trim(); });
       render(groups, skipped.length);
       archiveRosterVersion('Shuffle');
       showToast('Your student roster has been shuffled.');
       notice.textContent = duplicateRows.length ? `Included ${duplicateRows.length} repeated name entr${duplicateRows.length === 1 ? 'y' : 'ies'} as requested.` : skipped.length ? `Skipped ${skipped.length} empty row${skipped.length === 1 ? '' : 's'}.` : '';
-    });
+    }
+    shuffleButton.addEventListener('click', openShufflePreview);
+    document.getElementById('confirmShuffleButton').addEventListener('click', confirmShufflePreview);
+    const cancelShuffle = () => { pendingShuffle = null; document.getElementById('shufflePreviewDialog').close(); };
+    document.getElementById('cancelShuffleButton').addEventListener('click', cancelShuffle);
+    document.getElementById('cancelShuffleTop').addEventListener('click', cancelShuffle);
+    document.getElementById('shufflePreviewDialog').addEventListener('cancel', () => { pendingShuffle = null; });
 
     function loadScript(src) {
       return new Promise((resolve, reject) => {
@@ -2170,8 +2492,12 @@
     }
 
     document.getElementById('clearRosterBtn').addEventListener('click', () => {
+      if (!rosterInput.value.trim()) { notice.textContent = 'The student list is already empty.'; return; }
+      if (!confirm('Clear all student names and the current grouped results? You can use Undo last change to restore the list.')) return;
       captureRosterHistory();
       rosterInput.value = '';
+      selectedStudentRows.clear();
+      renderStudentEditor();
       document.getElementById('allowDuplicates').checked = false;
       updateDuplicateReview();
       clearResults();
@@ -2182,8 +2508,8 @@
       const section = button.dataset.resetSection;
       const prompts = {
         school: 'Clear the school name, motto, address, contact, and logo?',
-        classes: 'Clear all class names, preferred sizes, and current grouped results? Student names and saved rosters will remain.',
-        students: 'Clear the current student list and grouped results? Saved rosters will remain.',
+        classes: 'Clear all class names, preferred sizes, and current grouped results? Student names and saved rosters will remain. You can undo this change.',
+        students: 'Clear the current student list and grouped results? Saved rosters will remain. You can undo this change.',
         appearance: 'Reset text size, contrast, and colors to the accessible defaults?'
       };
       if (!window.confirm(prompts[section])) return;
@@ -2202,6 +2528,8 @@
       } else if (section === 'students') {
         captureRosterHistory();
         rosterInput.value = '';
+        selectedStudentRows.clear();
+        renderStudentEditor();
         document.getElementById('allowDuplicates').checked = false;
         updateDuplicateReview();
         clearResults();
