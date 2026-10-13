@@ -1823,9 +1823,9 @@
     });
     renderStudentEditor();
 
-    function renderImportPreview(filename, text, pdfReport = null) {
+    function renderImportPreview(filename, text) {
       const parsed = parseRows(text, true);
-      pendingImport = { filename, text, students: parsed.students, pdfReport };
+      pendingImport = { filename, text, students: parsed.students };
       const duplicateCounts = new Map();
       for (const student of parsed.students) {
         if (!student.name) continue;
@@ -1845,9 +1845,8 @@
         if (student.extraColumns) problems.push('Extra columns ignored');
         return `<tr><td>${student.rowNumber}</td><td><input type="text" data-import-name="${student.rowNumber}" value="${escapeHtml(student.name)}" aria-label="Student name on row ${student.rowNumber}"></td><td><input type="text" data-import-class="${student.rowNumber}" value="${escapeHtml(student.className)}" aria-label="Class on row ${student.rowNumber}"></td><td data-import-issue="${student.rowNumber}">${escapeHtml(problems.join(' · ') || 'Looks okay')}</td></tr>`;
       }).join('');
-      const pdfSummary = pdfReport ? ` Read ${pdfReport.pages} page${pdfReport.pages === 1 ? '' : 's'}; OCR used on ${pdfReport.ocrPages} page${pdfReport.ocrPages === 1 ? '' : 's'}; skipped ${pdfReport.skippedHeadingRows} likely heading/page row${pdfReport.skippedHeadingRows === 1 ? '' : 's'}.` : '';
-      document.getElementById('importPreviewSummary').textContent = `${filename}: ${parsed.students.length} student row${parsed.students.length === 1 ? '' : 's'} detected${parsed.students.length > 150 ? ' (showing first 150)' : ''}.${pdfSummary} Compare the count with the original and review the rows before importing.`;
-      const warnings = pdfImportWarnings(pdfReport);
+      document.getElementById('importPreviewSummary').textContent = `${filename}: ${parsed.students.length} student row${parsed.students.length === 1 ? '' : 's'} detected${parsed.students.length > 150 ? ' (showing first 150)' : ''}. Review or edit names and classes before importing.`;
+      const warnings = [];
       if (parsed.skipped.length) warnings.push(`${parsed.skipped.length} row${parsed.skipped.length === 1 ? '' : 's'} without a student name will be skipped.`);
       if (missingClassCount) warnings.push(`${missingClassCount} student${missingClassCount === 1 ? '' : 's'} have no class and will be assigned when you shuffle.`);
       if (duplicateCount) warnings.push(`${duplicateCount} rows are part of possible duplicate pairs. Review spelling before importing.`);
@@ -1867,15 +1866,6 @@
         className: document.querySelector(`[data-import-class="${student.rowNumber}"]`)?.value.trim() ?? student.className
       })).filter(student => student.name);
     }
-    function pdfImportWarnings(report) {
-      if (!report) return [];
-      const warnings = ['PDF reading is best-effort. Compare the detected count with the original document before importing.'];
-      if (report.ocrPages) warnings.push(`OCR was used on ${report.ocrPages} of ${report.pages} pages; check names carefully.`);
-      if (report.lowConfidencePages) warnings.push(`${report.lowConfidencePages} OCR page${report.lowConfidencePages === 1 ? '' : 's'} had low recognition confidence.`);
-      if (report.emptyPages) warnings.push(`${report.emptyPages} page${report.emptyPages === 1 ? '' : 's'} had no recognizable student rows.`);
-      if (report.skippedHeadingRows) warnings.push(`Ignored ${report.skippedHeadingRows} likely heading or page-number row${report.skippedHeadingRows === 1 ? '' : 's'}.`);
-      return warnings;
-    }
     function validateImportPreviewEdits() {
       if (!pendingImport) return;
       const students = getReviewedImportStudents();
@@ -1888,7 +1878,7 @@
       }
       const duplicateRows = [...countByKey.values()].filter(count => count > 1).reduce((sum, count) => sum + count, 0);
       const noClass = students.filter(student => !student.className).length;
-      const warnings = pdfImportWarnings(pendingImport.pdfReport);
+      const warnings = [];
       if (invalid.length) warnings.push(`${invalid.length} rows exceed the allowed name or class length.`);
       if (duplicateRows) warnings.push(`${duplicateRows} rows are part of possible duplicate pairs. Check spelling.`);
       if (noClass) warnings.push(`${noClass} students have no class and will be assigned when shuffled.`);
@@ -2521,138 +2511,41 @@
       const rows = window.XLSX.utils.sheet_to_json(firstSheet, { header: 1, raw: false, defval: '' });
       return tabularRowsToRosterText(rows);
     }
-    function wordsToPdfRows(words, pageWidth, options = {}) {
-      const sorted = words.filter(word => word.text?.trim()).map(word => ({
-        x: Number(word.x) || 0,
-        y: Number(word.y) || 0,
-        width: Math.max(0, Number(word.width) || 0),
-        text: word.text.trim()
-      })).sort((a, b) => (options.topOrigin ? a.y - b.y : b.y - a.y) || a.x - b.x);
-      const tolerance = options.yTolerance ?? 2.5;
-      const lines = [];
-      for (const word of sorted) {
-        let line = lines.find(candidate => Math.abs(candidate.y - word.y) <= tolerance);
-        if (!line) { line = { y: word.y, words: [] }; lines.push(line); }
-        line.words.push(word);
-      }
-      const gapThreshold = Math.max(options.minGap || 18, pageWidth * 0.035);
-      return lines.map(line => {
-        line.words.sort((a, b) => a.x - b.x);
-        const cells = [];
-        let cell = '';
-        let previous = null;
-        for (const word of line.words) {
-          if (previous && word.x - (previous.x + previous.width) > gapThreshold) {
-            cells.push(cell.trim());
-            cell = '';
-          }
-          cell = `${cell}${cell ? ' ' : ''}${word.text}`;
-          previous = word;
-        }
-        if (cell.trim()) cells.push(cell.trim());
-        return { cells, y: line.y };
-      });
-    }
-    function isPdfHeaderOrPageRow(row, pageHeight, options = {}) {
-      const cells = row.cells.map(cell => cell.toLocaleLowerCase().replace(/[_-]+/g, ' ').replace(/[.:]+$/g, '').trim()).filter(Boolean);
-      if (!cells.length) return true;
-      const whole = cells.join(' ').replace(/\s+/g, ' ').trim();
-      if (/^(?:page\s*)?\d{1,4}(?:\s*(?:of|\/)\s*\d{1,4})?$/.test(whole)) return true;
-      const nameHeader = /^(?:student|pupil|learner)?\s*(?:full\s*)?(?:name|names)$|^(?:student|pupil|learner)\s+name$|^.+\s+(?:student|pupil|learner)\s+(?:names?|list)$/;
-      const classHeader = /^(?:class|class name|grade|form|section|stream|house|group)$/;
-      if (cells.some(cell => nameHeader.test(cell)) || (cells.length === 1 && classHeader.test(cells[0]))) return true;
-      if (cells.length === 1 && /^(?:students?|pupils?|learners?|class list|student list|pupil list|roster|attendance|name list|s\/?n|serial number|school year|term|date)$/.test(whole)) return true;
-      if (cells.length === 1 && /\b(?:student|pupil|learner|class)\s+(?:names?|list|roster|register)\b/.test(whole)) return true;
-      if (cells.length === 1 && /^(?:(?:s\/?n|no\.?|serial)\s+)?(?:(?:student|pupil|learner)\s+)?(?:full\s+)?names?(?:\s+(?:of\s+(?:students?|pupils?)|class|grade|form|section))?$/i.test(whole)) return true;
-      return false;
-    }
-    function pdfRowsToRosterText(rows, headerRows = []) {
-      const data = [...headerRows, ...rows].map(row => row.cells);
-      const isNameHeader = cell => /^(?:student|pupil|learner)?\s*(?:full\s*)?(?:name|names)$|^(?:student|pupil|learner)\s+name$/i.test(cell.trim());
-      const isClassHeader = cell => /^(?:class|class name|grade|form|section|stream|house|group)$/i.test(cell.trim());
-      const headerIndex = data.findIndex((cells, index) => index < 8 && cells.some(isNameHeader));
-      let nameIndex = 0, classIndex = 1;
-      if (headerIndex >= 0) {
-        nameIndex = data[headerIndex].findIndex(isNameHeader);
-        classIndex = data[headerIndex].findIndex(isClassHeader);
-      } else {
-        const likelySerialFirstColumn = data.filter(row => row.length >= 3).filter(row => /^\d{1,4}[.)]?$/.test(row[0] || '')).length;
-        const threeColumnRows = data.filter(row => row.length >= 3).length;
-        if (threeColumnRows && likelySerialFirstColumn / threeColumnRows >= 0.6) { nameIndex = 1; classIndex = 2; }
-      }
-      return rows.filter((row, index) => index !== headerIndex).map(row => [row.cells[nameIndex] || '', classIndex >= 0 ? row.cells[classIndex] || '' : '', ''].join('\t')).join('\n');
-    }
     async function textFromPdf(file) {
       await loadScript('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js');
       window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
       const data = new Uint8Array(await file.arrayBuffer());
       const pdf = await window.pdfjsLib.getDocument({ data }).promise;
-      const extractedPages = [];
-      let skippedHeadingRows = 0;
-      let emptyPages = 0;
+      let text = '';
+      const pages = [];
       for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber++) {
-        processingText.textContent = `Reading PDF page ${pageNumber} of ${pdf.numPages}…`;
         const page = await pdf.getPage(pageNumber);
-        const viewport = page.getViewport({ scale: 1 });
         const content = await page.getTextContent();
-        const words = content.items.filter(item => item.str?.trim()).map(item => ({ x: item.transform?.[4] || 0, y: item.transform?.[5] || 0, width: item.width || 0, text: item.str }));
-        const rows = wordsToPdfRows(words, viewport.width);
-        const headerRows = [];
-        const filteredRows = rows.filter(row => {
-          const skipped = isPdfHeaderOrPageRow(row, viewport.height);
-          if (skipped) { skippedHeadingRows++; if (row.cells.some(cell => /(?:student|pupil|learner).*(?:name|list)|^(?:name|names)$/i.test(cell))) headerRows.push(row); }
-          return !skipped;
-        });
-        extractedPages.push({ page, viewport, rows: filteredRows, headerRows });
-      }
-
-      const pagesNeedingOcr = extractedPages.filter(entry => !entry.rows.length);
-      let ocrPages = 0;
-      let lowConfidencePages = 0;
-      if (pagesNeedingOcr.length) {
-        await loadScript('https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js');
-        for (let index = 0; index < pagesNeedingOcr.length; index++) {
-          const entry = pagesNeedingOcr[index];
-          const pageNumber = extractedPages.indexOf(entry) + 1;
-          processingText.textContent = `Scanning PDF page ${pageNumber} of ${pdf.numPages} with OCR…`;
-          const viewport = entry.page.getViewport({ scale: 1.7 });
-          const canvas = document.createElement('canvas');
-          canvas.width = Math.ceil(viewport.width); canvas.height = Math.ceil(viewport.height);
-          await entry.page.render({ canvasContext: canvas.getContext('2d'), viewport }).promise;
-          const recognition = await window.Tesseract.recognize(canvas, 'eng');
-          const confidence = Number(recognition.data.confidence) || 0;
-          if (confidence > 0 && confidence < 65) lowConfidencePages++;
-          const ocrWords = (recognition.data.words || []).map(word => ({
-            x: word.bbox?.x0 || 0,
-            y: word.bbox?.y0 || 0,
-            width: Math.max(0, (word.bbox?.x1 || 0) - (word.bbox?.x0 || 0)),
-            text: word.text || ''
-          }));
-          let ocrRows = wordsToPdfRows(ocrWords, viewport.width, { topOrigin: true, yTolerance: Math.max(5, viewport.width * 0.01), minGap: 24 });
-          if (!ocrRows.length && recognition.data.text) {
-            ocrRows = recognition.data.text.split(/\r?\n/).map(line => ({ cells: [line.trim()], y: 0 })).filter(row => row.cells[0]);
-          }
-          const beforeFilter = ocrRows.length;
-          const ocrHeaderRows = [];
-          ocrRows = ocrRows.filter(row => {
-            const skipped = isPdfHeaderOrPageRow(row, viewport.height, { topOrigin: true });
-            if (skipped && row.cells.some(cell => /(?:student|pupil|learner).*(?:name|list)|^(?:name|names)$/i.test(cell))) ocrHeaderRows.push(row);
-            return !skipped;
-          });
-          skippedHeadingRows += beforeFilter - ocrRows.length;
-          entry.rows = ocrRows;
-          entry.headerRows = ocrHeaderRows;
-          entry.ocr = true;
-          ocrPages++;
+        const lineMap = new Map();
+        for (const item of content.items) {
+          if (!item.str || !item.str.trim()) continue;
+          const y = Math.round(item.transform?.[5] || 0);
+          if (!lineMap.has(y)) lineMap.set(y, []);
+          lineMap.get(y).push({ x: item.transform?.[4] || 0, text: item.str.trim() });
         }
+        const pageText = [...lineMap.entries()].sort((a, b) => b[0] - a[0]).map(([, items]) => items.sort((a, b) => a.x - b.x).map(item => item.text).join('  ')).join('\n');
+        pages.push({ page, pageText });
+        text += pageText + '\n';
       }
-      const rows = extractedPages.flatMap(entry => entry.rows);
-      const headerRows = extractedPages.flatMap(entry => entry.headerRows || []);
-      emptyPages = extractedPages.filter(entry => !entry.rows.length).length;
-      return {
-        text: pdfRowsToRosterText(rows, headerRows),
-        report: { pages: pdf.numPages, ocrPages, lowConfidencePages, skippedHeadingRows, emptyPages }
-      };
+      if (text.replace(/\s/g, '').length > 30) return text;
+      await loadScript('https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js');
+      processingText.textContent = `Scanning ${pdf.numPages} PDF page${pdf.numPages === 1 ? '' : 's'} with OCR…`;
+      let ocrText = '';
+      for (let i = 0; i < pages.length; i++) {
+        processingText.textContent = `Reading PDF page ${i + 1} of ${pages.length}…`;
+        const viewport = pages[i].page.getViewport({ scale: 1.7 });
+        const canvas = document.createElement('canvas');
+        canvas.width = Math.ceil(viewport.width); canvas.height = Math.ceil(viewport.height);
+        await pages[i].page.render({ canvasContext: canvas.getContext('2d'), viewport }).promise;
+        const result = await window.Tesseract.recognize(canvas, 'eng');
+        ocrText += result.data.text + '\n';
+      }
+      return ocrText;
     }
     async function textFromImage(file) {
       await loadScript('https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js');
@@ -2669,20 +2562,15 @@
       try {
         const ext = file.name.split('.').pop().toLowerCase();
         let text;
-        let pdfReport = null;
         if (['csv', 'tsv', 'txt'].includes(ext)) text = await file.text();
         else if (ext === 'docx') text = await textFromDocx(file);
         else if (['xlsx', 'xls', 'xlsm'].includes(ext)) text = await textFromWorkbook(file);
-        else if (ext === 'pdf') {
-          const result = await textFromPdf(file);
-          text = result.text;
-          pdfReport = result.report;
-        }
+        else if (ext === 'pdf') text = await textFromPdf(file);
         else if (file.type.startsWith('image/')) text = await textFromImage(file);
         else throw new Error('This file type is not supported. Use an Excel, CSV, TXT, DOCX, PDF, or image file.');
         const cleaned = cleanExtractedText(text);
         if (!cleaned) throw new Error('No readable text was found in this file. Try a clearer image or a text-based document.');
-        renderImportPreview(file.name, cleaned, pdfReport);
+        renderImportPreview(file.name, cleaned);
       } catch (error) {
         notice.textContent = error.message || 'Could not read that file. Try another file.';
       } finally {
