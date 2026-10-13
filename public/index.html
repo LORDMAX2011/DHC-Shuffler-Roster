@@ -35,6 +35,8 @@
     :root[data-mode="dark"] .empty-icon, :root[data-mode="dark"] .student-name-input:focus { background:#26332c; }
     :root[data-mode="dark"] .student-list li { border-color:#303b35; }
     :root[data-mode="dark"] .student-name-input:focus { color:var(--ink); }
+    :root[data-mode="dark"] .dashboard-welcome { color:#f8fafc; background:linear-gradient(115deg, color-mix(in srgb, var(--green) 38%, #080b10), #17212b); }
+    :root[data-mode="dark"] .dashboard-welcome h2 { color:#f8fafc; }
     :root[data-contrast="high"] { --ink:#111; --muted:#26332c; --line:#3f4a43; --paper:#fff; --wash:#fff; --mint:#e2f1e6; --green:#004b35; --green-dark:#003b2a; }
     :root[data-mode="dark"][data-contrast="high"] { --ink:#fff; --muted:#f0f4f1; --line:#fff; --paper:#000; --wash:#000; --mint:#161b18; --green:#005239; --green-dark:#b8ffda; }
     * { box-sizing: border-box; }
@@ -1932,7 +1934,7 @@
       const profile = profileData();
       const schoolBanner = profile.name || profile.motto || profile.address || profile.contact || teacherName || rosterDate ? `<div class="school-banner"><div class="school-banner-logo">${schoolLogo ? `<img src="${schoolLogo}" alt="School logo">` : escapeHtml((profile.name || 'School').slice(0, 1).toUpperCase())}</div><div class="school-banner-copy"><strong>${escapeHtml(profile.name || 'Class roster')}</strong><span>${[profile.motto, profile.address, profile.contact, teacherName ? `Teacher: ${teacherName}` : '', rosterDate ? `Date: ${rosterDate}` : '', `School year: ${schoolYear}`, termName].filter(Boolean).map(escapeHtml).join(' · ')}</span></div></div>` : '';
       const destinations = [...new Set([...groups.map(group => group.className), ...classNames])].sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
-      document.getElementById('resultTools').innerHTML = '<button id="reshuffleBtn" class="button secondary" type="button">↻ Shuffle order</button><button id="rebalanceBtn" class="button secondary" type="button">⇄ Rebalance</button><button id="printBtn" class="button secondary" type="button">Print / Save PDF</button><button id="xlsxBtn" class="button secondary" type="button">Export Excel</button><button id="downloadBtn" class="button secondary" type="button">Export CSV</button>';
+      document.getElementById('resultTools').innerHTML = '<button id="reshuffleBtn" class="button secondary" type="button">↻ Shuffle order</button><button id="rebalanceBtn" class="button secondary" type="button">⇄ Rebalance</button><button id="printBtn" class="button secondary" type="button">Print / Save PDF</button><button id="xlsxBtn" class="button secondary" type="button">Export Excel</button><button id="downloadBtn" class="button secondary" type="button">Export CSV</button><button id="deleteAllResultsBtn" class="button quiet" type="button">Delete all results</button>';
       document.getElementById('resultTools').classList.remove('hide');
       const rows = groups.map((group, groupIndex) => {
         const targetLabel = classTargets[group.className] ? ` · target ${classTargets[group.className]}` : '';
@@ -1976,6 +1978,7 @@
       });
       document.getElementById('downloadBtn').addEventListener('click', downloadCsv);
       document.getElementById('xlsxBtn').addEventListener('click', downloadExcel);
+      document.getElementById('deleteAllResultsBtn').addEventListener('click', deleteAllResults);
       document.getElementById('studentSearch').addEventListener('input', event => {
         searchTerm = event.target.value;
         results.querySelectorAll('.student-row').forEach(row => {
@@ -2053,6 +2056,22 @@
       subtitle.textContent = 'Your grouped roster will appear here.';
       document.getElementById('resultTools').classList.add('hide');
       results.innerHTML = '<div class="empty"><div class="empty-icon" aria-hidden="true">▤</div><strong>No students in this roster</strong><p>Add names above and shuffle to create groups.</p></div>';
+    }
+    function deleteAllResults() {
+      const studentCount = parseRows(rosterInput.value).students.length || currentGroups.reduce((count, group) => count + group.students.length, 0);
+      if (!studentCount) { notice.textContent = 'There are no student results to delete.'; return; }
+      if (!confirm(`Delete all ${studentCount} student${studentCount === 1 ? '' : 's'} from this roster and clear the results? Your class names will remain. You can undo this from Students.`)) return;
+      archiveRosterVersion('Before deleting all results');
+      captureRosterHistory();
+      rosterInput.value = '';
+      studentAttributes = {};
+      selectedStudentRows.clear();
+      renderStudentEditor();
+      updateDuplicateReview();
+      clearResults();
+      scheduleCloudSave();
+      notice.textContent = 'All student names and results were deleted. Class names were kept.';
+      showToast('All results deleted. You can undo this change in Students.');
     }
 
     const savedRosterSelect = document.getElementById('savedRosterSelect');
