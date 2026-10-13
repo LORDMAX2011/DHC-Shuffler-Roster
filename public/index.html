@@ -199,7 +199,7 @@
     .notice { min-height: 18px; margin-top: 8px; color: var(--red); font-size: 12px; line-height: 1.45; }
     footer { margin-top: 25px; color: #7c8580; font-size: 11px; line-height: 1.5; text-align: center; }
     .hide { display: none !important; }
-    .section-tabs { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; margin: 0 auto 16px; max-width: 1000px; }
+    .section-tabs { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 8px; margin: 0 auto 16px; max-width: 1000px; }
     .section-tab { display: flex; align-items: center; gap: 10px; min-width: 0; padding: 11px 13px; border: 1px solid #e0e5dd; border-radius: 12px; background: rgba(255,254,250,.84); color: #627069; text-align: left; cursor: pointer; }
     .section-tab { transition: border-color .18s, background .18s, transform .18s; }
     .section-tab:hover { border-color: #b7cbb9; transform: translateY(-2px); }
@@ -419,12 +419,24 @@
     </details>
 
     <section id="accountSettingsCard" class="admin-tools hide" aria-labelledby="accountSettingsTitle">
-      <h3 id="accountSettingsTitle">My account</h3>
+      <h3 id="accountSettingsTitle">Security</h3>
+      <div class="admin-box">
+        <strong>Change username</strong>
+        <p class="profile-hint">Your current username is shown below. Confirm your password before saving a new one.</p>
+        <form id="changeUsernameForm">
+          <input id="currentUsername" type="text" readonly aria-label="Current username">
+          <input id="newUsername" type="text" autocomplete="username" maxlength="100" placeholder="New username" required aria-label="New username">
+          <input id="usernameCurrentPassword" type="password" autocomplete="current-password" maxlength="256" placeholder="Current password" required aria-label="Current password to change username">
+          <button class="button secondary" type="submit">Update username</button>
+        </form>
+        <div class="notice" id="usernameNotice" role="status" aria-live="polite"></div>
+      </div>
       <div class="admin-box">
         <strong>Change password</strong>
         <form id="changePasswordForm">
           <input id="currentPassword" type="password" autocomplete="current-password" placeholder="Current password" required aria-label="Current password">
           <input id="newPassword" type="password" autocomplete="new-password" minlength="12" maxlength="256" placeholder="New password (12+ characters)" required aria-label="New password">
+          <input id="confirmNewPassword" type="password" autocomplete="new-password" minlength="12" maxlength="256" placeholder="Confirm new password" required aria-label="Confirm new password">
           <button class="button secondary" type="submit">Update password</button>
         </form>
       </div>
@@ -573,6 +585,7 @@
       const panelRoot = document.createElement('div'); panelRoot.className = 'section-panels';
       const steps = [
         { id: 'school', label: 'School', hint: 'Name and logo', title: 'School profile', description: 'Set the school identity that appears on rosters.', reset: true, resetLabel: 'Reset school info' },
+        { id: 'security', label: 'Security', hint: 'Username and password', title: 'Account security', description: 'Change the username and password used to sign in.' },
         { id: 'classes', label: 'Classes', hint: 'Groups and sizes', title: 'Set up classes', description: 'Choose class names, set preferred sizes, and save reusable rosters.', reset: true, resetLabel: 'Reset classes' },
         { id: 'students', label: 'Students', hint: 'Import and review', title: 'Add student names', description: 'Paste a list or import a document, then review it before shuffling.', reset: true, resetLabel: 'Reset student names' },
         { id: 'appearance', label: 'Appearance', hint: 'Reading and colors', title: 'Reading and appearance', description: 'Adjust text size and contrast for comfortable reading, then choose your colors.', reset: true, resetLabel: 'Reset appearance' },
@@ -610,11 +623,12 @@
         button.addEventListener('click', () => setActive(step.id));
         nav.appendChild(button);
       }
-      createPanel(steps[0], [profile, accountSettingsCard, adminToolsCard]);
-      createPanel(steps[1], [classManager, savedRostersPanel]);
-      createPanel(steps[2], studentNodes);
-      createPanel(steps[3], [appearanceCard]);
-      createPanel(steps[4], [], true);
+      createPanel(steps[0], [profile, adminToolsCard]);
+      createPanel(steps[1], [accountSettingsCard]);
+      createPanel(steps[2], [classManager, savedRostersPanel]);
+      createPanel(steps[3], studentNodes);
+      createPanel(steps[4], [appearanceCard]);
+      createPanel(steps[5], [], true);
       function setActive(id) {
         for (const step of steps) {
           panels.get(step.id).classList.toggle('active', step.id === id);
@@ -1050,6 +1064,7 @@
     async function completeSignIn(token, shouldMigrateLocal = false, user = null) {
       cloudToken = token;
       if (user) currentUser = user;
+      document.getElementById('currentUsername').value = currentUser?.name || currentUser?.email || '';
       try { sessionStorage.setItem('classroomShuffle.authToken', cloudToken); } catch { /* The token remains in memory for this page. */ }
       const result = await apiRequest('/api/data');
       if (result.state) applyCloudState(result.state);
@@ -1075,9 +1090,22 @@
       finally { button.disabled = false; button.textContent = 'Sign in'; }
     });
     document.getElementById('logoutButton').addEventListener('click', () => signOut());
+    document.getElementById('changeUsernameForm').addEventListener('submit', async event => {
+      event.preventDefault();
+      const notice = document.getElementById('usernameNotice');
+      notice.textContent = '';
+      try {
+        const result = await apiRequest('/api/auth/change-username', { method: 'POST', body: JSON.stringify({ currentPassword: document.getElementById('usernameCurrentPassword').value, newUsername: document.getElementById('newUsername').value }) });
+        currentUser = result.user;
+        document.getElementById('currentUsername').value = result.user.name || result.user.email;
+        event.target.reset();
+        notice.textContent = 'Username updated. Use it the next time you sign in.';
+      } catch (error) { notice.textContent = error.message; }
+    });
     document.getElementById('changePasswordForm').addEventListener('submit', async event => {
       event.preventDefault();
       try {
+        if (document.getElementById('newPassword').value !== document.getElementById('confirmNewPassword').value) throw new Error('The new passwords do not match.');
         await apiRequest('/api/auth/change-password', { method: 'POST', body: JSON.stringify({ currentPassword: document.getElementById('currentPassword').value, newPassword: document.getElementById('newPassword').value }) });
         event.target.reset();
         showToast('Password updated.');

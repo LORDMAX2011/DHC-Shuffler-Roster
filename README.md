@@ -69,7 +69,7 @@ Render can redeploy the service after you push later commits to the connected br
 
 ## Data and access
 
-After sign-in, the app stores school profile and appearance settings, classes, student names, current groups, saved rosters, and grouping rules in MongoDB. Signed-in users can manage rosters and change their own password. Administrators can export school data, restore backups, and review recent account and data activity. Accounts use 12+ character passwords; sign-in sessions expire after 12 hours.
+After sign-in, the app stores school profile and appearance settings, classes, student names, current groups, saved rosters, and grouping rules in MongoDB. Signed-in users can manage rosters and use the Security section to change their username and password. Administrators can export school data, restore backups, and review recent account and data activity. Accounts use 12+ character passwords; sign-in sessions expire after 12 hours.
 
 The server makes a MongoDB snapshot before each school-data update and a scheduled snapshot every 24 hours. Up to 30 snapshots are retained; administrators can also create and restore backups manually. These snapshots are stored in the same MongoDB cluster, so they are not a substitute for an independent Atlas backup plan. Roster history undo is available during the current browser session. Saved-roster retention can be configured in the Classes section; the default is to keep rosters until manually deleted.
 

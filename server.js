@@ -42,6 +42,7 @@ const Account = mongoose.model('Account', new mongoose.Schema({
   email: { type: String, required: true, unique: true, lowercase: true, trim: true },
   displayName: { type: String, required: true, maxlength: 100 },
   role: { type: String, enum: ['admin', 'teacher'], default: 'teacher' },
+  usernameCustomized: { type: Boolean, default: false },
   salt: { type: String, required: true },
   passwordHash: { type: String, required: true },
   active: { type: Boolean, default: true }
@@ -124,6 +125,15 @@ async function ensureAdminAccount() {
   const adminLoginName = configuredAdminName.toLowerCase();
   const existing = await Account.findOne({ email: adminLoginName }).select('_id').lean();
   if (existing) return;
+  const existingAdmin = await Account.findOne({ role: 'admin' }).sort({ createdAt: 1 });
+  if (existingAdmin) {
+    if (!existingAdmin.usernameCustomized) {
+      existingAdmin.email = adminLoginName;
+      existingAdmin.displayName = configuredAdminName;
+      await existingAdmin.save();
+    }
+    return;
+  }
   const salt = crypto.randomBytes(16).toString('hex');
   const passwordHash = passwordDigest(process.env.ADMIN_PASSWORD, salt);
   await Account.create({ email: adminLoginName, displayName: configuredAdminName, role: 'admin', salt, passwordHash, active: true });
@@ -209,6 +219,29 @@ app.post('/api/auth/change-password', requireAuth, async (req, res, next) => {
     await recordAudit(req.auth.email, 'password.changed');
     return res.json({ changed: true });
   } catch (error) { return next(error); }
+});
+
+app.post('/api/auth/change-username', requireAuth, async (req, res, next) => {
+  try {
+    const currentPassword = typeof req.body?.currentPassword === 'string' ? req.body.currentPassword : '';
+    const newUsername = typeof req.body?.newUsername === 'string' ? req.body.newUsername.trim() : '';
+    if (!newUsername || newUsername.length > 100 || currentPassword.length > 256) return res.status(400).json({ error: 'Enter a username up to 100 characters and your current password.' });
+    const account = await Account.findById(req.auth.sub);
+    if (!account || !constantTimeEqual(passwordDigest(currentPassword, account.salt), account.passwordHash)) return res.status(401).json({ error: 'Current password is incorrect.' });
+    const normalizedUsername = newUsername.toLowerCase();
+    const duplicate = await Account.findOne({ email: normalizedUsername, _id: { $ne: account._id } }).select('_id').lean();
+    if (duplicate) return res.status(409).json({ error: 'That username is already in use. Choose another one.' });
+    const previousUsername = account.email;
+    account.email = normalizedUsername;
+    account.displayName = newUsername;
+    account.usernameCustomized = true;
+    await account.save();
+    await recordAudit(previousUsername, 'username.changed', normalizedUsername);
+    return res.json({ changed: true, user: { email: account.email, name: account.displayName, role: account.role } });
+  } catch (error) {
+    if (error.code === 11000) return res.status(409).json({ error: 'That username is already in use. Choose another one.' });
+    return next(error);
+  }
 });
 
 app.get('/api/users', requireAuth, requireAdmin, async (_req, res, next) => {
