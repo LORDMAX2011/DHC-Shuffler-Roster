@@ -139,7 +139,7 @@
     .idea-chip { border: 1px solid #dce6dc; border-radius: 99px; background: white; color: #46554c; padding: 6px 9px; font-size: 11px; font-weight: 650; cursor: pointer; }
     .idea-chip:hover { border-color: #9ab8a2; }
     .idea-chip[aria-pressed="true"] { border-color: var(--green); background: var(--mint); color: var(--green-dark); box-shadow: inset 0 0 0 1px var(--green); }
-    .ideas-actions { display: flex; align-items: center; gap: 11px; margin-top: 10px; }
+    .ideas-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 11px; margin-top: 10px; }
     .ideas-actions .button { padding: 8px 10px; font-size: 11px; }
     .ideas-actions .quiet { font-size: 11px; }
     .idea-description { color: var(--muted); font-size: 10px; margin: 0 0 8px; }
@@ -605,7 +605,7 @@
               <div class="ideas-top"><label for="ideaCategory">Class name ideas</label><select id="ideaCategory" aria-label="Choose a class name theme"></select></div>
               <p id="ideaDescription" class="idea-description"></p>
               <div id="ideaList" class="idea-list"></div>
-              <div class="ideas-actions"><button id="addIdeasBtn" class="button secondary" type="button">Add selected</button><button id="addAllIdeasBtn" class="button quiet" type="button">Add all in this set</button></div>
+              <div class="ideas-actions"><button id="addIdeasBtn" class="button secondary" type="button">Add selected</button><button id="replaceIdeasBtn" class="button secondary" type="button">Replace current classes</button><button id="addAllIdeasBtn" class="button quiet" type="button">Add all in this set</button></div>
             </div>
           </div>
           <section class="saved-rosters" aria-label="Saved rosters">
@@ -1558,6 +1558,51 @@
       addIdeaNames(names);
     });
     document.getElementById('addAllIdeasBtn').addEventListener('click', () => addIdeaNames(classIdeaSets[ideaCategory.value].names));
+    document.getElementById('replaceIdeasBtn').addEventListener('click', () => {
+      const replacements = [...new Set([...selectedIdeas].map(name => name.trim().replace(/\s+/g, ' ')).filter(Boolean))];
+      if (!replacements.length) { notice.textContent = 'Choose one or more class name ideas to replace your current classes.'; return; }
+      if (!confirm(`Replace all ${classNames.length} current class name${classNames.length === 1 ? '' : 's'} with ${replacements.join(', ')}? Existing class assignments and class size targets will be cleared, and students will be redistributed. You can undo this change in Students.`)) return;
+
+      const parsedRows = parseRows(rosterInput.value).students;
+      const students = parsedRows.length ? parsedRows : currentGroups.flatMap(group => group.students.map(name => ({
+        name,
+        className: group.className,
+        groupAttribute: studentAttributes[name.trim().toLocaleLowerCase()] || ''
+      })));
+      captureRosterHistory();
+      classNames = replacements;
+      classTargets = Object.fromEntries(replacements.map(name => [name, 0]));
+      students.forEach(student => {
+        const key = student.name.trim().toLocaleLowerCase();
+        if (student.groupAttribute) studentAttributes[key] = student.groupAttribute;
+      });
+      selectedIdeas.clear();
+      renderIdeas();
+
+      if (students.length) {
+        const groups = makeGroups(students.map(student => ({ ...student, className: '' })));
+        if (groups.length) {
+          currentGroups = groups;
+          syncRosterDraftFromGroups();
+          render(groups);
+          archiveRosterVersion('Class ideas replaced');
+        } else {
+          rosterInput.value = encodeStudentRows(students.map(student => ({ ...student, className: '' })));
+          renderClasses();
+          renderStudentEditor();
+          clearResults();
+          scheduleCloudSave();
+        }
+      } else {
+        rosterInput.value = '';
+        renderClasses();
+        renderStudentEditor();
+        clearResults();
+        scheduleCloudSave();
+      }
+      notice.textContent = `Replaced current classes with ${replacements.join(', ')}. Students have been redistributed.`;
+      showToast('Class names replaced and students redistributed.');
+    });
 
     function parseRows(text, includeBlankNames = false) {
       const lines = text.replace(/^\uFEFF/, '').split(/\r?\n/);
