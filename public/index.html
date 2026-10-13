@@ -219,6 +219,7 @@
     .section-tabs { position: sticky; top: 18px; display: flex; flex-direction: column; gap: 5px; min-width: 0; padding: 12px; border: 1px solid var(--line); border-radius: 16px; background: var(--paper); box-shadow: var(--shadow); }
     .sidebar-title { margin: 2px 9px 8px; color: var(--muted); font-size: 11px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
     .section-tab { display: flex; align-items: center; min-width: 0; padding: 11px 12px; border: 1px solid transparent; border-radius: 10px; background: transparent; color: var(--muted); text-align: left; cursor: pointer; transition: border-color .18s, background .18s, color .18s; }
+    .section-tab[hidden] { display: none !important; }
     .section-tab:hover { border-color: var(--line); background: color-mix(in srgb, var(--wash) 65%, var(--paper)); }
     .section-tab[aria-current="page"] { border-color: color-mix(in srgb, var(--green) 25%, var(--line)); background: var(--mint); color: var(--green-dark); }
     .tab-copy { min-width: 0; }
@@ -461,10 +462,10 @@
     </section>
 
     <section id="adminToolsCard" class="admin-tools hide" aria-labelledby="adminToolsTitle">
-      <h3 id="adminToolsTitle">School administration</h3>
+      <h3 id="adminToolsTitle">Backups and activity</h3>
       <div class="admin-grid">
         <div class="admin-box">
-          <strong>Backups and activity</strong>
+          <strong>Cloud backups</strong>
           <button id="manualBackupButton" class="button quiet" type="button">Create cloud backup now</button>
           <p id="backupReminder" class="saved-hint" role="status"></p>
           <button id="exportAllButton" class="button secondary" type="button">Export all school data</button>
@@ -609,6 +610,7 @@
         { id: 'classes', label: 'Classes', hint: 'Groups and sizes', title: 'Set up classes', description: 'Choose class names, set preferred sizes, and save reusable rosters.', reset: true, resetLabel: 'Reset classes' },
         { id: 'students', label: 'Students', hint: 'Import and review', title: 'Add student names', description: 'Paste a list or import a document, then review it before shuffling.', reset: true, resetLabel: 'Reset student names' },
         { id: 'appearance', label: 'Appearance', hint: 'Reading and colors', title: 'Reading and appearance', description: 'Adjust text size and contrast for comfortable reading, then choose your colors.', reset: true, resetLabel: 'Reset appearance' },
+        { id: 'backups', label: 'Backups', hint: 'Restore and activity', title: 'Backups and activity', description: 'Create, download, and restore school backups, and review recent activity.' },
         { id: 'results', label: 'Results', hint: 'Edit and export', title: 'Your class roster', description: 'Edit student groups, search, rebalance, and print or export.' }
       ];
       const panels = new Map();
@@ -632,18 +634,20 @@
       for (const step of steps) {
         const button = document.createElement('button');
         button.className = 'section-tab'; button.type = 'button'; button.id = `tab-${step.id}`;
+        if (step.id === 'backups') button.hidden = true;
         button.setAttribute('aria-controls', `panel-${step.id}`);
         button.setAttribute('aria-current', step.id === 'school' ? 'page' : 'false');
         button.innerHTML = `<span class="tab-copy"><strong>${step.label}</strong><small>${step.hint}</small></span>`;
         button.addEventListener('click', () => setActive(step.id));
         nav.appendChild(button);
       }
-      createPanel(steps[0], [profile, adminToolsCard]);
+      createPanel(steps[0], [profile]);
       createPanel(steps[1], [accountSettingsCard]);
       createPanel(steps[2], [classManager, savedRostersPanel]);
       createPanel(steps[3], studentNodes);
       createPanel(steps[4], [appearanceCard]);
-      createPanel(steps[5], [], true);
+      createPanel(steps[5], [adminToolsCard]);
+      createPanel(steps[6], [], true);
       function setActive(id) {
         for (const step of steps) {
           panels.get(step.id).classList.toggle('active', step.id === id);
@@ -1082,6 +1086,9 @@
       cloudReady = false;
       cloudToken = '';
       currentUser = null;
+      const backupsTab = document.getElementById('tab-backups');
+      if (backupsTab?.getAttribute('aria-current') === 'page') document.getElementById('tab-school').click();
+      if (backupsTab) backupsTab.hidden = true;
       document.getElementById('accountSettingsCard').classList.add('hide');
       document.getElementById('adminToolsCard').classList.add('hide');
       try { sessionStorage.removeItem('classroomShuffle.authToken'); } catch { /* Ignore unavailable session storage. */ }
@@ -1101,7 +1108,14 @@
       document.getElementById('logoutButton').classList.remove('hide');
       cloudReady = true;
       document.getElementById('accountSettingsCard').classList.remove('hide');
-      if (currentUser?.role === 'admin') await loadAdminTools();
+      const backupsTab = document.getElementById('tab-backups');
+      if (currentUser?.role === 'admin') {
+        backupsTab.hidden = false;
+        await loadAdminTools();
+      } else {
+        backupsTab.hidden = true;
+        document.getElementById('adminToolsCard').classList.add('hide');
+      }
       setConnectionStatus('Connected · saved to cloud', 'cloud');
       if (!result.state || cloudNeedsSync) { cloudNeedsSync = false; scheduleCloudSave(); }
     }
