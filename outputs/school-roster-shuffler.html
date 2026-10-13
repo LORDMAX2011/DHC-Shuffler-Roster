@@ -50,6 +50,9 @@
       transition: background-color .25s ease, color .25s ease;
     }
     button, textarea, input { font: inherit; }
+    :focus-visible { outline: 3px solid #1769aa; outline-offset: 3px; }
+    .skip-link { position: fixed; z-index: 120; top: 10px; left: 10px; transform: translateY(-160%); padding: 10px 14px; border-radius: 9px; background: var(--paper); color: var(--ink); box-shadow: var(--shadow); font-weight: 800; }
+    .skip-link:focus { transform: translateY(0); }
     .shell { width: min(1120px, calc(100% - 40px)); margin: 0 auto; padding: 34px 0 56px; }
     header { display: flex; align-items: center; justify-content: space-between; gap: 20px; margin-bottom: 42px; }
     .brand { display: flex; align-items: center; gap: 12px; font-weight: 760; letter-spacing: -.03em; }
@@ -237,6 +240,21 @@
     .panel-reset { flex: 0 0 auto; margin-left: auto; padding: 7px 10px; font-size: 12px; }
     .panel-heading p { margin: 5px 0 0; color: var(--muted); font-size: 13px; line-height: 1.45; }
     .panel-content { padding: 22px 25px; }
+    .dashboard-card { overflow: hidden; border: 1px solid var(--line); border-radius: 20px; background: var(--paper); box-shadow: var(--shadow); }
+    .dashboard-welcome { padding: clamp(20px, 4vw, 34px); color: #fff; background: linear-gradient(115deg, var(--green-dark), var(--green)); }
+    .dashboard-welcome .eyebrow { margin-bottom: 7px; color: rgba(255,255,255,.82); }
+    .dashboard-welcome h2 { margin: 0; font-size: clamp(24px, 3vw, 32px); line-height: 1.15; letter-spacing: -.035em; }
+    .dashboard-welcome p { margin: 9px 0 0; color: rgba(255,255,255,.9); }
+    .dashboard-content { padding: clamp(16px, 3vw, 26px); }
+    .dashboard-metrics { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 12px; margin-bottom: 22px; }
+    .dashboard-metric { min-width: 0; padding: 15px; border: 1px solid var(--line); border-radius: 13px; background: var(--wash); }
+    .dashboard-metric strong { display: block; font-size: clamp(22px, 3vw, 29px); line-height: 1.1; }
+    .dashboard-metric span { display: block; margin-top: 5px; color: var(--muted); font-size: 13px; font-weight: 700; }
+    .dashboard-actions { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 10px; }
+    .dashboard-action { display: flex; min-height: 64px; align-items: center; justify-content: space-between; gap: 8px; padding: 13px 15px; border: 2px solid var(--line); border-radius: 12px; color: var(--ink); background: var(--paper); text-align: left; font-weight: 800; cursor: pointer; transition: border-color .15s, transform .15s, background .15s; }
+    .dashboard-action:hover { transform: translateY(-2px); border-color: var(--green); background: var(--mint); }
+    .dashboard-action span:last-child { color: var(--green); font-size: 20px; }
+    .dashboard-tip { margin: 19px 0 0; padding: 12px 14px; border-left: 4px solid var(--green); border-radius: 7px; color: var(--muted); background: var(--wash); }
     .panel-content .profile-card { margin: 0; box-shadow: none; }
     .panel-content .class-manager { margin-bottom: 14px; }
     .appearance-card { border: 1px solid var(--line); border-radius: 15px; background: var(--paper); padding: 18px; box-shadow: var(--shadow); }
@@ -302,6 +320,7 @@
       .app-workspace { grid-template-columns: 180px minmax(0, 1fr); gap: 14px; }
       .section-tabs { padding: 8px; }
       .section-tab { padding: 10px; }
+      .dashboard-actions { grid-template-columns: repeat(2, minmax(0,1fr)); }
       .panel-heading, .panel-content { padding-left: 20px; padding-right: 20px; }
     }
     @media (max-width: 600px) {
@@ -325,6 +344,12 @@
       .panel-heading-top { align-items: flex-start; }
       .panel-reset { white-space: normal; }
       .section-tab { padding: 10px 12px; }
+      .section-tab { min-height: 44px; }
+      .dashboard-metrics { gap: 8px; }
+      .dashboard-metric { padding: 12px 10px; }
+      .dashboard-metric span { font-size: 12px; }
+      .dashboard-actions { grid-template-columns: 1fr; }
+      .dashboard-action { min-height: 52px; }
       .tab-copy strong { font-size: 12px; }
       .panel-heading { padding: 17px 16px 14px; }
       .panel-heading h2 { font-size: 17px; }
@@ -398,6 +423,7 @@
   </style>
 </head>
 <body>
+  <a class="skip-link" href="#appWorkspace">Skip to app sections</a>
   <div id="startupScreen" class="startup-screen" aria-live="polite"><div class="startup-mark" id="startupMark">↗</div><p>Preparing your school roster…</p></div>
   <div id="successToast" class="toast" role="status" aria-live="polite"></div>
   <dialog id="importPreviewDialog" class="import-dialog" aria-labelledby="importPreviewTitle">
@@ -601,10 +627,11 @@
       ].filter(Boolean);
       const nav = document.createElement('nav');
       nav.className = 'section-tabs'; nav.setAttribute('aria-label', 'App sections');
-      const workspace = document.createElement('div'); workspace.className = 'app-workspace';
+      const workspace = document.createElement('div'); workspace.className = 'app-workspace'; workspace.id = 'appWorkspace'; workspace.tabIndex = -1;
       nav.innerHTML = '<p class="sidebar-title">Workspace</p>';
       const panelRoot = document.createElement('div'); panelRoot.className = 'section-panels';
       const steps = [
+        { id: 'home', label: 'Dashboard', hint: 'Overview and shortcuts', title: 'Dashboard', description: 'A quick overview of your school roster and the next useful actions.' },
         { id: 'school', label: 'School', hint: 'Name and logo', title: 'School profile', description: 'Set the school identity that appears on rosters.', reset: true, resetLabel: 'Reset school info' },
         { id: 'security', label: 'Security', hint: 'Username and password', title: 'Account security', description: 'Change the username and password used to sign in.' },
         { id: 'classes', label: 'Classes', hint: 'Groups and sizes', title: 'Set up classes', description: 'Choose class names, set preferred sizes, and save reusable rosters.', reset: true, resetLabel: 'Reset classes' },
@@ -616,7 +643,7 @@
       const panels = new Map();
       function createPanel(step, children, useResultCard = false) {
         const section = document.createElement('section');
-        section.className = `section-panel${step.id === 'school' ? ' active' : ''}`;
+        section.className = `section-panel${step.id === 'home' ? ' active' : ''}`;
         section.id = `panel-${step.id}`;
         section.setAttribute('aria-labelledby', `tab-${step.id}`);
         if (useResultCard) {
@@ -634,30 +661,40 @@
       for (const step of steps) {
         const button = document.createElement('button');
         button.className = 'section-tab'; button.type = 'button'; button.id = `tab-${step.id}`;
-        if (step.id === 'backups') button.hidden = true;
+        if (step.id === 'backups' || step.id === 'security') button.hidden = true;
         button.setAttribute('aria-controls', `panel-${step.id}`);
-        button.setAttribute('aria-current', step.id === 'school' ? 'page' : 'false');
+        button.setAttribute('aria-current', step.id === 'home' ? 'page' : 'false');
         button.innerHTML = `<span class="tab-copy"><strong>${step.label}</strong><small>${step.hint}</small></span>`;
         button.addEventListener('click', () => setActive(step.id));
         nav.appendChild(button);
       }
-      createPanel(steps[0], [profile]);
-      createPanel(steps[1], [accountSettingsCard]);
-      createPanel(steps[2], [classManager, savedRostersPanel]);
-      createPanel(steps[3], studentNodes);
-      createPanel(steps[4], [appearanceCard]);
-      createPanel(steps[5], [adminToolsCard]);
-      createPanel(steps[6], [], true);
+      const dashboard = document.createElement('section');
+      dashboard.className = 'dashboard-card';
+      dashboard.setAttribute('aria-labelledby', 'dashboardWelcomeTitle');
+      dashboard.innerHTML = '<div class="dashboard-welcome"><p class="eyebrow">School roster overview</p><h2 id="dashboardWelcomeTitle">Welcome back</h2><p id="dashboardStatus" role="status" aria-live="polite">Your workspace is ready.</p></div><div class="dashboard-content"><div class="dashboard-metrics" aria-label="Roster summary"><div class="dashboard-metric"><strong id="dashboardStudentCount">0</strong><span>Students in current list</span></div><div class="dashboard-metric"><strong id="dashboardClassCount">0</strong><span>Classes set up</span></div><div class="dashboard-metric"><strong id="dashboardSavedCount">0</strong><span>Saved rosters</span></div></div><h3>Quick actions</h3><div class="dashboard-actions"><button class="dashboard-action" type="button" data-go-section="students"><span>Add or import students</span><span aria-hidden="true">→</span></button><button class="dashboard-action" type="button" data-go-section="classes"><span>Set up classes</span><span aria-hidden="true">→</span></button><button class="dashboard-action" type="button" data-go-section="results"><span>View class results</span><span aria-hidden="true">→</span></button><button class="dashboard-action" type="button" data-shuffle-current><span>Shuffle current list</span><span aria-hidden="true">↻</span></button></div><p class="dashboard-tip" id="dashboardTip">Start by adding students and choosing the classes they should be grouped into.</p></div>';
+      createPanel(steps[0], [dashboard]);
+      createPanel(steps[1], [profile]);
+      createPanel(steps[2], [accountSettingsCard]);
+      createPanel(steps[3], [classManager, savedRostersPanel]);
+      createPanel(steps[4], studentNodes);
+      createPanel(steps[5], [appearanceCard]);
+      createPanel(steps[6], [adminToolsCard]);
+      createPanel(steps[7], [], true);
       function setActive(id) {
         for (const step of steps) {
           panels.get(step.id).classList.toggle('active', step.id === id);
           document.getElementById(`tab-${step.id}`).setAttribute('aria-current', step.id === id ? 'page' : 'false');
         }
       }
+      dashboard.querySelectorAll('[data-go-section]').forEach(button => button.addEventListener('click', () => setActive(button.dataset.goSection)));
+      dashboard.querySelector('[data-shuffle-current]').addEventListener('click', () => {
+        if (parseRows(rosterInput.value).students.length) shuffleButton.click();
+        else { setActive('students'); rosterInput.focus(); }
+      });
       workspace.append(nav, panelRoot);
       intro.after(workspace);
       layout.remove();
-      setActive('school');
+      setActive('home');
     }
     assembleAppSections();
 
@@ -1087,8 +1124,10 @@
       cloudToken = '';
       currentUser = null;
       const backupsTab = document.getElementById('tab-backups');
-      if (backupsTab?.getAttribute('aria-current') === 'page') document.getElementById('tab-school').click();
+      const securityTab = document.getElementById('tab-security');
+      if (backupsTab?.getAttribute('aria-current') === 'page' || securityTab?.getAttribute('aria-current') === 'page') document.getElementById('tab-home').click();
       if (backupsTab) backupsTab.hidden = true;
+      if (securityTab) securityTab.hidden = true;
       document.getElementById('accountSettingsCard').classList.add('hide');
       document.getElementById('adminToolsCard').classList.add('hide');
       try { sessionStorage.removeItem('classroomShuffle.authToken'); } catch { /* Ignore unavailable session storage. */ }
@@ -1109,11 +1148,15 @@
       cloudReady = true;
       document.getElementById('accountSettingsCard').classList.remove('hide');
       const backupsTab = document.getElementById('tab-backups');
+      const securityTab = document.getElementById('tab-security');
       if (currentUser?.role === 'admin') {
         backupsTab.hidden = false;
+        securityTab.hidden = false;
         await loadAdminTools();
       } else {
         backupsTab.hidden = true;
+        securityTab.hidden = true;
+        document.getElementById('accountSettingsCard').classList.add('hide');
         document.getElementById('adminToolsCard').classList.add('hide');
       }
       setConnectionStatus('Connected · saved to cloud', 'cloud');
@@ -1213,6 +1256,22 @@
     function profileData() {
       return { name: schoolProfile.name.value.trim(), motto: schoolProfile.motto.value.trim(), address: schoolProfile.address.value.trim(), contact: schoolProfile.contact.value.trim(), logo: schoolLogo };
     }
+    function updateDashboard() {
+      const studentCount = document.getElementById('dashboardStudentCount');
+      if (!studentCount) return;
+      const students = parseRows(rosterInput.value).students.length;
+      const name = profileData().name;
+      document.getElementById('dashboardWelcomeTitle').textContent = name ? `Welcome to ${name}` : 'Welcome back';
+      studentCount.textContent = String(students);
+      document.getElementById('dashboardClassCount').textContent = String(classNames.length);
+      document.getElementById('dashboardSavedCount').textContent = String(savedRosters.length);
+      document.getElementById('dashboardStatus').textContent = currentGroups.length
+        ? `Your latest roster has ${currentGroups.reduce((total, group) => total + group.students.length, 0)} students in ${currentGroups.length} classes and is ready to review.`
+        : students ? 'Your student list is ready. Shuffle it to create class groups.' : 'Your workspace is ready. Add students and classes to get started.';
+      document.getElementById('dashboardTip').textContent = currentGroups.length
+        ? 'Need another arrangement? Open Results to reshuffle, rebalance, print, or export this roster.'
+        : students ? 'Choose or add classes, then open Students and select Shuffle students.' : 'Start by adding students and choosing the classes they should be grouped into.';
+    }
     function saveSchoolProfile() {
       const profile = profileData();
       try { localStorage.setItem('classroomShuffle.schoolProfile', JSON.stringify(profile)); }
@@ -1229,6 +1288,7 @@
         removeLogoButton.classList.add('hide');
       }
       updateFavicon();
+      updateDashboard();
       if (currentGroups.length) render(currentGroups);
       scheduleCloudSave();
     }
@@ -1287,6 +1347,7 @@
         if (currentGroups.length) render(currentGroups);
         scheduleCloudSave();
       }));
+      updateDashboard();
     }
     function addClass(value, shouldFocus = true) {
       const name = value.trim().replace(/\s+/g, ' ');
@@ -1510,6 +1571,7 @@
       return duplicates;
     }
     rosterInput.addEventListener('input', updateDuplicateReview);
+    rosterInput.addEventListener('input', updateDashboard);
     rosterInput.addEventListener('input', scheduleCloudSave);
 
     function shuffle(items) {
@@ -1532,6 +1594,7 @@
     }
     function render(groups, skippedCount = 0) {
       currentGroups = groups;
+      updateDashboard();
       const students = groups.reduce((sum, group) => sum + group.students.length, 0);
       const classWord = groups.length === 1 ? 'class' : 'classes';
       subtitle.textContent = `${students} student${students === 1 ? '' : 's'} across ${groups.length} ${classWord}`;
@@ -1647,6 +1710,7 @@
 
     function clearResults() {
       currentGroups = [];
+      updateDashboard();
       subtitle.textContent = 'Your grouped roster will appear here.';
       document.getElementById('resultTools').classList.add('hide');
       results.innerHTML = '<div class="empty"><div class="empty-icon" aria-hidden="true">▤</div><strong>No students in this roster</strong><p>Add names above and shuffle to create groups.</p></div>';
@@ -1672,6 +1736,7 @@
       savedRosterSelect.innerHTML = visibleRosters.length
         ? '<option value="">Choose a saved roster</option>' + visibleRosters.map(record => `<option value="${escapeHtml(record.id)}" ${record.id === selectedId ? 'selected' : ''}>${escapeHtml(record.schoolYear || 'School year not set')} · ${escapeHtml(record.termName || 'Term not set')} · ${escapeHtml(record.name)}</option>`).join('')
         : '<option value="">No saved rosters yet</option>';
+      updateDashboard();
     }
     function refreshRosterVersions(selectedId = '') {
       const select = document.getElementById('rosterVersionSelect');
