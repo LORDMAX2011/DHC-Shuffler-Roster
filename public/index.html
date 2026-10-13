@@ -29,7 +29,7 @@
     :root[data-mode="dark"] .profile-field input, :root[data-mode="dark"] .login-card input, :root[data-mode="dark"] textarea, :root[data-mode="dark"] .class-add-row input, :root[data-mode="dark"] .ideas-top select, :root[data-mode="dark"] .saved-row input, :root[data-mode="dark"] .saved-row select, :root[data-mode="dark"] .class-size, :root[data-mode="dark"] .move-select, :root[data-mode="dark"] .results-toolbar input, :root[data-mode="dark"] .add-student-row input { color:var(--ink); background:#18211d; border-color:var(--line); }
     :root[data-mode="dark"] .class-manager, :root[data-mode="dark"] .saved-rosters, :root[data-mode="dark"] .file-drop, :root[data-mode="dark"] .format-note, :root[data-mode="dark"] .school-banner, :root[data-mode="dark"] .class-title, :root[data-mode="dark"] .summary span { color:var(--ink); background:#26332c; }
     :root[data-mode="dark"] .section-tab { background:#202a25; border-color:var(--line); color:var(--muted); }
-    :root[data-mode="dark"] .section-tab[aria-current="step"], :root[data-mode="dark"] .secondary { background:#304239; }
+    :root[data-mode="dark"] .section-tab[aria-current="page"], :root[data-mode="dark"] .secondary { background:#304239; }
     :root[data-mode="dark"] .idea-chip, :root[data-mode="dark"] .theme-option, :root[data-mode="dark"] .appearance-preview { color:var(--ink); background:#18211d; border-color:var(--line); }
     :root[data-mode="dark"] .local-pill { color:var(--ink); background:#202a25; border-color:var(--line); }
     :root[data-mode="dark"] .empty-icon, :root[data-mode="dark"] .student-name-input:focus { background:#26332c; }
@@ -199,17 +199,16 @@
     .notice { min-height: 18px; margin-top: 8px; color: var(--red); font-size: 12px; line-height: 1.45; }
     footer { margin-top: 25px; color: #7c8580; font-size: 11px; line-height: 1.5; text-align: center; }
     .hide { display: none !important; }
-    .section-tabs { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 8px; margin: 0 auto 16px; max-width: 1000px; }
-    .section-tab { display: flex; align-items: center; gap: 10px; min-width: 0; padding: 11px 13px; border: 1px solid #e0e5dd; border-radius: 12px; background: rgba(255,254,250,.84); color: #627069; text-align: left; cursor: pointer; }
-    .section-tab { transition: border-color .18s, background .18s, transform .18s; }
-    .section-tab:hover { border-color: #b7cbb9; transform: translateY(-2px); }
-    .section-tab[aria-current="step"] { border-color: var(--green); background: #edf5ed; color: var(--green-dark); box-shadow: 0 4px 12px rgba(37,108,84,.08); }
-    .tab-number { display: grid; place-items: center; width: 27px; height: 27px; flex: 0 0 auto; border-radius: 9px; background: #eff1ec; color: #6d7971; font-size: 11px; font-weight: 800; }
-    .section-tab[aria-current="step"] .tab-number { background: var(--green); color: white; }
+    .app-workspace { display: grid; grid-template-columns: 220px minmax(0, 1fr); align-items: start; gap: 22px; margin: 0 auto; }
+    .section-tabs { position: sticky; top: 18px; display: flex; flex-direction: column; gap: 5px; min-width: 0; padding: 12px; border: 1px solid var(--line); border-radius: 16px; background: var(--paper); box-shadow: var(--shadow); }
+    .sidebar-title { margin: 2px 9px 8px; color: var(--muted); font-size: 11px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+    .section-tab { display: flex; align-items: center; min-width: 0; padding: 11px 12px; border: 1px solid transparent; border-radius: 10px; background: transparent; color: var(--muted); text-align: left; cursor: pointer; transition: border-color .18s, background .18s, color .18s; }
+    .section-tab:hover { border-color: var(--line); background: color-mix(in srgb, var(--wash) 65%, var(--paper)); }
+    .section-tab[aria-current="page"] { border-color: color-mix(in srgb, var(--green) 25%, var(--line)); background: var(--mint); color: var(--green-dark); }
     .tab-copy { min-width: 0; }
-    .tab-copy strong { display: block; font-size: 12px; }
-    .tab-copy small { display: block; margin-top: 2px; color: var(--muted); font-size: 10px; }
-    .section-panel { display: none; max-width: 900px; margin: 0 auto; }
+    .tab-copy strong { display: block; font-size: 13px; }
+    .tab-copy small { display: block; margin-top: 2px; color: var(--muted); font-size: 11px; }
+    .section-panel { display: none; max-width: none; min-width: 0; margin: 0; }
     .section-panel.active { display: block; animation: appear .18s ease-out; }
     @keyframes appear { from { opacity: .65; transform: translateY(3px); } to { opacity: 1; transform: translateY(0); } }
     .panel-card { border: 1px solid rgba(218,225,216,.9); border-radius: 20px; background: var(--paper); box-shadow: var(--shadow); overflow: hidden; }
@@ -278,14 +277,13 @@
     .toast.error { border-color:#d99883; }
     .section-actions { display: flex; justify-content: space-between; gap: 12px; max-width: 900px; margin: 15px auto 0; }
     .section-actions .button { min-width: 130px; }
-    .section-progress { height: 3px; background: #e4e9e1; max-width: 900px; margin: 0 auto 14px; border-radius: 9px; overflow: hidden; }
-    .section-progress span { display: block; width: 25%; height: 100%; background: var(--green); transition: width .2s ease; }
     @media (max-width: 780px) {
       .shell { width: min(900px, calc(100% - 32px)); padding-top: 23px; }
       header { margin-bottom: 27px; }
       .results { min-height: 320px; }
       .empty { min-height: 270px; }
-      .section-tabs { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+      .app-workspace { grid-template-columns: 180px minmax(0, 1fr); gap: 14px; }
+      .section-tabs { padding: 8px; }
       .section-tab { padding: 10px; }
       .panel-heading, .panel-content { padding-left: 20px; padding-right: 20px; }
     }
@@ -301,19 +299,18 @@
       .constraint-controls, .admin-grid { grid-template-columns:1fr; }
       .intro { margin-bottom: 20px; }
       .intro p { font-size: 14px; }
-      .section-tabs { grid-template-columns: repeat(2, minmax(0, 1fr)); margin-bottom: 11px; }
+      .app-workspace { display: flex; flex-direction: column; gap: 12px; }
+      .section-tabs { position: static; width: 100%; flex-direction: row; overflow-x: auto; margin-bottom: 0; padding: 7px; scroll-snap-type: x mandatory; }
+      .sidebar-title { display: none; }
+      .section-tab { flex: 0 0 auto; min-width: 124px; scroll-snap-align: start; }
       .intro::after { width: 52px; height: 52px; right: 0; top: -10px; opacity: .6; }
       .panel-heading-top { align-items: flex-start; }
       .panel-reset { white-space: normal; }
-      .section-tab { padding: 9px; gap: 7px; }
-      .tab-copy small { display: none; }
-      .tab-copy strong { font-size: 11px; }
-      .tab-number { width: 24px; height: 24px; }
+      .section-tab { padding: 10px 12px; }
+      .tab-copy strong { font-size: 12px; }
       .panel-heading { padding: 17px 16px 14px; }
       .panel-heading h2 { font-size: 17px; }
       .panel-content { padding: 14px; }
-      .section-actions { margin-top: 10px; }
-      .section-actions .button { min-width: 0; flex: 1; }
       .card-head { padding-left: 17px; padding-right: 17px; }
       .card-body { padding: 17px; }
       .results-body { padding: 15px; }
@@ -337,8 +334,7 @@
     }
     @media (min-width: 1200px) {
       .shell { width: min(1180px, calc(100% - 64px)); padding-top: 42px; }
-      .section-panel { max-width: 980px; }
-      .section-progress, .section-actions { max-width: 980px; }
+      .section-panel { max-width: none; }
       .panel-heading { padding: 26px 30px 20px; }
       .panel-content { padding: 28px 30px; }
     }
@@ -579,9 +575,8 @@
       ].filter(Boolean);
       const nav = document.createElement('nav');
       nav.className = 'section-tabs'; nav.setAttribute('aria-label', 'App sections');
-      const progress = document.createElement('div'); progress.className = 'section-progress'; progress.setAttribute('aria-hidden', 'true');
-      progress.innerHTML = '<span></span>';
-      const progressBar = progress.firstElementChild;
+      const workspace = document.createElement('div'); workspace.className = 'app-workspace';
+      nav.innerHTML = '<p class="sidebar-title">Workspace</p>';
       const panelRoot = document.createElement('div'); panelRoot.className = 'section-panels';
       const steps = [
         { id: 'school', label: 'School', hint: 'Name and logo', title: 'School profile', description: 'Set the school identity that appears on rosters.', reset: true, resetLabel: 'Reset school info' },
@@ -607,19 +602,14 @@
           children.forEach(child => content.appendChild(child));
           card.appendChild(content); section.appendChild(card);
         }
-        const index = steps.findIndex(item => item.id === step.id);
-        const actions = document.createElement('div'); actions.className = 'section-actions';
-        if (index > 0) actions.innerHTML += `<button class="button secondary" type="button" data-section-go="${steps[index - 1].id}">← ${steps[index - 1].label}</button>`;
-        if (index < steps.length - 1) actions.innerHTML += `<button class="button primary" type="button" data-section-go="${steps[index + 1].id}">Continue to ${steps[index + 1].label} →</button>`;
-        if (actions.childElementCount) section.appendChild(actions);
         panelRoot.appendChild(section); panels.set(step.id, section);
       }
-      for (const [index, step] of steps.entries()) {
+      for (const step of steps) {
         const button = document.createElement('button');
         button.className = 'section-tab'; button.type = 'button'; button.id = `tab-${step.id}`;
         button.setAttribute('aria-controls', `panel-${step.id}`);
-        button.setAttribute('aria-current', index === 0 ? 'step' : 'false');
-        button.innerHTML = `<span class="tab-number">${index + 1}</span><span class="tab-copy"><strong>${step.label}</strong><small>${step.hint}</small></span>`;
+        button.setAttribute('aria-current', step.id === 'school' ? 'page' : 'false');
+        button.innerHTML = `<span class="tab-copy"><strong>${step.label}</strong><small>${step.hint}</small></span>`;
         button.addEventListener('click', () => setActive(step.id));
         nav.appendChild(button);
       }
@@ -632,16 +622,11 @@
       function setActive(id) {
         for (const step of steps) {
           panels.get(step.id).classList.toggle('active', step.id === id);
-          document.getElementById(`tab-${step.id}`).setAttribute('aria-current', step.id === id ? 'step' : 'false');
+          document.getElementById(`tab-${step.id}`).setAttribute('aria-current', step.id === id ? 'page' : 'false');
         }
-        progressBar.style.width = `${((steps.findIndex(step => step.id === id) + 1) / steps.length) * 100}%`;
-        if (window.matchMedia('(max-width: 600px)').matches) nav.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }
-      panelRoot.addEventListener('click', event => {
-        const button = event.target.closest('[data-section-go]');
-        if (button) setActive(button.dataset.sectionGo);
-      });
-      intro.after(nav, progress, panelRoot);
+      workspace.append(nav, panelRoot);
+      intro.after(workspace);
       layout.remove();
       setActive('school');
     }
