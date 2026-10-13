@@ -1343,7 +1343,7 @@
       if (currentUser?.role === 'admin') {
         backupsTab.hidden = false;
         securityTab.hidden = false;
-        await loadAdminTools();
+        loadAdminTools();
       } else {
         backupsTab.hidden = true;
         securityTab.hidden = true;
@@ -1389,7 +1389,10 @@
       } catch (error) { showToast(error.message, true); }
     });
     async function initializeBackend() {
+      dismissStartup();
       if (location.protocol === 'file:') { setSaveStatus('Saved in this browser', 'saved'); dismissStartup(); return; }
+      setConnectionStatus('Connecting…');
+      setSaveStatus('Checking cloud connection…', 'pending');
       try {
         const health = await fetch('/api/health', { cache: 'no-store', signal: AbortSignal.timeout(6000) });
         if (!health.ok) throw new Error('API unavailable');
@@ -2797,14 +2800,6 @@
       if (localState) applyCloudState(localState);
     } catch { /* Ignore unavailable or malformed offline state. */ }
     initializeBackend();
-    setTimeout(() => {
-      const startup = document.getElementById('startupScreen');
-      if (startup && !startup.classList.contains('done')) {
-        setConnectionStatus('Connection delayed', 'offline');
-        if (cloudApiMode) showLogin('The server is taking longer than usual. Please try signing in again.');
-        dismissStartup();
-      }
-    }, 15000);
   </script>
 </body>
 </html>

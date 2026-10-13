@@ -1,4 +1,4 @@
-const CACHE_NAME = 'school-classroom-shuffle-v10';
+const CACHE_NAME = 'school-classroom-shuffle-v11';
 const APP_SHELL = ['/', '/manifest.webmanifest', '/icon.svg'];
 
 self.addEventListener('install', event => {
