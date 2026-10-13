@@ -201,6 +201,10 @@
     .summary span { border-radius: 99px; padding: 6px 10px; color: #53605a; background: #f1f4ed; font-size: 11px; font-weight: 700; }
     .class-group { border: 1px solid var(--line); border-radius: 14px; overflow: hidden; margin: 0 0 12px; animation: rise-in .34s ease both; animation-delay: calc(var(--group-index, 0) * 55ms); }
     .class-title { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 11px 13px; background: #f2f6ef; font-weight: 760; font-size: 13px; }
+    .class-title { cursor:pointer; list-style:none; min-height:46px; }
+    .class-title::-webkit-details-marker { display:none; }
+    .class-title::after { content:'⌄'; flex:0 0 auto; color:var(--green); font-size:18px; transition:transform .15s ease; }
+    .result-class-collapse:not([open]) > .class-title::after { transform:rotate(-90deg); }
     .count { color: var(--muted); font-size: 11px; font-weight: 650; }
     .student-list { list-style: none; margin: 0; padding: 0; counter-reset: student; }
     .student-list li { display: flex; align-items: center; gap: 8px; padding: 7px 10px; border-top: 1px solid #eef0eb; font-size: 13px; }
@@ -245,6 +249,13 @@
     .panel-reset { flex: 0 0 auto; margin-left: auto; padding: 7px 10px; font-size: 12px; }
     .panel-heading p { margin: 5px 0 0; color: var(--muted); font-size: 13px; line-height: 1.45; }
     .panel-content { padding: 22px 25px; }
+    .subsection-collapse { margin: 0 0 12px; border: 1px solid var(--line); border-radius: 13px; background: var(--paper); overflow: clip; }
+    .subsection-collapse > summary { display:flex; min-height:48px; align-items:center; justify-content:space-between; gap:12px; padding:11px 14px; color:var(--ink); background:var(--wash); font-size:14px; font-weight:800; cursor:pointer; list-style:none; }
+    .subsection-collapse > summary::-webkit-details-marker { display:none; }
+    .subsection-collapse > summary::after { content:'⌄'; flex:0 0 auto; color:var(--green); font-size:19px; transition:transform .15s ease; }
+    .subsection-collapse[open] > summary::after { transform:rotate(180deg); }
+    .subsection-content { padding:12px; }
+    .subsection-content > :last-child { margin-bottom:0; }
     .dashboard-card { overflow: hidden; border: 1px solid var(--line); border-radius: 20px; background: var(--paper); box-shadow: var(--shadow); }
     .dashboard-welcome { padding: clamp(20px, 4vw, 34px); color: #fff; background: linear-gradient(115deg, var(--green-dark), var(--green)); }
     .dashboard-welcome .eyebrow { margin-bottom: 7px; color: rgba(255,255,255,.82); }
@@ -455,7 +466,9 @@
       .results-body { padding: 0; }
       .school-banner { border-color: #bbb; background: white; }
       .class-group { break-inside: avoid; border-color: #bbb; }
+      .result-class-collapse:not([open]) > :not(summary) { display:block !important; }
       .class-title { background: #f2f2f2; }
+      .class-title::after, .subsection-collapse > summary::after { display:none; }
       .student-name-input { border: 0; padding: 3px 0; color: #111; }
       .print-signatures { display:none; }
       :root[data-print-layout="compact"] .student-list li { padding:3px 7px; font-size:10px; }
@@ -701,6 +714,29 @@
         { id: 'results', label: 'Results', hint: 'Edit and export', title: 'Your class roster', description: 'Edit student groups, search, rebalance, and print or export.' }
       ];
       const panels = new Map();
+      const subsectionLabels = {
+        security: ['Sign-in settings'],
+        classes: ['Class names and suggestions', 'Saved rosters'],
+        students: ['Upload student names', 'File format guide', 'Editable student list', 'Paste names manually', 'Class balance options', 'Duplicate review', 'Student actions'],
+        appearance: ['Appearance and accessibility settings'],
+        backups: ['Backup and activity tools']
+      };
+      function createCollapsible(label, key, children = []) {
+        const details = document.createElement('details');
+        details.className = 'subsection-collapse';
+        details.dataset.collapseKey = key;
+        const summary = document.createElement('summary');
+        summary.textContent = label;
+        const content = document.createElement('div');
+        content.className = 'subsection-content';
+        children.forEach(child => content.appendChild(child));
+        details.append(summary, content);
+        try { details.open = localStorage.getItem(`classroomShuffle.collapse.${key}`) !== 'closed'; } catch { details.open = true; }
+        details.addEventListener('toggle', () => {
+          try { localStorage.setItem(`classroomShuffle.collapse.${key}`, details.open ? 'open' : 'closed'); } catch { /* Collapsing still works when storage is unavailable. */ }
+        });
+        return details;
+      }
       function createPanel(step, children, useResultCard = false) {
         const section = document.createElement('section');
         section.className = `section-panel${step.id === 'home' ? ' active' : ''}`;
@@ -713,7 +749,12 @@
           const resetButton = step.reset ? `<button class="button quiet panel-reset" type="button" data-reset-section="${step.id}">${step.resetLabel}</button>` : '';
           card.innerHTML = `<div class="panel-heading"><div class="panel-heading-top"><h2>${step.title}</h2>${resetButton}</div><p>${step.description}</p></div>`;
           const content = document.createElement('div'); content.className = 'panel-content';
-          children.forEach(child => content.appendChild(child));
+          children.forEach((child, index) => {
+            if (child.matches?.('.profile-card, .roster-paste-details, #notice, #processing')) { content.appendChild(child); return; }
+            const label = subsectionLabels[step.id]?.[index] || child.querySelector?.('h3')?.textContent?.trim() || child.querySelector?.('h2')?.textContent?.trim() || `Section ${index + 1}`;
+            const key = `${step.id}-${child.id || child.classList?.[0] || index}-${index}`;
+            content.appendChild(createCollapsible(label, key, [child]));
+          });
           card.appendChild(content); section.appendChild(card);
         }
         panelRoot.appendChild(section); panels.set(step.id, section);
@@ -732,10 +773,19 @@
       dashboard.className = 'dashboard-card';
       dashboard.setAttribute('aria-labelledby', 'dashboardWelcomeTitle');
       dashboard.innerHTML = '<div class="dashboard-welcome"><p class="eyebrow">School roster overview</p><h2 id="dashboardWelcomeTitle">Welcome back</h2><p id="dashboardStatus" role="status" aria-live="polite">Your workspace is ready.</p></div><div class="dashboard-content"><div class="dashboard-metrics" aria-label="Roster summary"><div class="dashboard-metric"><strong id="dashboardStudentCount">0</strong><span>Students in current list</span></div><div class="dashboard-metric"><strong id="dashboardClassCount">0</strong><span>Classes set up</span></div><div class="dashboard-metric"><strong id="dashboardSavedCount">0</strong><span>Saved rosters</span></div></div><h3>Quick actions</h3><div class="dashboard-actions"><button class="dashboard-action" type="button" data-go-section="students"><span>Add or import students</span><span aria-hidden="true">→</span></button><button class="dashboard-action" type="button" data-go-section="classes"><span>Set up classes</span><span aria-hidden="true">→</span></button><button class="dashboard-action" type="button" data-go-section="results"><span>View class results</span><span aria-hidden="true">→</span></button><button class="dashboard-action" type="button" data-shuffle-current><span>Shuffle current list</span><span aria-hidden="true">↻</span></button></div><p class="dashboard-tip" id="dashboardTip">Start by adding students and choosing the classes they should be grouped into.</p></div>';
+      const dashboardContent = dashboard.querySelector('.dashboard-content');
+      const metricBlock = dashboard.querySelector('.dashboard-metrics');
+      metricBlock.replaceWith(createCollapsible('Roster overview', 'dashboard-metrics', [metricBlock]));
+      const quickHeading = dashboardContent.querySelector('h3');
+      const quickActions = dashboard.querySelector('.dashboard-actions');
+      const quickBlock = createCollapsible('Quick actions', 'dashboard-actions', [quickHeading, quickActions]);
+      dashboardContent.insertBefore(quickBlock, dashboard.querySelector('#dashboardTip'));
+      const tip = dashboard.querySelector('#dashboardTip');
+      tip.replaceWith(createCollapsible('Getting started tip', 'dashboard-tip', [tip]));
       const checklist = document.createElement('section');
       checklist.className = 'setup-checklist';
       checklist.innerHTML = '<div class="setup-progress"><span>Getting started</span><span id="setupProgressText">0 of 4 complete</span></div><progress id="setupProgressBar" max="4" value="0" aria-label="School roster setup progress"></progress><ol id="setupSteps" class="setup-steps"></ol>';
-      dashboard.querySelector('.dashboard-content').appendChild(checklist);
+      dashboardContent.appendChild(createCollapsible('Getting started checklist', 'dashboard-setup', [checklist]));
       createPanel(steps[0], [dashboard]);
       createPanel(steps[1], [profile]);
       createPanel(steps[2], [accountSettingsCard]);
@@ -915,7 +965,7 @@
       document.querySelectorAll('.section-tab').forEach((tab, index) => { const label = tab.querySelector('strong'); if (label) label.textContent = copy.nav[index] || interfaceCopy.en.nav[index]; });
       document.getElementById('dashboardWelcomeTitle').textContent = profileData().name ? `Welcome to ${profileData().name}` : copy.welcome;
       document.querySelectorAll('.dashboard-metric span').forEach((span, index) => { span.textContent = copy.metrics[index] || interfaceCopy.en.metrics[index]; });
-      document.querySelector('.dashboard-content > h3').textContent = copy.dashboardHeading;
+      document.querySelector('[data-collapse-key="dashboard-actions"] h3').textContent = copy.dashboardHeading;
       document.querySelectorAll('.dashboard-action').forEach((button, index) => { const label = button.querySelector('span'); if (label) label.textContent = copy.actions[index] || interfaceCopy.en.actions[index]; });
       document.querySelector('.setup-progress > span:first-child').textContent = copy.setup;
       document.getElementById('studentEditorTitle').textContent = copy.studentTitle;
@@ -1953,7 +2003,7 @@
           const searchable = `${group.className} ${name}`.toLocaleLowerCase().includes(searchTerm.toLocaleLowerCase());
           return `<li class="student-row" ${searchTerm && !searchable ? 'hidden' : ''}>${nameControl}${moveControl}</li>`;
         }).join('');
-        return `<section class="class-group" style="--group-index:${groupIndex}"><div class="class-title"><span>${escapeHtml(group.className)}</span><span class="count">${group.students.length} student${group.students.length === 1 ? '' : 's'}${targetLabel}</span></div><ol class="student-list">${studentsHtml}</ol><div class="add-student-row"><input type="text" placeholder="Add a student to ${escapeHtml(group.className)}" aria-label="New student name" data-new-student="${groupIndex}"><button type="button" data-add-student="${groupIndex}">Add</button></div></section>`;
+        return `<details class="class-group result-class-collapse" open data-collapse-key="${escapeHtml(`result-${group.className}`)}" style="--group-index:${groupIndex}"><summary class="class-title"><span>${escapeHtml(group.className)}</span><span class="count">${group.students.length} student${group.students.length === 1 ? '' : 's'}${targetLabel}</span></summary><ol class="student-list">${studentsHtml}</ol><div class="add-student-row"><input type="text" placeholder="Add a student to ${escapeHtml(group.className)}" aria-label="New student name" data-new-student="${groupIndex}"><button type="button" data-add-student="${groupIndex}">Add</button></div></details>`;
       }).join('');
       const sizeWarnings = groups.filter(group => classTargets[group.className] > 0 && group.students.length !== classTargets[group.className]).map(group => {
         const difference = group.students.length - classTargets[group.className];
@@ -1961,6 +2011,11 @@
       });
       const sizeWarningHtml = sizeWarnings.length ? `<div class="class-size-warning" role="status"><strong>Class size check</strong><br>${sizeWarnings.map(escapeHtml).join('<br>')}<br>Adjust class targets or rebalance the roster if needed.</div>` : '';
       results.innerHTML = schoolBanner + `<div class="results-toolbar"><input id="studentSearch" type="search" placeholder="Search students or classes" aria-label="Search roster" value="${escapeHtml(searchTerm)}"><label class="meta-field">Teacher <input id="teacherNameInput" type="text" placeholder="Teacher name" value="${escapeHtml(teacherName)}"></label><label class="meta-field">Date <input id="rosterDateInput" type="date" value="${escapeHtml(rosterDate)}"></label><label class="privacy-toggle"><input id="privacyToggle" type="checkbox" ${privacyMode ? 'checked' : ''}> Hide names on screen</label></div><div class="summary"><span>✦ Randomized roster</span><span>${students} students</span><span>${groups.length} ${classWord}</span><span>${escapeHtml(schoolYear)} · ${escapeHtml(termName)}</span>${skippedCount ? `<span>${skippedCount} row${skippedCount === 1 ? '' : 's'} skipped</span>` : ''}</div>${sizeWarningHtml}${rows}`;
+      results.querySelectorAll('.result-class-collapse[data-collapse-key]').forEach(details => {
+        const key = `classroomShuffle.collapse.${details.dataset.collapseKey}`;
+        try { details.open = localStorage.getItem(key) !== 'closed'; } catch { details.open = true; }
+        details.addEventListener('toggle', () => { try { localStorage.setItem(key, details.open ? 'open' : 'closed'); } catch { /* Collapsing still works when storage is unavailable. */ } });
+      });
       const printSelect = document.createElement('select');
       printSelect.id = 'printLayout'; printSelect.setAttribute('aria-label', 'Print layout');
       printSelect.innerHTML = '<option value="standard">Standard print</option><option value="compact">Compact print</option><option value="signoff">Signature lines</option>';
