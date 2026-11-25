@@ -438,7 +438,6 @@
     @media (prefers-reduced-motion: reduce) {
       *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
     }
-    /* Keep helper copy readable while preserving compact controls and layout. */
     label { font-size: 14px; }
     input, select, textarea { font-size: 14px; }
     .button { font-size: 14px; }
@@ -1700,7 +1699,6 @@
         const line = lines[i].trim();
         if (!line) continue;
         const delimiter = line.includes('\t') ? '\t' : ',';
-        // Supports CSV quoted fields, including commas inside quoted names.
         const fields = (delimiter === '\t' ? line.split('\t') : line.split(/,(?=(?:[^"]*"[^"]*")*[^"]*$)/)).map(value => value.trim().replace(/^"|"$/g, '').replace(/""/g, '"'));
         const headerNameColumn = fields.findIndex(field => /^(name|student|student name|pupil name|full name)$/i.test(field));
         const headerClassColumn = fields.findIndex(field => /class|grade|form|section/i.test(field));
@@ -1762,11 +1760,6 @@
       rosterInput.value = encodeStudentRows(rows);
       selectedStudentRows.clear();
       studentEditorPage = 0;
-      for (const row of rows) {
-        const className = row.className.trim();
-        if (className && !classNames.some(name => name.toLocaleLowerCase() === className.toLocaleLowerCase())) { classNames.push(className); classTargets[className] = 0; }
-      }
-      classNames.sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
       renderClasses();
       updateDuplicateReview();
       renderStudentEditor();
@@ -1941,15 +1934,6 @@
       captureRosterHistory();
       rosterInput.value = usableStudents.map(student => [student.name, student.className, student.groupAttribute].join('\t')).join('\n');
       renderStudentEditor();
-      const importedClasses = [...new Set(usableStudents.map(student => student.className).filter(Boolean))];
-      for (const name of importedClasses) if (!classNames.some(existing => existing.toLocaleLowerCase() === name.toLocaleLowerCase())) {
-        classNames.push(name);
-        if (!Object.hasOwn(classTargets, name)) classTargets[name] = 0;
-      }
-      if (importedClasses.length) {
-        classNames.sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
-        renderClasses();
-      }
       updateDuplicateReview();
       scheduleCloudSave();
       notice.textContent = `Imported ${usableStudents.length} reviewed rows from ${pendingImport.filename}.${invalidCount ? ` Skipped ${invalidCount} overlong row${invalidCount === 1 ? '' : 's'}.` : ''} Review the list before shuffling.`;
@@ -2189,7 +2173,7 @@
       yearFilter.value = years.includes(selectedYear) ? selectedYear : 'all';
       const termFilter = document.getElementById('archiveTermSelect');
       const selectedTerm = termFilter.value || 'all';
-      const terms = [...new Set(savedRosters.map(record => record.termName).filter(Boolean))].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
+      const terms = [...new Set(savedRosters.map(record => record.termName).filter(Boolean))].sort((a, b) => b.localeCompare(a, undefined, { sensitivity: 'base' }));
       termFilter.innerHTML = '<option value="all">All terms</option>' + terms.map(term => `<option value="${escapeHtml(term)}">${escapeHtml(term)}</option>`).join('');
       termFilter.value = terms.includes(selectedTerm) ? selectedTerm : 'all';
       const visibleRosters = savedRosters.filter(record => (yearFilter.value === 'all' || record.schoolYear === yearFilter.value) && (termFilter.value === 'all' || record.termName === termFilter.value));
@@ -2343,60 +2327,71 @@
     refreshSavedRosterOptions();
 
     function makeGroups(students) {
-      const byClass = new Map();
-      const attributeCounts = new Map();
-      const explicit = students.filter(student => student.className.trim());
-      const namesOnly = students.filter(student => !student.className.trim());
-      for (const name of classNames) { byClass.set(name, []); attributeCounts.set(name, new Map()); }
-      const normalizedName = name => name.trim().toLocaleLowerCase();
-      function addAttributeCount(className, attribute) {
-        if (!attribute) return;
-        if (!attributeCounts.has(className)) attributeCounts.set(className, new Map());
-        const key = attribute.trim().toLocaleLowerCase();
-        const counts = attributeCounts.get(className);
-        counts.set(key, (counts.get(key) || 0) + 1);
-      }
-      for (const student of explicit) {
-        const requested = student.className.trim();
-        const existing = classNames.find(name => name.toLocaleLowerCase() === requested.toLocaleLowerCase());
-        const key = existing || requested;
-        if (!byClass.has(key)) byClass.set(key, []);
-        byClass.get(key).push(student.name.trim());
-        addAttributeCount(key, student.groupAttribute || studentAttributes[normalizedName(student.name)] || '');
-      }
       const targets = [...classNames];
-      if (!targets.length && namesOnly.length) {
-        notice.textContent = 'Add at least one class above to group rows that have a name only.';
+      if (!targets.length) {
+        notice.textContent = 'Add at least one destination class/group label in the Classes tab first.';
         return [];
       }
-      // Fill preferred class sizes first; place any remaining students in the smallest class.
-      const mixed = shuffle(namesOnly);
-      for (const student of mixed) {
-        const attribute = student.groupAttribute || studentAttributes[normalizedName(student.name)] || '';
-        let candidates = targets.filter(name => classTargets[name] > 0 && byClass.get(name).length < classTargets[name]);
-        if (candidates.length) {
-          candidates.sort((a, b) => byClass.get(a).length / classTargets[a] - byClass.get(b).length / classTargets[b]);
-          const bestRatio = byClass.get(candidates[0]).length / classTargets[candidates[0]];
-          candidates = candidates.filter(name => byClass.get(name).length / classTargets[name] === bestRatio);
-        } else {
-          const minSize = Math.min(...targets.map(name => byClass.get(name).length));
-          candidates = targets.filter(name => byClass.get(name).length === minSize);
-        }
-        if (balanceByAttribute && attribute) {
-          const key = attribute.trim().toLocaleLowerCase();
-          const minimum = Math.min(...candidates.map(name => attributeCounts.get(name)?.get(key) || 0));
-          candidates = candidates.filter(name => (attributeCounts.get(name)?.get(key) || 0) === minimum);
-        }
-        const target = candidates[Math.floor(Math.random() * candidates.length)];
-        byClass.get(target).push(student.name.trim());
-        addAttributeCount(target, attribute);
+
+      const byClass = new Map();
+      const attributeCounts = new Map();
+      for (const name of targets) {
+        byClass.set(name, []);
+        attributeCounts.set(name, new Map());
       }
+
+      const normalizedName = name => name.trim().toLocaleLowerCase();
+      function addAttributeCount(targetName, attribute) {
+        if (!attribute) return;
+        const key = attribute.trim().toLocaleLowerCase();
+        const counts = attributeCounts.get(targetName);
+        counts.set(key, (counts.get(key) || 0) + 1);
+      }
+
+      const poolsByInputClass = new Map();
+      for (const student of students) {
+        const inputClassKey = (student.className || 'Unassigned').trim().toLocaleLowerCase();
+        if (!poolsByInputClass.has(inputClassKey)) poolsByInputClass.set(inputClassKey, []);
+        poolsByInputClass.get(inputClassKey).push(student);
+      }
+
+      for (const pool of poolsByInputClass.values()) {
+        const mixed = shuffle(pool);
+        const classCountInTarget = new Map(targets.map(t => [t, 0]));
+
+        for (const student of mixed) {
+          const attribute = student.groupAttribute || studentAttributes[normalizedName(student.name)] || '';
+
+          let candidates = targets.filter(name => classTargets[name] > 0 && byClass.get(name).length < classTargets[name]);
+          if (!candidates.length) candidates = [...targets];
+
+          const minFromThisClass = Math.min(...candidates.map(name => classCountInTarget.get(name)));
+          candidates = candidates.filter(name => classCountInTarget.get(name) === minFromThisClass);
+
+          const minTotalSize = Math.min(...candidates.map(name => byClass.get(name).length));
+          candidates = candidates.filter(name => byClass.get(name).length === minTotalSize);
+
+          if (balanceByAttribute && attribute) {
+            const key = attribute.trim().toLocaleLowerCase();
+            const minimum = Math.min(...candidates.map(name => attributeCounts.get(name)?.get(key) || 0));
+            candidates = candidates.filter(name => (attributeCounts.get(name)?.get(key) || 0) === minimum);
+          }
+
+          const target = candidates[Math.floor(Math.random() * candidates.length)];
+          byClass.get(target).push(student.name.trim());
+          classCountInTarget.set(target, classCountInTarget.get(target) + 1);
+          addAttributeCount(target, attribute);
+        }
+      }
+
       const groups = [...byClass.entries()]
         .sort(([a], [b]) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }))
         .map(([className, names]) => ({ className, students: shuffle(names) }));
+
       const normalized = name => name.trim().toLocaleLowerCase();
       const parsePairs = text => text.split(/\r?\n/).map(line => line.split(',').map(name => name.trim()).filter(Boolean)).filter(names => names.length >= 2);
       const locate = name => groups.find(group => group.students.some(student => normalized(student) === normalized(name)));
+
       for (const names of parsePairs(togetherRules)) {
         const target = locate(names[0]);
         if (!target) continue;
@@ -2408,6 +2403,7 @@
           }
         }
       }
+
       for (const names of parsePairs(apartRules)) {
         for (let i = 0; i < names.length; i++) for (let j = i + 1; j < names.length; j++) {
           const first = locate(names[i]); const second = locate(names[j]);
@@ -2418,7 +2414,8 @@
           destination.students.push(second.students.splice(index, 1)[0]);
         }
       }
-      return groups.filter(group => group.students.length || classNames.includes(group.className));
+
+      return groups;
     }
 
     function reshuffle() {
@@ -2830,4 +2827,3 @@
   </script>
 </body>
 </html>
-
