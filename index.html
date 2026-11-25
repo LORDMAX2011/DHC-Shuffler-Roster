@@ -438,6 +438,7 @@
     @media (prefers-reduced-motion: reduce) {
       *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
     }
+    /* Keep helper copy readable while preserving compact controls and layout. */
     label { font-size: 14px; }
     input, select, textarea { font-size: 14px; }
     .button { font-size: 14px; }
@@ -507,7 +508,7 @@
       <div class="header-actions"><button id="installAppButton" class="mode-toggle hide" type="button">Install app</button><button id="modeToggle" class="mode-toggle" type="button" aria-pressed="false">Dark mode</button><div class="local-pill" id="connectionPill">Local storage only</div><span id="saveStatus" class="save-status" role="status" aria-live="polite">Checking save status…</span>
       <button id="logoutButton" class="button quiet hide" type="button" title="End this admin session">Log out</button></div>
     </header>
-
+ 
     <details class="card profile-card" open>
       <summary>School information</summary>
       <div class="profile-form">
@@ -522,7 +523,7 @@
         </div>
       </div>
     </details>
-
+ 
     <section id="accountSettingsCard" class="admin-tools hide" aria-labelledby="accountSettingsTitle">
       <h3 id="accountSettingsTitle">Security</h3>
       <div class="admin-box">
@@ -546,7 +547,7 @@
         </form>
       </div>
     </section>
-
+ 
     <section id="adminToolsCard" class="admin-tools hide" aria-labelledby="adminToolsTitle">
       <h3 id="adminToolsTitle">Backups and activity</h3>
       <div class="admin-grid">
@@ -560,7 +561,7 @@
         </div>
       </div>
     </section>
-
+ 
     <section class="appearance-card" id="appearanceCard" aria-labelledby="appearanceTitle">
       <h3 id="appearanceTitle">Make it yours</h3>
       <p>Choose larger text and high-contrast colors for easier reading, then adjust the page style. Your choices are saved for this school.</p>
@@ -580,13 +581,13 @@
       <div class="appearance-preview"><span>Preview: buttons and highlights use your accent color.</span><strong>Example button</strong></div>
       <p id="contrastStatus" class="contrast-status" role="status"></p>
     </section>
-
+ 
     <section class="intro">
       <p class="eyebrow">A simpler way to make class lists</p>
       <h1>Shuffle the roster.<br>Keep every class together.</h1>
       <p>Paste a student list, mix up the order, and get a fresh roster sorted into classes in seconds.</p>
     </section>
-
+ 
     <section class="layout" aria-label="Student roster shuffler">
       <article class="card">
         <div class="card-head">
@@ -662,7 +663,7 @@
           <div id="processing" class="processing hide" role="status"><span class="spinner" aria-hidden="true"></span><span id="processingText">Reading file…</span></div>
         </div>
       </article>
-
+ 
       <article class="card results">
         <div class="card-head results-head">
           <div><h2>Your shuffled classes</h2><p id="resultSubtitle">Your grouped roster will appear here.</p></div>
@@ -677,7 +678,7 @@
     </section>
     <footer>Class names are arranged alphabetically. Student order is randomized within each class.<br>Files are processed in your browser. Image and scanned-PDF OCR may download its reading engine the first time; file contents stay on this device.</footer>
   </main>
-
+ 
   <script>
     let startupFailsafe = window.setTimeout(() => dismissStartup(), 10000);
     window.addEventListener('error', () => dismissStartup(), { once: true });
@@ -693,7 +694,7 @@
       const savedRostersPanel = document.querySelector('.saved-rosters');
       const resultCard = document.querySelector('.card.results');
       if (!shell || !intro || !layout || !profile || !accountSettingsCard || !adminToolsCard || !appearanceCard || !classManager || !savedRostersPanel || !resultCard) return;
-
+ 
       const studentNodes = [
         layout.querySelector('.file-drop'), layout.querySelector('.format-note'), layout.querySelector('#studentEditor'),
         layout.querySelector('.roster-paste-details'), layout.querySelector('.balance-controls'), layout.querySelector('#duplicateControls'),
@@ -825,7 +826,7 @@
       console.error('Section layout could not be assembled; keeping the original page layout.', error);
       dismissStartup();
     }
-
+ 
     const rosterInput = document.getElementById('roster');
     const shuffleButton = document.getElementById('shuffleBtn');
     const fileInput = document.getElementById('csvFile');
@@ -870,6 +871,8 @@
     let togetherRules = '';
     let apartRules = '';
     let studentAttributes = {};
+    // Remembers each student's input class (e.g. SS1) so reshuffles can keep spreading them fairly.
+    let studentSources = {};
     let balanceByAttribute = false;
     let rosterHistory = [];
     const defaultAppearance = { theme: 'slate', accent: '#4c6378', background: '#e2eaf1', mode: 'light', textSize: 'large', highContrast: true, largePrint: false, language: 'en' };
@@ -895,7 +898,7 @@
       teacherName = savedMeta.teacherName || '';
       rosterDate = savedMeta.rosterDate || rosterDate;
     } catch { /* Use today's date if browser storage is unavailable. */ }
-
+ 
     function setupSchoolYearOptions() {
       const select = document.getElementById('schoolYearSelect');
       for (let year = academicStartYear - 5; year <= academicStartYear + 2; year++) {
@@ -912,7 +915,7 @@
     document.getElementById('togetherRules').addEventListener('change', event => { captureRosterHistory(); togetherRules = event.target.value; scheduleCloudSave(); });
     document.getElementById('apartRules').addEventListener('change', event => { captureRosterHistory(); apartRules = event.target.value; scheduleCloudSave(); });
     document.getElementById('balanceFieldToggle').addEventListener('change', event => { captureRosterHistory(); balanceByAttribute = event.target.checked; scheduleCloudSave(); });
-
+ 
     const themePalettes = {
       forest: { label: 'Forest', accent: '#256c54', background: '#e6f1e9' },
       ocean: { label: 'Ocean', accent: '#246b8f', background: '#e1f0f8' },
@@ -1089,7 +1092,7 @@
       applyAppearance({ ...appearance, language: event.target.value });
       scheduleCloudSave();
     });
-
+ 
     let toastTimer = null;
     function showToast(message, isError = false) {
       const toast = document.getElementById('successToast');
@@ -1108,7 +1111,7 @@
       clearTimeout(startupFailsafe);
       document.getElementById('startupScreen')?.classList.add('done');
     }
-
+ 
     function setConnectionStatus(text, mode = '') {
       const pill = document.getElementById('connectionPill');
       pill.textContent = text;
@@ -1140,6 +1143,7 @@
         togetherRules,
         apartRules,
         studentAttributes: { ...studentAttributes },
+        studentSources: { ...studentSources },
         balanceByAttribute
       };
     }
@@ -1151,7 +1155,7 @@
     function captureRosterHistory() {
       rosterHistory.push(JSON.parse(JSON.stringify({
         classNames, classTargets, rosterDraft: rosterInput.value, groups: currentGroups,
-        teacherName, rosterDate, schoolYear, termName, togetherRules, apartRules, studentAttributes, balanceByAttribute, savedRosters, rosterVersions
+        teacherName, rosterDate, schoolYear, termName, togetherRules, apartRules, studentAttributes, studentSources, balanceByAttribute, savedRosters, rosterVersions
       })));
       if (rosterHistory.length > 20) rosterHistory.shift();
       updateUndoButtons();
@@ -1171,6 +1175,7 @@
       togetherRules = previous.togetherRules;
       apartRules = previous.apartRules;
       studentAttributes = previous.studentAttributes;
+      studentSources = previous.studentSources || {};
       balanceByAttribute = previous.balanceByAttribute;
       savedRosters = previous.savedRosters;
       rosterVersions = previous.rosterVersions || rosterVersions;
@@ -1277,6 +1282,7 @@
       togetherRules = typeof state.togetherRules === 'string' ? state.togetherRules : '';
       apartRules = typeof state.apartRules === 'string' ? state.apartRules : '';
       studentAttributes = state.studentAttributes && typeof state.studentAttributes === 'object' ? { ...state.studentAttributes } : {};
+      studentSources = state.studentSources && typeof state.studentSources === 'object' ? { ...state.studentSources } : {};
       balanceByAttribute = state.balanceByAttribute === true;
       const profile = state.schoolProfile || {};
       schoolProfile.name.value = profile.name || '';
@@ -1459,7 +1465,7 @@
       cities: { label: 'World cities', description: 'Well-known city names from different regions.', names: ['Accra', 'Cairo', 'Dakar', 'Lagos', 'London', 'Nairobi', 'New York', 'Paris', 'Rio de Janeiro', 'Tokyo'] },
       oceans: { label: 'Oceans and seas', description: 'A geography-inspired collection of water names.', names: ['Arctic', 'Atlantic', 'Indian Ocean', 'Mediterranean', 'Pacific', 'Red Sea', 'Southern Ocean'] }
     };
-
+ 
     for (const [key, set] of Object.entries(classIdeaSets)) {
       const option = document.createElement('option'); option.value = key; option.textContent = set.label; ideaCategory.appendChild(option);
     }
@@ -1475,7 +1481,7 @@
     }
     ideaCategory.addEventListener('change', renderIdeas);
     renderIdeas();
-
+ 
     function profileData() {
       return { name: schoolProfile.name.value.trim(), motto: schoolProfile.motto.value.trim(), address: schoolProfile.address.value.trim(), contact: schoolProfile.contact.value.trim(), logo: schoolLogo };
     }
@@ -1562,7 +1568,7 @@
     });
     removeLogoButton.addEventListener('click', () => { schoolLogo = ''; saveSchoolProfile(); });
     saveSchoolProfile();
-
+ 
     function renderClasses() {
       const classEntrySelect = document.getElementById('classEntrySelect');
       const selectedClass = classEntrySelect.value;
@@ -1615,11 +1621,6 @@
       const className = document.getElementById('classEntrySelect').value;
       if (!names.length) { notice.textContent = 'Enter at least one student name for the selected class.'; document.getElementById('classEntryNames').focus(); return; }
       captureRosterHistory();
-      if (!classNames.some(name => name.toLocaleLowerCase() === className.toLocaleLowerCase())) {
-        classNames.push(className);
-        classTargets[className] = 0;
-        classNames.sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
-      }
       const addedRows = names.map(name => `${name}\t${className}`).join('\n');
       rosterInput.value = [rosterInput.value.trimEnd(), addedRows].filter(Boolean).join('\n');
       renderStudentEditor();
@@ -1627,7 +1628,9 @@
       renderClasses();
       updateDuplicateReview();
       scheduleCloudSave();
-      notice.textContent = `Added ${names.length} student name${names.length === 1 ? '' : 's'} to ${className}. Review the list in Students before shuffling.`;
+      notice.textContent = findDestinationClass(className)
+        ? `Added ${names.length} student name${names.length === 1 ? '' : 's'} to ${className}. Review the list in Students before shuffling.`
+        : `Added ${names.length} student name${names.length === 1 ? '' : 's'} under ${className} as an input class. They will be spread across your own classes when you shuffle.`;
       showToast(`Names added to ${className}.`);
     });
     function addIdeaNames(names) {
@@ -1648,7 +1651,7 @@
       const replacements = [...new Set([...selectedIdeas].map(name => name.trim().replace(/\s+/g, ' ')).filter(Boolean))];
       if (!replacements.length) { notice.textContent = 'Choose one or more class name ideas to replace your current classes.'; return; }
       if (!confirm(`Replace all ${classNames.length} current class name${classNames.length === 1 ? '' : 's'} with ${replacements.join(', ')}? Existing class assignments and class size targets will be cleared, and students will be redistributed. You can undo this change in Students.`)) return;
-
+ 
       const parsedRows = parseRows(rosterInput.value).students;
       const students = parsedRows.length ? parsedRows : currentGroups.flatMap(group => group.students.map(name => ({
         name,
@@ -1656,6 +1659,7 @@
         groupAttribute: studentAttributes[name.trim().toLocaleLowerCase()] || ''
       })));
       captureRosterHistory();
+      const previousClassNames = [...classNames];
       classNames = replacements;
       classTargets = Object.fromEntries(replacements.map(name => [name, 0]));
       students.forEach(student => {
@@ -1664,16 +1668,18 @@
       });
       selectedIdeas.clear();
       renderIdeas();
-
+ 
       if (students.length) {
-        const groups = makeGroups(students.map(student => ({ ...student, className: '' })));
+        // Old destination labels are cleared; input classes such as SS1/SS2/SS3 stay as source pools.
+        const keepSource = student => previousClassNames.some(name => normalizeClassLabel(name) === normalizeClassLabel(student.className)) ? '' : student.className;
+        const groups = makeGroups(students.map(student => ({ ...student, className: keepSource(student) })));
         if (groups.length) {
           currentGroups = groups;
           syncRosterDraftFromGroups();
           render(groups);
           archiveRosterVersion('Class ideas replaced');
         } else {
-          rosterInput.value = encodeStudentRows(students.map(student => ({ ...student, className: '' })));
+          rosterInput.value = encodeStudentRows(students.map(student => ({ ...student, className: keepSource(student) })));
           renderClasses();
           renderStudentEditor();
           clearResults();
@@ -1689,7 +1695,7 @@
       notice.textContent = `Replaced current classes with ${replacements.join(', ')}. Students have been redistributed.`;
       showToast('Class names replaced and students redistributed.');
     });
-
+ 
     function parseRows(text, includeBlankNames = false) {
       const lines = text.replace(/^\uFEFF/, '').split(/\r?\n/);
       const students = [];
@@ -1699,6 +1705,7 @@
         const line = lines[i].trim();
         if (!line) continue;
         const delimiter = line.includes('\t') ? '\t' : ',';
+        // Supports CSV quoted fields, including commas inside quoted names.
         const fields = (delimiter === '\t' ? line.split('\t') : line.split(/,(?=(?:[^"]*"[^"]*")*[^"]*$)/)).map(value => value.trim().replace(/^"|"$/g, '').replace(/""/g, '"'));
         const headerNameColumn = fields.findIndex(field => /^(name|student|student name|pupil name|full name)$/i.test(field));
         const headerClassColumn = fields.findIndex(field => /class|grade|form|section/i.test(field));
@@ -1719,7 +1726,7 @@
       }
       return { students, skipped };
     }
-
+ 
     const studentEditorPageSize = 50;
     let studentEditorPage = 0;
     let studentEditorSort = 'row';
@@ -1760,6 +1767,7 @@
       rosterInput.value = encodeStudentRows(rows);
       selectedStudentRows.clear();
       studentEditorPage = 0;
+      classNames.sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
       renderClasses();
       updateDuplicateReview();
       renderStudentEditor();
@@ -1832,7 +1840,7 @@
       if (currentGroups.length) clearResults();
     });
     renderStudentEditor();
-
+ 
     function renderImportPreview(filename, text, pdfReport = null) {
       const parsed = parseRows(text, true);
       pendingImport = { filename, text, students: parsed.students, pdfReport };
@@ -1860,6 +1868,8 @@
       const warnings = pdfImportWarnings(pdfReport);
       if (parsed.skipped.length) warnings.push(`${parsed.skipped.length} row${parsed.skipped.length === 1 ? '' : 's'} without a student name will be skipped.`);
       if (missingClassCount) warnings.push(`${missingClassCount} student${missingClassCount === 1 ? '' : 's'} have no class and will be assigned when you shuffle.`);
+      const importSourceNote = sourceClassNote(parsed.students.filter(student => student.name));
+      if (importSourceNote) warnings.push(importSourceNote);
       if (duplicateCount) warnings.push(`${duplicateCount} rows are part of possible duplicate pairs. Review spelling before importing.`);
       if (invalidCount) warnings.push(`${invalidCount} row${invalidCount === 1 ? '' : 's'} exceed the allowed name or class length. Correct those rows to continue.`);
       if (parsed.students.length > 5000) warnings.push('A roster can contain at most 5,000 students. Reduce the file before importing.');
@@ -1902,6 +1912,8 @@
       if (invalid.length) warnings.push(`${invalid.length} rows exceed the allowed name or class length.`);
       if (duplicateRows) warnings.push(`${duplicateRows} rows are part of possible duplicate pairs. Check spelling.`);
       if (noClass) warnings.push(`${noClass} students have no class and will be assigned when shuffled.`);
+      const editedSourceNote = sourceClassNote(students.filter(student => student.name));
+      if (editedSourceNote) warnings.push(editedSourceNote);
       const skipped = pendingImport.students.length - students.length;
       if (skipped) warnings.push(`${skipped} blank-name row${skipped === 1 ? '' : 's'} will be skipped.`);
       if (students.length > 5000) warnings.push('A roster can contain at most 5,000 students.');
@@ -1934,9 +1946,12 @@
       captureRosterHistory();
       rosterInput.value = usableStudents.map(student => [student.name, student.className, student.groupAttribute].join('\t')).join('\n');
       renderStudentEditor();
+      // Imported classes (SS1, SS2, SS3...) are input pools, not new destination classes.
+      studentSources = {};
+      const sourceNote = sourceClassNote(usableStudents);
       updateDuplicateReview();
       scheduleCloudSave();
-      notice.textContent = `Imported ${usableStudents.length} reviewed rows from ${pendingImport.filename}.${invalidCount ? ` Skipped ${invalidCount} overlong row${invalidCount === 1 ? '' : 's'}.` : ''} Review the list before shuffling.`;
+      notice.textContent = `Imported ${usableStudents.length} reviewed rows from ${pendingImport.filename}.${invalidCount ? ` Skipped ${invalidCount} overlong row${invalidCount === 1 ? '' : 's'}.` : ''} ${sourceNote ? ` ${sourceNote}` : ''} Review the list before shuffling.`;
       document.getElementById('importPreviewDialog').close();
       showToast('Reviewed student list imported.');
       pendingImport = null;
@@ -1945,7 +1960,7 @@
     document.getElementById('cancelImportButton').addEventListener('click', () => { pendingImport = null; document.getElementById('importPreviewDialog').close(); });
     document.getElementById('cancelImportTop').addEventListener('click', () => { pendingImport = null; document.getElementById('importPreviewDialog').close(); });
     document.getElementById('importPreviewDialog').addEventListener('cancel', () => { pendingImport = null; });
-
+ 
     function findDuplicates(students) {
       const counts = new Map();
       for (const student of students) {
@@ -1974,7 +1989,7 @@
     rosterInput.addEventListener('input', updateDuplicateReview);
     rosterInput.addEventListener('input', updateDashboard);
     rosterInput.addEventListener('input', scheduleCloudSave);
-
+ 
     function shuffle(items) {
       const copy = [...items];
       for (let i = copy.length - 1; i > 0; i--) {
@@ -1983,11 +1998,11 @@
       }
       return copy;
     }
-
+ 
     function escapeHtml(value) {
       return value.replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char]));
     }
-
+ 
     function formatRosterDate(value) {
       if (!value) return '';
       const [year, month, day] = value.split('-').map(Number);
@@ -1999,13 +2014,14 @@
         classTargets[group.className] = 0;
       }
       classNames.sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
-      rosterInput.value = encodeStudentRows(currentGroups.flatMap(group => group.students.map(name => ({ name, className: group.className, groupAttribute: studentAttributes[name.trim().toLocaleLowerCase()] || '' }))));
+      rosterInput.value = encodeStudentRows(currentGroups.flatMap(group => group.students.map(name => { const key = name.trim().toLocaleLowerCase(); return { name, className: Object.hasOwn(studentSources, key) ? studentSources[key] : group.className, groupAttribute: studentAttributes[key] || '' }; })));
       renderClasses();
       renderStudentEditor();
       updateDuplicateReview();
     }
     function render(groups, skippedCount = 0) {
       currentGroups = groups;
+      if (groups.sources) for (const [key, label] of Object.entries(groups.sources)) { if (label === null) delete studentSources[key]; else studentSources[key] = label; }
       updateDashboard();
       const students = groups.reduce((sum, group) => sum + group.students.length, 0);
       const classWord = groups.length === 1 ? 'class' : 'classes';
@@ -2133,7 +2149,7 @@
       }));
       scheduleCloudSave();
     }
-
+ 
     function clearResults() {
       currentGroups = [];
       updateDashboard();
@@ -2150,6 +2166,7 @@
       captureRosterHistory();
       rosterInput.value = '';
       studentAttributes = {};
+      studentSources = {};
       selectedStudentRows.clear();
       renderStudentEditor();
       updateDuplicateReview();
@@ -2159,7 +2176,7 @@
       showToast('All results deleted. You can undo this change in Students.');
     }
     document.getElementById('deleteAllResultsBtn').addEventListener('click', deleteAllResults);
-
+ 
     const savedRosterSelect = document.getElementById('savedRosterSelect');
     function refreshSavedRosterOptions(selectedId = '') {
       if (!cloudApiMode) {
@@ -2173,7 +2190,7 @@
       yearFilter.value = years.includes(selectedYear) ? selectedYear : 'all';
       const termFilter = document.getElementById('archiveTermSelect');
       const selectedTerm = termFilter.value || 'all';
-      const terms = [...new Set(savedRosters.map(record => record.termName).filter(Boolean))].sort((a, b) => b.localeCompare(a, undefined, { sensitivity: 'base' }));
+      const terms = [...new Set(savedRosters.map(record => record.termName).filter(Boolean))].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
       termFilter.innerHTML = '<option value="all">All terms</option>' + terms.map(term => `<option value="${escapeHtml(term)}">${escapeHtml(term)}</option>`).join('');
       termFilter.value = terms.includes(selectedTerm) ? selectedTerm : 'all';
       const visibleRosters = savedRosters.filter(record => (yearFilter.value === 'all' || record.schoolYear === yearFilter.value) && (termFilter.value === 'all' || record.termName === termFilter.value));
@@ -2257,6 +2274,7 @@
         togetherRules,
         apartRules,
         studentAttributes: { ...studentAttributes },
+        studentSources: { ...studentSources },
         balanceByAttribute,
         teacherName,
         rosterDate,
@@ -2294,6 +2312,7 @@
       togetherRules = record.togetherRules || '';
       apartRules = record.apartRules || '';
       studentAttributes = record.studentAttributes || {};
+      studentSources = record.studentSources || {};
       balanceByAttribute = record.balanceByAttribute === true;
       document.getElementById('schoolYearSelect').value = schoolYear;
       document.getElementById('termNameInput').value = termName;
@@ -2325,73 +2344,108 @@
       notice.textContent = record ? `Deleted “${record.name}”.` : 'Saved roster deleted.';
     });
     refreshSavedRosterOptions();
-
-    function makeGroups(students) {
-      const targets = [...classNames];
-      if (!targets.length) {
-        notice.textContent = 'Add at least one destination class/group label in the Classes tab first.';
-        return [];
+ 
+    const normalizeClassLabel = value => String(value || '').trim().replace(/\s+/g, ' ').toLocaleLowerCase();
+    // A label is a destination only if it matches one of the class chips from Step 1.
+    function findDestinationClass(label) {
+      const key = normalizeClassLabel(label);
+      return key ? classNames.find(name => normalizeClassLabel(name) === key) || '' : '';
+    }
+    // Input classes (SS1, SS2, SS3, anything else) found in a list of students, excluding real destinations.
+    function sourceClassLabels(students) {
+      const labels = new Map();
+      for (const student of students) {
+        const label = String(student.className || '').trim().replace(/\s+/g, ' ');
+        if (label && !findDestinationClass(label) && !labels.has(normalizeClassLabel(label))) labels.set(normalizeClassLabel(label), label);
       }
-
+      return [...labels.values()];
+    }
+    function sourceClassNote(students) {
+      const labels = sourceClassLabels(students);
+      if (!labels.length) return '';
+      const count = students.filter(student => student.className && !findDestinationClass(student.className)).length;
+      return `${count} student${count === 1 ? '' : 's'} listed under ${labels.length} input class${labels.length === 1 ? '' : 'es'} (${labels.slice(0, 6).join(', ')}${labels.length > 6 ? '…' : ''}). They will be spread evenly across your own classes when you shuffle, not turned into new classes.`;
+    }
+ 
+    function makeGroups(students) {
       const byClass = new Map();
       const attributeCounts = new Map();
-      for (const name of targets) {
-        byClass.set(name, []);
-        attributeCounts.set(name, new Map());
-      }
-
+      const sources = {};
+      for (const name of classNames) { byClass.set(name, []); attributeCounts.set(name, new Map()); }
       const normalizedName = name => name.trim().toLocaleLowerCase();
-      function addAttributeCount(targetName, attribute) {
+      function addAttributeCount(className, attribute) {
         if (!attribute) return;
+        if (!attributeCounts.has(className)) attributeCounts.set(className, new Map());
         const key = attribute.trim().toLocaleLowerCase();
-        const counts = attributeCounts.get(targetName);
+        const counts = attributeCounts.get(className);
         counts.set(key, (counts.get(key) || 0) + 1);
       }
-
-      const poolsByInputClass = new Map();
+      // Sort every student into either a pinned destination (class label matches a Step 1 chip)
+      // or a source pool (SS1, SS2, SS3, any other input class, or no class at all).
+      const pinned = [];
+      const pools = new Map();
       for (const student of students) {
-        const inputClassKey = (student.className || 'Unassigned').trim().toLocaleLowerCase();
-        if (!poolsByInputClass.has(inputClassKey)) poolsByInputClass.set(inputClassKey, []);
-        poolsByInputClass.get(inputClassKey).push(student);
+        const nameKey = normalizedName(student.name);
+        const destination = findDestinationClass(student.className);
+        if (destination) { pinned.push({ student, destination, nameKey }); continue; }
+        let label = String(student.className || '').trim().replace(/\s+/g, ' ');
+        if (!label) {
+          const remembered = studentSources[nameKey] || '';
+          label = remembered && !findDestinationClass(remembered) ? remembered : '';
+        }
+        const poolKey = normalizeClassLabel(label);
+        if (!pools.has(poolKey)) pools.set(poolKey, { label, students: [] });
+        pools.get(poolKey).students.push({ student, nameKey });
       }
-
-      for (const pool of poolsByInputClass.values()) {
-        const mixed = shuffle(pool);
-        const classCountInTarget = new Map(targets.map(t => [t, 0]));
-
-        for (const student of mixed) {
-          const attribute = student.groupAttribute || studentAttributes[normalizedName(student.name)] || '';
-
-          let candidates = targets.filter(name => classTargets[name] > 0 && byClass.get(name).length < classTargets[name]);
+      const targets = [...classNames];
+      if (!targets.length && pools.size) {
+        notice.textContent = 'Add at least one class in Step 1 first. Students from input classes such as SS1, SS2 and SS3 are spread across the classes you add.';
+        return [];
+      }
+      for (const { student, destination, nameKey } of pinned) {
+        byClass.get(destination).push(student.name.trim());
+        addAttributeCount(destination, student.groupAttribute || studentAttributes[nameKey] || '');
+        sources[nameKey] = null; // pinned students have no source pool
+      }
+      // Weights make unequal preferred sizes get proportionally more of every source class.
+      const positiveTargets = targets.map(name => Number(classTargets[name]) || 0).filter(value => value > 0);
+      const fallbackWeight = positiveTargets.length ? positiveTargets.reduce((sum, value) => sum + value, 0) / positiveTargets.length : 1;
+      const weight = name => (Number(classTargets[name]) > 0 ? Number(classTargets[name]) : fallbackWeight);
+      const lowest = (list, score) => {
+        const scored = list.map(name => [name, Math.round(score(name) * 1e9)]);
+        const minimum = Math.min(...scored.map(item => item[1]));
+        return scored.filter(item => item[1] === minimum).map(item => item[0]);
+      };
+      // Largest input classes first; students without any input class go last.
+      const poolList = [...pools.values()].sort((a, b) => (a.label === '') - (b.label === '') || b.students.length - a.students.length);
+      for (const pool of poolList) {
+        const poolCounts = new Map(targets.map(name => [name, 0]));
+        for (const { student, nameKey } of shuffle(pool.students)) {
+          const attribute = student.groupAttribute || studentAttributes[nameKey] || '';
+          // Skip classes that already reached their preferred size while others still have room.
+          let candidates = targets.filter(name => !(classTargets[name] > 0 && byClass.get(name).length >= classTargets[name]));
           if (!candidates.length) candidates = [...targets];
-
-          const minFromThisClass = Math.min(...candidates.map(name => classCountInTarget.get(name)));
-          candidates = candidates.filter(name => classCountInTarget.get(name) === minFromThisClass);
-
-          const minTotalSize = Math.min(...candidates.map(name => byClass.get(name).length));
-          candidates = candidates.filter(name => byClass.get(name).length === minTotalSize);
-
+          // 1) keep this input class evenly split, 2) then keep overall class sizes level.
+          candidates = lowest(candidates, name => poolCounts.get(name) / weight(name));
+          candidates = lowest(candidates, name => byClass.get(name).length / weight(name));
           if (balanceByAttribute && attribute) {
             const key = attribute.trim().toLocaleLowerCase();
             const minimum = Math.min(...candidates.map(name => attributeCounts.get(name)?.get(key) || 0));
             candidates = candidates.filter(name => (attributeCounts.get(name)?.get(key) || 0) === minimum);
           }
-
           const target = candidates[Math.floor(Math.random() * candidates.length)];
           byClass.get(target).push(student.name.trim());
-          classCountInTarget.set(target, classCountInTarget.get(target) + 1);
+          poolCounts.set(target, poolCounts.get(target) + 1);
           addAttributeCount(target, attribute);
+          sources[nameKey] = pool.label;
         }
       }
-
       const groups = [...byClass.entries()]
         .sort(([a], [b]) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }))
         .map(([className, names]) => ({ className, students: shuffle(names) }));
-
       const normalized = name => name.trim().toLocaleLowerCase();
       const parsePairs = text => text.split(/\r?\n/).map(line => line.split(',').map(name => name.trim()).filter(Boolean)).filter(names => names.length >= 2);
       const locate = name => groups.find(group => group.students.some(student => normalized(student) === normalized(name)));
-
       for (const names of parsePairs(togetherRules)) {
         const target = locate(names[0]);
         if (!target) continue;
@@ -2403,7 +2457,6 @@
           }
         }
       }
-
       for (const names of parsePairs(apartRules)) {
         for (let i = 0; i < names.length; i++) for (let j = i + 1; j < names.length; j++) {
           const first = locate(names[i]); const second = locate(names[j]);
@@ -2414,13 +2467,14 @@
           destination.students.push(second.students.splice(index, 1)[0]);
         }
       }
-
-      return groups;
+      const finalGroups = groups.filter(group => group.students.length || classNames.includes(group.className));
+      finalGroups.sources = sources;
+      return finalGroups;
     }
-
+ 
     function reshuffle() {
       const students = currentGroups.length
-        ? currentGroups.flatMap(group => group.students.map(name => ({ name, className: group.className })))
+        ? currentGroups.flatMap(group => group.students.map(name => ({ name, className: Object.hasOwn(studentSources, name.trim().toLocaleLowerCase()) ? '' : group.className })))
         : parseRows(rosterInput.value).students;
       if (students.length) {
         const groups = makeGroups(students);
@@ -2437,7 +2491,7 @@
       const groups = makeGroups(students);
       if (groups.length) { render(groups); archiveRosterVersion('Rebalance'); }
     }
-
+ 
     function openShufflePreview() {
       notice.textContent = '';
       const { students, skipped } = parseRows(rosterInput.value);
@@ -2453,15 +2507,21 @@
       const groups = makeGroups(students);
       if (!groups.length) return;
       pendingShuffle = { groups, students, skipped, duplicateRows };
+      const sourceOf = name => groups.sources?.[name.trim().toLocaleLowerCase()] || '';
+      const sourceBreakdown = group => {
+        const tally = new Map();
+        for (const name of group.students) { const label = sourceOf(name); if (label) tally.set(label, (tally.get(label) || 0) + 1); }
+        return tally.size ? ` <small>(${[...tally].map(([label, count]) => `${escapeHtml(label)}: ${count}`).join(' · ')})</small>` : '';
+      };
       const counts = groups.map(group => {
         const target = Number(classTargets[group.className]) || 0;
         const difference = target ? group.students.length - target : 0;
         const check = !target ? 'No preferred size' : difference === 0 ? 'Meets target' : `${Math.abs(difference)} ${difference > 0 ? 'over' : 'under'} target`;
-        return `<tr><td>${escapeHtml(group.className)}</td><td>${group.students.length}</td><td>${target || 'Not set'}</td><td>${check}</td></tr>`;
+        return `<tr><td>${escapeHtml(group.className)}</td><td>${group.students.length}${sourceBreakdown(group)}</td><td>${target || 'Not set'}</td><td>${check}</td></tr>`;
       }).join('');
       const total = groups.reduce((sum, group) => sum + group.students.length, 0);
       const warnings = groups.filter(group => classTargets[group.className] > 0 && group.students.length !== classTargets[group.className]);
-      document.getElementById('shufflePreviewSummary').textContent = `${total} student${total === 1 ? '' : 's'} will be grouped into ${groups.length} class${groups.length === 1 ? '' : 'es'}.${skipped.length ? ` ${skipped.length} blank row${skipped.length === 1 ? '' : 's'} will be skipped.` : ''} This exact randomized arrangement will be used if you confirm.`;
+      document.getElementById('shufflePreviewSummary').textContent = `${total} student${total === 1 ? '' : 's'} will be grouped into ${groups.length} class${groups.length === 1 ? '' : 'es'}.${skipped.length ? ` ${skipped.length} blank row${skipped.length === 1 ? '' : 's'} will be skipped.` : ''} ${(() => { const labels = [...new Set(Object.values(groups.sources || {}).filter(Boolean))]; return labels.length ? ` Students from ${labels.length} input class${labels.length === 1 ? '' : 'es'} (${labels.slice(0, 6).join(', ')}) are spread evenly across these classes.` : ''; })()} This exact randomized arrangement will be used if you confirm.`;
       document.getElementById('shufflePreviewWarnings').innerHTML = warnings.length ? `<p class="import-warning">${warnings.length} class${warnings.length === 1 ? '' : 'es'} will not match preferred sizes. Review the counts below before continuing.</p>` : '';
       document.getElementById('shufflePreviewRows').innerHTML = counts || '<tr><td colspan="4">No classes to show.</td></tr>';
       document.getElementById('shufflePreviewDialog').showModal();
@@ -2484,7 +2544,7 @@
     document.getElementById('cancelShuffleButton').addEventListener('click', cancelShuffle);
     document.getElementById('cancelShuffleTop').addEventListener('click', cancelShuffle);
     document.getElementById('shufflePreviewDialog').addEventListener('cancel', () => { pendingShuffle = null; });
-
+ 
     function loadScript(src) {
       return new Promise((resolve, reject) => {
         const existing = [...document.scripts].find(script => script.src === src);
@@ -2619,7 +2679,7 @@
         });
         extractedPages.push({ page, viewport, rows: filteredRows, headerRows });
       }
-
+ 
       const pagesNeedingOcr = extractedPages.filter(entry => !entry.rows.length);
       let ocrPages = 0;
       let lowConfidencePages = 0;
@@ -2704,7 +2764,7 @@
         fileInput.value = '';
       }
     });
-
+ 
     function csvCell(value) { return `"${String(value).replace(/"/g, '""')}"`; }
     function downloadCsv() {
       if (!currentGroups.length) return;
@@ -2719,7 +2779,7 @@
       showToast('CSV roster downloaded.');
       if (cloudReady) apiRequest('/api/audit', { method: 'POST', body: JSON.stringify({ action: 'roster.exported', detail: 'CSV' }) }).catch(() => {});
     }
-
+ 
     function exportBaseName() {
       return (profileData().name || 'school').normalize('NFKD').replace(/[^a-zA-Z0-9]+/g, '-').replace(/^-|-$/g, '').toLowerCase() || 'school';
     }
@@ -2755,7 +2815,7 @@
         button.textContent = 'Export Excel';
       }
     }
-
+ 
     document.getElementById('clearRosterBtn').addEventListener('click', () => {
       if (!rosterInput.value.trim()) { notice.textContent = 'The student list is already empty.'; return; }
       if (!confirm('Clear all student names and the current grouped results? You can use Undo last change to restore the list.')) return;
@@ -2827,3 +2887,4 @@
   </script>
 </body>
 </html>
+ 
