@@ -2368,6 +2368,16 @@
     }
  
     function makeGroups(students) {
+      // Grade labels (SS1, SS 2, JSS3...) left over as class chips by older imports are input classes, not destinations.
+      const gradeChip = /^(jss|ss)\s*\d+$/i;
+      const staleChips = classNames.filter(name => gradeChip.test(name.trim()));
+      if (staleChips.length) {
+        classNames = classNames.filter(name => !gradeChip.test(name.trim()));
+        for (const name of staleChips) delete classTargets[name];
+        renderClasses();
+        scheduleCloudSave();
+        notice.textContent = `Removed ${staleChips.join(', ')} from your class chips. Those are input classes and are now spread across your own classes instead.`;
+      }
       const byClass = new Map();
       const attributeCounts = new Map();
       const sources = {};
