@@ -319,6 +319,11 @@
     .balance-controls { margin:9px 0; padding:10px; border-radius:10px; background:var(--wash); }
     .balance-controls label { margin:0; font-size:11px; }
     .balance-controls p { margin:5px 0 0 21px; color:var(--muted); font-size:10px; line-height:1.4; }
+    .input-class-controls { margin:9px 0; padding:12px; border-radius:10px; background:var(--wash); border:1px solid var(--line); }
+    .input-class-controls strong { display:block; margin-bottom:8px; font-size:13px; }
+    .input-class-controls label { display:flex; align-items:flex-start; gap:8px; margin:0 0 7px; font-size:12px; line-height:1.4; cursor:pointer; }
+    .input-class-controls input[type="radio"] { margin-top:3px; flex:0 0 auto; }
+    .input-class-controls p { margin:6px 0 0; color:var(--muted); font-size:11px; line-height:1.4; }
     .history-tools { display:flex; gap:7px; flex-wrap:wrap; }
     .print-signatures { display:none; }
     .appearance-card h3 { margin: 0; font-size: 15px; }
@@ -652,6 +657,7 @@
             <textarea id="roster" spellcheck="false" aria-describedby="format-example" placeholder="Name, Class&#10;Ada Okafor, JSS 1A&#10;Tunde Bello, JSS 1B&#10;Mina Yusuf, JSS 1A"></textarea>
             <div id="format-example" class="row" style="margin-top:7px;justify-content:flex-start;color:var(--muted);font-size:11px">CSV columns: student name, class (optional), balance group (optional). Check imported names and groups before shuffling.</div>
           </details>
+          <div class="input-class-controls" role="radiogroup" aria-labelledby="inputClassModeLabel"><strong id="inputClassModeLabel">How should the classes in your student list (SS1, SS2, SS3…) be used?</strong><label><input type="radio" name="inputClassMode" value="pools" checked><span><b>Import pools</b> – spread each one evenly across the classes I set up in Step 1</span></label><label><input type="radio" name="inputClassMode" value="labels"><span><b>Class labels</b> – keep students in SS1, SS2, SS3… and use those as the classes</span></label><p id="inputClassModeHint">Import pools: SS1, SS2 and SS3 are never shown as classes in the shuffle preview.</p></div>
           <div class="balance-controls"><label><input id="balanceFieldToggle" type="checkbox"> Balance classes using the third CSV column</label><p>Use only school-approved grouping information. The value is used to spread matching groups evenly.</p></div>
           <div id="duplicateControls" class="hide"><div id="duplicateMessage" class="notice"></div><label class="privacy-toggle"><input id="allowDuplicates" type="checkbox"> I checked; keep repeated names</label></div>
           <div class="row">
@@ -697,7 +703,7 @@
  
       const studentNodes = [
         layout.querySelector('.file-drop'), layout.querySelector('.format-note'), layout.querySelector('#studentEditor'),
-        layout.querySelector('.roster-paste-details'), layout.querySelector('.balance-controls'), layout.querySelector('#duplicateControls'),
+        layout.querySelector('.roster-paste-details'), layout.querySelector('.input-class-controls'), layout.querySelector('.balance-controls'), layout.querySelector('#duplicateControls'),
         layout.querySelector('#clearRosterBtn')?.closest('.row'), layout.querySelector('#notice'), layout.querySelector('#processing')
       ].filter(Boolean);
       const nav = document.createElement('nav');
@@ -873,6 +879,8 @@
     let studentAttributes = {};
     // Remembers each student's input class (e.g. SS1) so reshuffles can keep spreading them fairly.
     let studentSources = {};
+    // 'pools': classes in the student list are input pools. 'labels': they are the destination classes.
+    let inputClassMode = 'pools';
     let balanceByAttribute = false;
     let rosterHistory = [];
     const defaultAppearance = { theme: 'slate', accent: '#4c6378', background: '#e2eaf1', mode: 'light', textSize: 'large', highContrast: true, largePrint: false, language: 'en' };
@@ -915,6 +923,35 @@
     document.getElementById('togetherRules').addEventListener('change', event => { captureRosterHistory(); togetherRules = event.target.value; scheduleCloudSave(); });
     document.getElementById('apartRules').addEventListener('change', event => { captureRosterHistory(); apartRules = event.target.value; scheduleCloudSave(); });
     document.getElementById('balanceFieldToggle').addEventListener('change', event => { captureRosterHistory(); balanceByAttribute = event.target.checked; scheduleCloudSave(); });
+    function syncInputClassModeControl() {
+      document.querySelectorAll('input[name="inputClassMode"]').forEach(radio => { radio.checked = radio.value === inputClassMode; });
+      const hint = document.getElementById('inputClassModeHint');
+      if (hint) hint.textContent = inputClassMode === 'labels'
+        ? 'Class labels: SS1, SS2 and SS3 are added to your class list and students stay in them.'
+        : 'Import pools: SS1, SS2 and SS3 are never shown as classes in the shuffle preview.';
+    }
+    document.querySelectorAll('input[name="inputClassMode"]').forEach(radio => radio.addEventListener('change', event => {
+      if (!event.target.checked) return;
+      const mode = event.target.value === 'labels' ? 'labels' : 'pools';
+      if (mode === inputClassMode) return;
+      captureRosterHistory();
+      inputClassMode = mode;
+      syncInputClassModeControl();
+      let message;
+      if (mode === 'labels') {
+        const added = addInputClassesAsChips();
+        message = added.length ? `Now using ${added.join(', ')} as class labels.` : 'Classes in your student list will be used as class labels.';
+      } else {
+        const removed = removeGradeChips();
+        message = removed.length ? `Now using ${removed.join(', ')} as import pools. They were removed from your class chips.` : 'Classes in your student list will now be used as import pools.';
+      }
+      renderClasses();
+      updateDuplicateReview();
+      if (currentGroups.length) clearResults();
+      scheduleCloudSave();
+      notice.textContent = `${message} Shuffle again to apply it.`;
+      showToast(message);
+    }));
  
     const themePalettes = {
       forest: { label: 'Forest', accent: '#256c54', background: '#e6f1e9' },
@@ -1144,6 +1181,7 @@
         apartRules,
         studentAttributes: { ...studentAttributes },
         studentSources: { ...studentSources },
+        inputClassMode,
         balanceByAttribute
       };
     }
@@ -1155,7 +1193,7 @@
     function captureRosterHistory() {
       rosterHistory.push(JSON.parse(JSON.stringify({
         classNames, classTargets, rosterDraft: rosterInput.value, groups: currentGroups,
-        teacherName, rosterDate, schoolYear, termName, togetherRules, apartRules, studentAttributes, studentSources, balanceByAttribute, savedRosters, rosterVersions
+        teacherName, rosterDate, schoolYear, termName, togetherRules, apartRules, studentAttributes, studentSources, inputClassMode, balanceByAttribute, savedRosters, rosterVersions
       })));
       if (rosterHistory.length > 20) rosterHistory.shift();
       updateUndoButtons();
@@ -1176,6 +1214,7 @@
       apartRules = previous.apartRules;
       studentAttributes = previous.studentAttributes;
       studentSources = previous.studentSources || {};
+      inputClassMode = previous.inputClassMode === 'labels' ? 'labels' : 'pools';
       balanceByAttribute = previous.balanceByAttribute;
       savedRosters = previous.savedRosters;
       rosterVersions = previous.rosterVersions || rosterVersions;
@@ -1184,6 +1223,7 @@
       document.getElementById('togetherRules').value = togetherRules;
       document.getElementById('apartRules').value = apartRules;
       document.getElementById('balanceFieldToggle').checked = balanceByAttribute;
+      syncInputClassModeControl();
       renderClasses();
       refreshSavedRosterOptions();
       updateDuplicateReview();
@@ -1283,6 +1323,7 @@
       apartRules = typeof state.apartRules === 'string' ? state.apartRules : '';
       studentAttributes = state.studentAttributes && typeof state.studentAttributes === 'object' ? { ...state.studentAttributes } : {};
       studentSources = state.studentSources && typeof state.studentSources === 'object' ? { ...state.studentSources } : {};
+      inputClassMode = state.inputClassMode === 'labels' ? 'labels' : 'pools';
       balanceByAttribute = state.balanceByAttribute === true;
       const profile = state.schoolProfile || {};
       schoolProfile.name.value = profile.name || '';
@@ -1303,6 +1344,7 @@
       document.getElementById('togetherRules').value = togetherRules;
       document.getElementById('apartRules').value = apartRules;
       document.getElementById('balanceFieldToggle').checked = balanceByAttribute;
+      syncInputClassModeControl();
       rosterInput.value = state.rosterDraft || '';
       renderStudentEditor();
       currentGroups = Array.isArray(state.groups) ? state.groups.map(group => ({ className: group.className, students: [...group.students] })) : [];
@@ -1621,6 +1663,11 @@
       const className = document.getElementById('classEntrySelect').value;
       if (!names.length) { notice.textContent = 'Enter at least one student name for the selected class.'; document.getElementById('classEntryNames').focus(); return; }
       captureRosterHistory();
+      if (inputClassMode === 'labels' && !findDestinationClass(className)) {
+        classNames.push(className);
+        classTargets[className] = 0;
+        classNames.sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
+      }
       const addedRows = names.map(name => `${name}\t${className}`).join('\n');
       rosterInput.value = [rosterInput.value.trimEnd(), addedRows].filter(Boolean).join('\n');
       renderStudentEditor();
@@ -1628,7 +1675,7 @@
       renderClasses();
       updateDuplicateReview();
       scheduleCloudSave();
-      notice.textContent = findDestinationClass(className)
+      notice.textContent = (findDestinationClass(className) || inputClassMode === 'labels')
         ? `Added ${names.length} student name${names.length === 1 ? '' : 's'} to ${className}. Review the list in Students before shuffling.`
         : `Added ${names.length} student name${names.length === 1 ? '' : 's'} under ${className} as an input class. They will be spread across your own classes when you shuffle.`;
       showToast(`Names added to ${className}.`);
@@ -1671,7 +1718,7 @@
  
       if (students.length) {
         // Old destination labels are cleared; input classes such as SS1/SS2/SS3 stay as source pools.
-        const keepSource = student => previousClassNames.some(name => normalizeClassLabel(name) === normalizeClassLabel(student.className)) ? '' : student.className;
+        const keepSource = student => inputClassMode === 'labels' || previousClassNames.some(name => normalizeClassLabel(name) === normalizeClassLabel(student.className)) ? '' : student.className;
         const groups = makeGroups(students.map(student => ({ ...student, className: keepSource(student) })));
         if (groups.length) {
           currentGroups = groups;
@@ -1767,6 +1814,7 @@
       rosterInput.value = encodeStudentRows(rows);
       selectedStudentRows.clear();
       studentEditorPage = 0;
+      if (inputClassMode === 'labels') addInputClassesAsChips();
       classNames.sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
       renderClasses();
       updateDuplicateReview();
@@ -1948,6 +1996,7 @@
       renderStudentEditor();
       // Imported classes (SS1, SS2, SS3...) are input pools, not new destination classes.
       studentSources = {};
+      if (inputClassMode === 'labels') { addInputClassesAsChips(); classNames.sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' })); renderClasses(); }
       const sourceNote = sourceClassNote(usableStudents);
       updateDuplicateReview();
       scheduleCloudSave();
@@ -2275,6 +2324,7 @@
         apartRules,
         studentAttributes: { ...studentAttributes },
         studentSources: { ...studentSources },
+        inputClassMode,
         balanceByAttribute,
         teacherName,
         rosterDate,
@@ -2319,6 +2369,7 @@
       document.getElementById('togetherRules').value = togetherRules;
       document.getElementById('apartRules').value = apartRules;
       document.getElementById('balanceFieldToggle').checked = balanceByAttribute;
+      syncInputClassModeControl();
       try { localStorage.setItem('classroomShuffle.rosterMeta', JSON.stringify({ teacherName, rosterDate })); } catch { /* The saved record remains loadable. */ }
       rosterInput.value = record.rosterText || '';
       renderStudentEditor();
@@ -2353,6 +2404,7 @@
     }
     // Input classes (SS1, SS2, SS3, anything else) found in a list of students, excluding real destinations.
     function sourceClassLabels(students) {
+      if (inputClassMode === 'labels') return [];
       const labels = new Map();
       for (const student of students) {
         const label = String(student.className || '').trim().replace(/\s+/g, ' ');
@@ -2367,16 +2419,33 @@
       return `${count} student${count === 1 ? '' : 's'} listed under ${labels.length} input class${labels.length === 1 ? '' : 'es'} (${labels.slice(0, 6).join(', ')}${labels.length > 6 ? '…' : ''}). They will be spread evenly across your own classes when you shuffle, not turned into new classes.`;
     }
  
-    function makeGroups(students) {
-      // Grade labels (SS1, SS 2, JSS3...) left over as class chips by older imports are input classes, not destinations.
+    // Import-pool mode: grade labels (SS1, SS 2, JSS3...) left over as class chips are input classes, not destinations.
+    function removeGradeChips() {
       const gradeChip = /^(jss|ss)\s*\d+$/i;
-      const staleChips = classNames.filter(name => gradeChip.test(name.trim()));
-      if (staleChips.length) {
+      const stale = classNames.filter(name => gradeChip.test(name.trim()));
+      if (stale.length) {
         classNames = classNames.filter(name => !gradeChip.test(name.trim()));
-        for (const name of staleChips) delete classTargets[name];
+        for (const name of stale) delete classTargets[name];
         renderClasses();
         scheduleCloudSave();
-        notice.textContent = `Removed ${staleChips.join(', ')} from your class chips. Those are input classes and are now spread across your own classes instead.`;
+      }
+      return stale;
+    }
+    // Class-label mode: every class found in the student list becomes a class chip.
+    function addInputClassesAsChips() {
+      const added = [];
+      for (const student of parseRows(rosterInput.value).students) {
+        const label = String(student.className || '').trim().replace(/\s+/g, ' ');
+        if (label && !findDestinationClass(label)) { classNames.push(label); classTargets[label] = 0; added.push(label); }
+      }
+      if (added.length) classNames.sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
+      return added;
+    }
+ 
+    function makeGroups(students) {
+      if (inputClassMode === 'pools') {
+        const removed = removeGradeChips();
+        if (removed.length) notice.textContent = `Removed ${removed.join(', ')} from your class chips. Those are input classes and are now spread across your own classes instead.`;
       }
       const byClass = new Map();
       const attributeCounts = new Map();
@@ -2396,7 +2465,9 @@
       const pools = new Map();
       for (const student of students) {
         const nameKey = normalizedName(student.name);
-        const destination = findDestinationClass(student.className);
+        let destination = findDestinationClass(student.className);
+        // In class-label mode a class in the student list is itself a destination.
+        if (!destination && inputClassMode === 'labels') destination = String(student.className || '').trim().replace(/\s+/g, ' ');
         if (destination) { pinned.push({ student, destination, nameKey }); continue; }
         let label = String(student.className || '').trim().replace(/\s+/g, ' ');
         if (!label) {
@@ -2412,7 +2483,9 @@
         notice.textContent = 'Add at least one class in Step 1 first. Students from input classes such as SS1, SS2 and SS3 are spread across the classes you add.';
         return [];
       }
-      for (const { student, destination, nameKey } of pinned) {
+      for (const { student, nameKey, destination: wanted } of pinned) {
+        const destination = [...byClass.keys()].find(key => normalizeClassLabel(key) === normalizeClassLabel(wanted)) || wanted;
+        if (!byClass.has(destination)) { byClass.set(destination, []); attributeCounts.set(destination, new Map()); }
         byClass.get(destination).push(student.name.trim());
         addAttributeCount(destination, student.groupAttribute || studentAttributes[nameKey] || '');
         sources[nameKey] = null; // pinned students have no source pool
