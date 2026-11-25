@@ -481,6 +481,64 @@
       :root[data-print-layout="signoff"] .print-signatures { display:flex; gap:30px; margin-top:24px; break-inside:avoid; }
       .print-signatures span { flex:1; border-top:1px solid #555; padding-top:6px; color:#333; font-size:10px; }
     }
+ 
+    /* Polish layer */
+    body { background: radial-gradient(1100px 520px at 12% -8%, color-mix(in srgb, var(--green) 14%, transparent), transparent 70%), radial-gradient(900px 480px at 100% 0%, color-mix(in srgb, var(--orange) 12%, transparent), transparent 70%), var(--wash); background-attachment: fixed; }
+    .card { border-radius: 22px; box-shadow: 0 1px 0 rgba(255,255,255,.6) inset, var(--shadow); transition: box-shadow .2s ease, transform .2s ease; }
+    .card:hover { box-shadow: 0 1px 0 rgba(255,255,255,.6) inset, 0 20px 50px rgba(39,54,45,.12); }
+    .button { transition: transform .12s ease, box-shadow .15s ease, background .15s ease; }
+    .button:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(39,54,45,.16); }
+    .button:active { transform: translateY(0); box-shadow: none; }
+    .button.primary { background: linear-gradient(180deg, color-mix(in srgb, var(--green) 88%, white), var(--green)); box-shadow: 0 6px 16px color-mix(in srgb, var(--green) 35%, transparent); }
+    .class-chip { border-radius: 99px; transition: transform .12s ease; }
+    .class-chip:hover { transform: translateY(-1px); }
+    .student-editor-table tbody tr:nth-child(even) { background: color-mix(in srgb, var(--wash) 55%, transparent); }
+    .student-editor-table tbody tr:hover { background: var(--mint); }
+    .import-dialog { border-radius: 20px; box-shadow: 0 30px 80px rgba(0,0,0,.28); }
+    .input-class-controls { border-left: 4px solid var(--green); }
+    .fair-matrix { margin-top: 16px; }
+    .fair-matrix h3 { margin: 0 0 4px; font-size: 14px; }
+    .fair-matrix .fair-sub { margin: 0 0 8px; color: var(--muted); font-size: 12px; }
+    .fair-matrix table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .fair-matrix th, .fair-matrix td { padding: 7px 9px; border-bottom: 1px solid var(--line); text-align: center; }
+    .fair-matrix th:first-child, .fair-matrix td:first-child { text-align: left; font-weight: 700; }
+    .fair-matrix thead th { background: var(--wash); font-size: 12px; }
+    .fair-ok, .fair-off { display: inline-block; padding: 2px 9px; border-radius: 99px; font-size: 11px; font-weight: 800; }
+    .fair-ok { background: #dff3e4; color: #1f5b34; }
+    .fair-off { background: #fff0d6; color: #7a4a06; }
+    :root[data-mode="dark"] .fair-ok { background: #214a31; color: #cdeed8; }
+    :root[data-mode="dark"] .fair-off { background: #5a4216; color: #ffe3b0; }
+    .build-tag { position: fixed; right: 12px; bottom: 10px; z-index: 5; padding: 4px 10px; border-radius: 99px; border: 1px solid var(--line); background: var(--paper); color: var(--muted); font-size: 11px; font-weight: 700; opacity: .85; pointer-events: none; }
+    @media print { .build-tag { display: none; } }
+ 
+    /* ---- Look & feel polish ---- */
+    body { background: linear-gradient(180deg, color-mix(in srgb, var(--wash) 88%, #fff) 0, var(--wash) 420px); }
+    .card { border-radius: 22px; box-shadow: 0 18px 50px rgba(30,45,60,.10), 0 2px 6px rgba(30,45,60,.05); }
+    .button { transition: transform .15s ease, box-shadow .15s ease, background .15s ease; }
+    .button:hover:not(:disabled) { transform: translateY(-1px); }
+    .button.primary, #shuffleBtn { background: linear-gradient(135deg, var(--green), var(--green-dark)); color: #fff; box-shadow: 0 8px 20px color-mix(in srgb, var(--green) 32%, transparent); }
+    .student-editor-table thead th, .import-preview-table thead th { position: sticky; top: 0; z-index: 1; background: var(--wash); font-size: 12px; letter-spacing: .04em; text-transform: uppercase; }
+    .student-editor-table tbody tr:nth-child(even), .import-preview-table tbody tr:nth-child(even) { background: color-mix(in srgb, var(--wash) 55%, transparent); }
+    .student-editor-table tbody tr:hover, .import-preview-table tbody tr:hover { background: var(--mint); }
+    .student-editor-table td, .import-preview-table td { padding-top: 10px; padding-bottom: 10px; }
+    .badge { display: inline-block; padding: 3px 11px; border-radius: 99px; font-size: 12px; font-weight: 750; white-space: nowrap; }
+    .badge.ok { background: #dff3e4; color: #1d5c32; } .badge.warn { background: #fff0d1; color: #7a4b00; } .badge.bad { background: #fbe0dc; color: #8c2a20; } .badge.none { background: var(--wash); color: var(--muted); border: 1px solid var(--line); }
+    :root[data-mode="dark"] .badge.ok { background: #1f4a2c; color: #bfeccb; } :root[data-mode="dark"] .badge.warn { background: #4d3a12; color: #ffdf9a; } :root[data-mode="dark"] .badge.bad { background: #5a2420; color: #ffc9c2; }
+    .class-group { animation: rise-in .45s ease both; animation-delay: calc(var(--group-index, 0) * 70ms); }
+    .fair-report { margin: 16px 0; padding: 14px; border: 1px solid var(--line); border-radius: 14px; background: var(--paper); }
+    .fair-report p { margin: 2px 0 10px; color: var(--muted); font-size: 12px; }
+    .fair-scroll { overflow-x: auto; }
+    .fair-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .fair-table th, .fair-table td { padding: 8px 10px; border-bottom: 1px solid var(--line); text-align: center; white-space: nowrap; }
+    .fair-table th:first-child, .fair-table th[scope="row"] { text-align: left; }
+    .fair-table thead th { background: var(--wash); font-size: 11px; text-transform: uppercase; letter-spacing: .04em; }
+    @media (prefers-reduced-motion: reduce) { .class-group, .button { animation: none; transition: none; } }
+    @media print {
+      body { background: #fff !important; color: #000 !important; }
+      .card, .class-group, .fair-report { box-shadow: none !important; border-color: #888 !important; break-inside: avoid; }
+      .class-group { animation: none !important; }
+      .badge { border: 1px solid #888; background: #fff !important; color: #000 !important; }
+    }
   </style>
 </head>
 <body>
@@ -489,7 +547,7 @@
   <div id="successToast" class="toast" role="status" aria-live="polite"></div>
   <dialog id="shufflePreviewDialog" class="import-dialog" aria-labelledby="shufflePreviewTitle">
     <div class="import-dialog-head"><h2 id="shufflePreviewTitle">Review class sizes before shuffling</h2><button id="cancelShuffleTop" class="button quiet" type="button">Close</button></div>
-    <div class="import-dialog-body"><p id="shufflePreviewSummary"></p><div id="shufflePreviewWarnings"></div><div class="student-table-wrap"><table class="student-editor-table"><thead><tr><th>Class</th><th>Students after shuffle</th><th>Preferred size</th><th>Check</th></tr></thead><tbody id="shufflePreviewRows"></tbody></table></div></div>
+    <div class="import-dialog-body"><p id="shufflePreviewSummary"></p><div id="shufflePreviewWarnings"></div><div class="student-table-wrap"><table class="student-editor-table"><thead><tr><th>Class</th><th>Students after shuffle</th><th>Preferred size</th><th>Check</th></tr></thead><tbody id="shufflePreviewRows"></tbody></table></div><div id="shufflePreviewMatrix" class="fair-matrix"></div></div>
     <div class="import-dialog-foot"><button id="cancelShuffleButton" class="button secondary" type="button">Go back</button><button id="confirmShuffleButton" class="button primary" type="button">Confirm and shuffle</button></div>
   </dialog>
   <dialog id="importPreviewDialog" class="import-dialog" aria-labelledby="importPreviewTitle">
@@ -2099,7 +2157,7 @@
         return `${group.className}: target ${classTargets[group.className]}, currently ${group.students.length} (${Math.abs(difference)} ${difference > 0 ? 'over' : 'under'}).`;
       });
       const sizeWarningHtml = sizeWarnings.length ? `<div class="class-size-warning" role="status"><strong>Class size check</strong><br>${sizeWarnings.map(escapeHtml).join('<br>')}<br>Adjust class targets or rebalance the roster if needed.</div>` : '';
-      results.innerHTML = schoolBanner + `<div class="results-toolbar"><input id="studentSearch" type="search" placeholder="Search students or classes" aria-label="Search roster" value="${escapeHtml(searchTerm)}"><label class="meta-field">Teacher <input id="teacherNameInput" type="text" placeholder="Teacher name" value="${escapeHtml(teacherName)}"></label><label class="meta-field">Date <input id="rosterDateInput" type="date" value="${escapeHtml(rosterDate)}"></label><label class="privacy-toggle"><input id="privacyToggle" type="checkbox" ${privacyMode ? 'checked' : ''}> Hide names on screen</label></div><div class="summary"><span>✦ Randomized roster</span><span>${students} students</span><span>${groups.length} ${classWord}</span><span>${escapeHtml(schoolYear)} · ${escapeHtml(termName)}</span>${skippedCount ? `<span>${skippedCount} row${skippedCount === 1 ? '' : 's'} skipped</span>` : ''}</div>${sizeWarningHtml}${rows}`;
+      results.innerHTML = schoolBanner + `<div class="results-toolbar"><input id="studentSearch" type="search" placeholder="Search students or classes" aria-label="Search roster" value="${escapeHtml(searchTerm)}"><label class="meta-field">Teacher <input id="teacherNameInput" type="text" placeholder="Teacher name" value="${escapeHtml(teacherName)}"></label><label class="meta-field">Date <input id="rosterDateInput" type="date" value="${escapeHtml(rosterDate)}"></label><label class="privacy-toggle"><input id="privacyToggle" type="checkbox" ${privacyMode ? 'checked' : ''}> Hide names on screen</label></div><div class="summary"><span>✦ Randomized roster</span><span>${students} students</span><span>${groups.length} ${classWord}</span><span>${escapeHtml(schoolYear)} · ${escapeHtml(termName)}</span>${skippedCount ? `<span>${skippedCount} row${skippedCount === 1 ? '' : 's'} skipped</span>` : ''}</div>${sizeWarningHtml}${fairnessHtml(groups)}${rows}`;
       results.querySelectorAll('.result-class-collapse[data-collapse-key]').forEach(details => {
         const key = `classroomShuffle.collapse.${details.dataset.collapseKey}`;
         try { details.open = localStorage.getItem(key) !== 'closed'; } catch { details.open = true; }
@@ -2555,6 +2613,23 @@
       return finalGroups;
     }
  
+    // Shows how many students from each input class (SS1, SS2, SS3...) landed in each class.
+    function fairnessHtml(groups) {
+      if (inputClassMode === 'labels') return '';
+      const sourceOf = name => { const key = name.trim().toLocaleLowerCase(); return (groups.sources && groups.sources[key]) ?? studentSources[key] ?? ''; };
+      const labels = [...new Set(groups.flatMap(group => group.students.map(sourceOf)).filter(Boolean))];
+      if (!labels.length || groups.length < 2) return '';
+      const hasTargets = groups.some(group => classTargets[group.className] > 0);
+      const head = groups.map(group => `<th>${escapeHtml(group.className)}</th>`).join('');
+      const rows = labels.map(label => {
+        const counts = groups.map(group => group.students.filter(name => sourceOf(name) === label).length);
+        const spread = Math.max(...counts) - Math.min(...counts);
+        const badge = hasTargets ? '<span class="badge none">Weighted by sizes</span>' : spread <= 1 ? '<span class="badge ok">Even</span>' : `<span class="badge warn">Off by ${spread}</span>`;
+        return `<tr><th scope="row">${escapeHtml(label)}</th>${counts.map(count => `<td>${count}</td>`).join('')}<td>${counts.reduce((sum, count) => sum + count, 0)}</td><td>${badge}</td></tr>`;
+      }).join('');
+      return `<div class="fair-report"><strong>Fairness report</strong><p>How many students from each input class landed in each class.</p><div class="fair-scroll"><table class="fair-table"><thead><tr><th>Input class</th>${head}<th>Total</th><th>Check</th></tr></thead><tbody>${rows}</tbody></table></div></div>`;
+    }
+ 
     function reshuffle() {
       const students = currentGroups.length
         ? currentGroups.flatMap(group => group.students.map(name => ({ name, className: Object.hasOwn(studentSources, name.trim().toLocaleLowerCase()) ? '' : group.className })))
@@ -2599,13 +2674,26 @@
       const counts = groups.map(group => {
         const target = Number(classTargets[group.className]) || 0;
         const difference = target ? group.students.length - target : 0;
-        const check = !target ? 'No preferred size' : difference === 0 ? 'Meets target' : `${Math.abs(difference)} ${difference > 0 ? 'over' : 'under'} target`;
+        const check = !target ? '<span class="badge none">No preferred size</span>' : difference === 0 ? '<span class="badge ok">Meets target</span>' : `<span class="badge ${Math.abs(difference) <= 2 ? 'warn' : 'bad'}">${Math.abs(difference)} ${difference > 0 ? 'over' : 'under'} target</span>`;
         return `<tr><td>${escapeHtml(group.className)}</td><td>${group.students.length}${sourceBreakdown(group)}</td><td>${target || 'Not set'}</td><td>${check}</td></tr>`;
       }).join('');
       const total = groups.reduce((sum, group) => sum + group.students.length, 0);
       const warnings = groups.filter(group => classTargets[group.className] > 0 && group.students.length !== classTargets[group.className]);
       document.getElementById('shufflePreviewSummary').textContent = `${total} student${total === 1 ? '' : 's'} will be grouped into ${groups.length} class${groups.length === 1 ? '' : 'es'}.${skipped.length ? ` ${skipped.length} blank row${skipped.length === 1 ? '' : 's'} will be skipped.` : ''} ${(() => { const labels = [...new Set(Object.values(groups.sources || {}).filter(Boolean))]; return labels.length ? ` Students from ${labels.length} input class${labels.length === 1 ? '' : 'es'} (${labels.slice(0, 6).join(', ')}) are spread evenly across these classes.` : ''; })()} This exact randomized arrangement will be used if you confirm.`;
       document.getElementById('shufflePreviewWarnings').innerHTML = warnings.length ? `<p class="import-warning">${warnings.length} class${warnings.length === 1 ? '' : 'es'} will not match preferred sizes. Review the counts below before continuing.</p>` : '';
+      // Fairness report: input class (rows) against destination class (columns).
+      const matrixLabels = [...new Set(Object.values(groups.sources || {}).filter(Boolean))];
+      const matrixBox = document.getElementById('shufflePreviewMatrix');
+      if (matrixLabels.length && inputClassMode === 'pools') {
+        const hasTargets = groups.some(group => classTargets[group.className] > 0);
+        const rowsHtml = matrixLabels.map(label => {
+          const cells = groups.map(group => group.students.filter(name => sourceOf(name) === label).length);
+          const spread = Math.max(...cells) - Math.min(...cells);
+          const verdict = hasTargets ? '<span class="fair-ok">Weighted by sizes</span>' : spread <= 1 ? '<span class="fair-ok">Even</span>' : `<span class="fair-off">Off by ${spread}</span>`;
+          return `<tr><td>${escapeHtml(label)}</td>${cells.map(count => `<td>${count}</td>`).join('')}<td><strong>${cells.reduce((a, b) => a + b, 0)}</strong></td><td>${verdict}</td></tr>`;
+        }).join('');
+        matrixBox.innerHTML = `<h3>Fairness report</h3><p class="fair-sub">How each input class is spread across your classes.</p><div class="student-table-wrap"><table><thead><tr><th>Input class</th>${groups.map(group => `<th>${escapeHtml(group.className)}</th>`).join('')}<th>Total</th><th>Check</th></tr></thead><tbody>${rowsHtml}</tbody></table></div>`;
+      } else matrixBox.innerHTML = '';
       document.getElementById('shufflePreviewRows').innerHTML = counts || '<tr><td colspan="4">No classes to show.</td></tr>';
       document.getElementById('shufflePreviewDialog').showModal();
     }
@@ -2968,6 +3056,7 @@
     } catch { /* Ignore unavailable or malformed offline state. */ }
     initializeBackend();
   </script>
+  <div class="build-tag" id="buildTag" aria-hidden="true">v2.2 · fairness report &amp; new look · 25 Nov 2026</div>
 </body>
 </html>
  
